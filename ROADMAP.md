@@ -54,6 +54,8 @@ Ship every 2-4 weeks. Learn by building.
 
 ## Phase 2 — Penrose Diagrams (months 3-4)
 
+**Status:** ✅ Done — shipped as v0.2.0 on 2026-04-10.
+
 **Physics concepts:**
 - Conformal compactification
 - Causal structure
@@ -61,13 +63,16 @@ Ship every 2-4 weeks. Learn by building.
 - Penrose diagram construction
 
 **Deliverables:**
-- `spacetime_lab.diagrams.penrose` module
-- Penrose diagrams for Schwarzschild, RN, de Sitter, FLRW
-- Export to SVG/TikZ for LaTeX papers
-- Interactive web viewer
-- Notebook: `02_penrose_diagrams.ipynb`
+- [x] `spacetime_lab.diagrams.penrose` module — `PenroseChart` ABC + `MinkowskiPenrose` + `SchwarzschildPenrose`
+- [x] Penrose diagram for Schwarzschild (full four-region maximally extended)
+- [ ] Reissner-Nordström, de Sitter, FLRW — *deferred to a Phase 2.5 / Phase 7 extension*
+- [ ] Export to SVG/TikZ for LaTeX papers — *stubs in place, implementation deferred to a follow-up pass*
+- [ ] Interactive web viewer — *deferred to the frontend sprint*
+- [x] Notebook: `02_penrose_diagrams.ipynb`
+- [x] `render_matplotlib` backend (unlocks the notebook)
+- [x] 83 new tests (33 Minkowski + 50 Schwarzschild) — total suite 109 tests
 
-**Release:** v0.2.0
+**Release:** v0.2.0 — tagged 2026-04-10.
 
 ---
 
