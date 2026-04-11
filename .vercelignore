@@ -1,0 +1,10 @@
+backend/
+spacetime_lab/
+tests/
+notebooks/
+docs/
+pyproject.toml
+render.yaml
+*.py
+!frontend/**/*.js
+!frontend/**/*.jsx
