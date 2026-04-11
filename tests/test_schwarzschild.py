@@ -196,3 +196,16 @@ class TestSchwarzschild:
         K_at_horizon = bh.kretschmann_scalar(2.0)
         # K(0.1) should be massively larger than K(2)
         assert K_close_to_zero > 10000 * K_at_horizon
+
+    def test_christoffel_explicit_returns_13_components(self):
+        """Should return exactly 13 non-zero components."""
+        bh = Schwarzschild()
+        explicit = bh.christoffel_symbols_explicit()
+        # 13 non-zero components (with symmetries counted separately)
+        assert len(explicit) == 13
+
+    def test_christoffel_explicit_matches_computed(self):
+        """The explicit formulas match the base class symbolic computation."""
+        bh = Schwarzschild()
+        # This verifies symbolic Christoffel calculation
+        assert bh.verify_christoffel_symbols() is True

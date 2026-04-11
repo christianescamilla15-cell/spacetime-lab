@@ -349,6 +349,107 @@ class Schwarzschild(Metric):
         """
         return 48 * self.mass**2 / r**6
 
+    def christoffel_symbols_explicit(self) -> dict[str, sp.Expr]:
+        """Return the non-zero Christoffel symbols of Schwarzschild explicitly.
+
+        These are the known closed-form expressions for the Christoffel
+        symbols of the second kind in Schwarzschild coordinates (t, r, theta, phi).
+
+        Only the non-zero components are returned, labeled by their index
+        positions (e.g., "t_tr" means Gamma^t_{tr}).
+
+        Non-zero components:
+            Γ^t_{tr} = Γ^t_{rt} = M / (r(r - 2M))
+            Γ^r_{tt} = M(r - 2M) / r^3
+            Γ^r_{rr} = -M / (r(r - 2M))
+            Γ^r_{θθ} = -(r - 2M)
+            Γ^r_{φφ} = -(r - 2M) sin²(θ)
+            Γ^θ_{rθ} = Γ^θ_{θr} = 1/r
+            Γ^θ_{φφ} = -sin(θ) cos(θ)
+            Γ^φ_{rφ} = Γ^φ_{φr} = 1/r
+            Γ^φ_{θφ} = Γ^φ_{φθ} = cot(θ)
+
+        Returns:
+            Dictionary mapping index strings (e.g., "t_tr") to symbolic expressions.
+
+        Note:
+            Can be verified against the base class computation:
+                gamma = self.christoffel_symbols()
+                # gamma[0][0][1] should equal explicit["t_tr"]
+
+        References:
+            Wald eq. 6.1.44, MTW Box 23.2, Carroll eq. 5.70
+        """
+        M = self.mass
+        r = self._r
+        theta = self._theta
+
+        return {
+            # Gamma^t_{tr} and Gamma^t_{rt}
+            "t_tr": M / (r * (r - 2 * M)),
+            "t_rt": M / (r * (r - 2 * M)),
+            # Gamma^r_{tt}
+            "r_tt": M * (r - 2 * M) / r**3,
+            # Gamma^r_{rr}
+            "r_rr": -M / (r * (r - 2 * M)),
+            # Gamma^r_{theta theta}
+            "r_thetatheta": -(r - 2 * M),
+            # Gamma^r_{phi phi}
+            "r_phiphi": -(r - 2 * M) * sp.sin(theta) ** 2,
+            # Gamma^theta_{r theta} and Gamma^theta_{theta r}
+            "theta_rtheta": 1 / r,
+            "theta_thetar": 1 / r,
+            # Gamma^theta_{phi phi}
+            "theta_phiphi": -sp.sin(theta) * sp.cos(theta),
+            # Gamma^phi_{r phi} and Gamma^phi_{phi r}
+            "phi_rphi": 1 / r,
+            "phi_phir": 1 / r,
+            # Gamma^phi_{theta phi} and Gamma^phi_{phi theta}
+            "phi_thetaphi": sp.cos(theta) / sp.sin(theta),
+            "phi_phitheta": sp.cos(theta) / sp.sin(theta),
+        }
+
+    def verify_christoffel_symbols(self) -> bool:
+        """Verify that the base class computation matches explicit formulas.
+
+        This is a sanity check: computes the Christoffel symbols symbolically
+        using the base class method (which differentiates the metric tensor)
+        and compares them to the known explicit expressions.
+
+        Returns:
+            True if all 13 non-zero components match exactly.
+
+        Raises:
+            AssertionError: If any component doesn't match.
+        """
+        computed = self.christoffel_symbols()
+        explicit = self.christoffel_symbols_explicit()
+
+        # Index mapping: 0=t, 1=r, 2=theta, 3=phi
+        idx = {"t": 0, "r": 1, "theta": 2, "phi": 3}
+
+        for key, expected in explicit.items():
+            # Parse key like "t_tr" -> mu=t, nu=t, lambda=r
+            mu_label, nu_lambda = key.split("_")
+            # For compound subscripts like "rtheta", split by known names
+            for split_at in range(1, len(nu_lambda)):
+                nu_label = nu_lambda[:split_at]
+                lam_label = nu_lambda[split_at:]
+                if nu_label in idx and lam_label in idx:
+                    break
+
+            mu = idx[mu_label]
+            nu = idx[nu_label]
+            lam = idx[lam_label]
+
+            diff = sp.simplify(computed[mu][nu][lam] - expected)
+            assert diff == 0, (
+                f"Christoffel mismatch at Γ^{mu_label}_{{{nu_label}{lam_label}}}: "
+                f"computed={computed[mu][nu][lam]}, expected={expected}"
+            )
+
+        return True
+
     # ──────────────────────────────────────────────────────────────
     # Representation
     # ──────────────────────────────────────────────────────────────

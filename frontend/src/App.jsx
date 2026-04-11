@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import EffectivePotential from './EffectivePotential'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -143,6 +144,9 @@ export default function App() {
             </div>
           )}
         </section>
+
+        {/* Effective Potential — Phase 1 addition */}
+        <EffectivePotential />
 
         {/* Roadmap preview */}
         <section style={styles.card}>

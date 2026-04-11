@@ -80,6 +80,75 @@ async def schwarzschild_tensor(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+class EffectivePotentialResponse(BaseModel):
+    """Effective potential V_eff(r) computed over a range of radii."""
+
+    mass: float
+    angular_momentum: float
+    particle_type: str
+    r_values: list[float]
+    v_values: list[float]
+    event_horizon: float
+    photon_sphere: float
+    isco: float
+    critical_points: list[dict[str, float]] = Field(
+        default_factory=list,
+        description="Extrema of V_eff (min = stable orbit, max = unstable)"
+    )
+
+
+@router.get("/schwarzschild/effective_potential", response_model=EffectivePotentialResponse)
+async def effective_potential(
+    mass: float = Query(1.0, gt=0, description="Mass parameter M"),
+    angular_momentum: float = Query(4.0, ge=0, description="Angular momentum L"),
+    particle_type: str = Query("massive", description="'massive' or 'photon'"),
+    r_min: float = Query(2.5, gt=0, description="Inner radius"),
+    r_max: float = Query(30.0, description="Outer radius"),
+    n_points: int = Query(500, ge=10, le=2000),
+) -> EffectivePotentialResponse:
+    """Compute V_eff(r) over a range of radii for the Schwarzschild black hole.
+
+    The effective potential determines the radial motion of test particles
+    in equatorial geodesics. Extrema correspond to circular orbits:
+    - Maximum = unstable orbit (photon sphere for photons, outer turning for massive)
+    - Minimum = stable orbit (for massive particles with L > 2√3 M)
+    """
+    import numpy as np
+
+    if particle_type not in ("massive", "photon"):
+        raise HTTPException(400, "particle_type must be 'massive' or 'photon'")
+
+    try:
+        bh = Schwarzschild(mass=mass)
+        r_values = np.linspace(max(r_min, 2 * mass + 0.01), r_max, n_points).tolist()
+        v_values = [
+            float(bh.effective_potential(r, angular_momentum, particle_type))
+            for r in r_values
+        ]
+
+        # Find extrema (simple local min/max detection)
+        critical_points = []
+        for i in range(1, len(v_values) - 1):
+            if v_values[i - 1] < v_values[i] > v_values[i + 1]:
+                critical_points.append({"r": r_values[i], "v": v_values[i], "type": "max"})
+            elif v_values[i - 1] > v_values[i] < v_values[i + 1]:
+                critical_points.append({"r": r_values[i], "v": v_values[i], "type": "min"})
+
+        return EffectivePotentialResponse(
+            mass=mass,
+            angular_momentum=angular_momentum,
+            particle_type=particle_type,
+            r_values=r_values,
+            v_values=v_values,
+            event_horizon=float(bh.event_horizon()),
+            photon_sphere=float(bh.photon_sphere()),
+            isco=float(bh.isco()),
+            critical_points=critical_points,
+        )
+    except Exception as e:
+        raise HTTPException(500, str(e)) from e
+
+
 @router.get("/available")
 async def list_available_metrics() -> dict:
     """List metrics currently available in the platform."""
