@@ -24,8 +24,8 @@ Spacetime Lab is an interactive web platform and Python SDK for exploring black 
 
 | Module | What it does | Status |
 |--------|-------------|--------|
-| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | 🏗️ Building |
-| `diagrams/` | Penrose and embedding diagram generators | 📅 Phase 2 |
+| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | ✅ Schwarzschild (v0.1) |
+| `diagrams/` | Penrose and embedding diagram generators | 🏗️ Phase 2 |
 | `geodesics/` | Symplectic geodesic integration in curved spacetime | 📅 Phase 3 |
 | `horizons/` | Event horizon, ISCO, photon sphere finders | 📅 Phase 4 |
 | `waves/` | Quasinormal modes, ringdown, LIGO integration | 📅 Phase 5 |
@@ -83,9 +83,9 @@ spacetime-lab/
 
 **18-month plan — from Schwarzschild to holography.** See [ROADMAP.md](./ROADMAP.md) for the full phase-by-phase breakdown.
 
-- ✅ Phase 0 — Bootstrap (you are here)
-- 🏗️ Phase 1 — Schwarzschild foundations
-- 📅 Phase 2 — Penrose diagrams
+- ✅ Phase 0 — Bootstrap
+- ✅ Phase 1 — Schwarzschild foundations (v0.1.0)
+- 🏗️ Phase 2 — Penrose diagrams
 - 📅 Phase 3 — Kerr geodesics
 - 📅 Phase 4 — Horizon finders
 - 📅 Phase 5 — Gravitational waves
@@ -93,6 +93,29 @@ spacetime-lab/
 - 📅 Phase 7 — AdS/CFT foundations
 - 📅 Phase 8 — Holographic entanglement (RT/HRT)
 - 📅 Phase 9 — v1.0 release
+
+## Tutorial notebooks
+
+Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics narrative with executable checks against the `spacetime_lab` API.
+
+| # | Notebook | Phase | What you learn |
+|---|----------|-------|----------------|
+| 01 | [`01_schwarzschild_basics.ipynb`](./notebooks/01_schwarzschild_basics.ipynb) | 1 | Line element, vacuum Einstein equations, Kretschmann scalar, tortoise and Kruskal coordinates, effective potential, horizon thermodynamics |
+
+## Upstream contributions
+
+Part of Spacetime Lab's philosophy is *learn by shipping to real projects*. Phase 1 produced the following pull requests to [`bilby-dev/bilby`](https://github.com/bilby-dev/bilby):
+
+| # | PR | Topic |
+|---|-----|-------|
+| 1 | [bilby-dev/bilby#1069](https://github.com/bilby-dev/bilby/pull/1069) | Fix `matched_filter_snr` docstring (complex vs squared) |
+| 2 | [bilby-dev/bilby#1070](https://github.com/bilby-dev/bilby/pull/1070) | Document `conversion.py` spin / mass-ratio parameters |
+| 3 | [bilby-dev/bilby#1071](https://github.com/bilby-dev/bilby/pull/1071) | Add `.devcontainer/` (core + gw) |
+| 4 | [bilby-dev/bilby#1072](https://github.com/bilby-dev/bilby/pull/1072) | Logger uses `NullHandler` by default |
+| 5 | [bilby-dev/bilby#1073](https://github.com/bilby-dev/bilby/pull/1073) | `Emcee.get_expected_outputs` classmethod for HTCondor transfer |
+| 6 | [bilby-dev/bilby#1074](https://github.com/bilby-dev/bilby/pull/1074) | `plot_exclude_keys` for bilby_mcmc trace plots |
+| 7 | [bilby-dev/bilby#1075](https://github.com/bilby-dev/bilby/pull/1075) | Use nested-sampling weights in `plot_corner` + weighted quantiles |
+| 8 | [bilby-dev/bilby#1076](https://github.com/bilby-dev/bilby/pull/1076) | Wire docstring doctests into the unittest suite |
 
 ## Contributing
 

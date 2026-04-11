@@ -13,9 +13,9 @@ Ship every 2-4 weeks. Learn by building.
 
 ---
 
-## Phase 0 — Bootstrap (current)
+## Phase 0 — Bootstrap
 
-**Status:** 🏗️ In progress
+**Status:** ✅ Done
 
 - [x] Monorepo structure
 - [x] README, LICENSE, CONTRIBUTING, SECURITY
@@ -32,6 +32,8 @@ Ship every 2-4 weeks. Learn by building.
 
 ## Phase 1 — Schwarzschild Foundations (months 1-2)
 
+**Status:** ✅ Done — shipped as v0.1.0 on 2026-04-10.
+
 **Physics concepts:**
 - Lorentzian signature (-,+,+,+)
 - Schwarzschild metric in different coordinates
@@ -39,14 +41,14 @@ Ship every 2-4 weeks. Learn by building.
 - Symbolic computation of Christoffel symbols and Riemann tensor
 
 **Deliverables:**
-- `spacetime_lab.metrics.Metric` abstract base class
-- `spacetime_lab.metrics.Schwarzschild` full implementation
-- Symbolic + numerical interfaces
-- Web visualization: static embedding diagram of Schwarzschild
-- Notebook: `01_schwarzschild_basics.ipynb`
-- Contributions to Bilby (2-3 good-first-issue PRs)
+- [x] `spacetime_lab.metrics.Metric` abstract base class
+- [x] `spacetime_lab.metrics.Schwarzschild` full implementation (26 tests)
+- [x] Symbolic + numerical interfaces
+- [ ] Web visualization: static embedding diagram of Schwarzschild *(deferred to Phase 2 — will be rolled into the diagrams module)*
+- [x] Notebook: `01_schwarzschild_basics.ipynb`
+- [x] Contributions to Bilby — **8 PRs opened** (target was 2-3): #1069, #1070, #1071, #1072, #1073, #1074, #1075, #1076
 
-**Release:** v0.1.0
+**Release:** v0.1.0 — tagged 2026-04-10.
 
 ---
 
