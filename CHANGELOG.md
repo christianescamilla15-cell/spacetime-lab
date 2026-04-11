@@ -6,6 +6,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-04-11 — Phase 6: Quantum information primitives
+
+Sixth substantive release. Closes Phase 6 of the 18-month
+[ROADMAP](./ROADMAP.md). Spacetime Lab now has the quantum
+information building blocks needed for the holographic entanglement
+entropy machinery in Phases 7-9: density matrices, partial traces,
+von Neumann entropy, Schmidt decomposition, and quantum mutual
+information.
+
+This is the **conceptual pivot** of the roadmap.  For five phases
+we have been doing classical general relativity.  Phase 6 enters
+quantum information theory.  Phase 7+ will weld the two together
+(that is the holography programme), and the bridge is already
+visible from previous phases: the Bekenstein-Hawking entropy
+:math:`S_{BH} = A/4` that we computed for Schwarzschild and Kerr is
+literally an entanglement entropy in the holographic dictionary.
+
+### Added
+
+- `spacetime_lab.entropy` — new subpackage:
+  - `density_matrix(state)` — promote a pure state vector to its
+    rank-1 density matrix :math:`|\\psi\\rangle\\langle\\psi|`.
+  - `partial_trace(rho, dims, traced_subsystems)` — generic partial
+    trace for arbitrary subsystem dimensions and arbitrary subsets
+    of subsystems to trace out.  Uses ``numpy.einsum`` with
+    explicit index labels for clarity and supports up to 13
+    subsystems.
+  - `is_pure(rho)`, `is_density_matrix(rho)` — predicates with
+    explicit Hermiticity, trace-1, and PSD checks.
+  - `von_neumann_entropy(rho, base)` — the canonical
+    :math:`S(\\rho) = -\\text{tr}(\\rho \\log \\rho)`.  Selectable log
+    base (``"e"``, ``"2"``, ``"10"``).  Handles the
+    :math:`0 \\log 0 = 0` convention via an eigenvalue cutoff.
+  - `mutual_information(rho_AB, dims, A, B, base)` — quantum
+    mutual information :math:`I(A:B) = S_A + S_B - S_{AB}`.
+  - `schmidt_decomposition(state, dims)` — return Schmidt
+    coefficients and the two sets of Schmidt vectors via SVD on
+    the reshaped state.
+  - `schmidt_rank(state, dims)` — number of non-zero Schmidt
+    coefficients (= rank of the reduced density matrix).
+  - `entanglement_entropy(state, dims, base)` — convenience
+    wrapper that goes state → SVD → entropy in one call without
+    materialising the reduced density matrix.
+- `notebooks/06_entanglement_entropy.ipynb` — Phase 6 concept +
+  demo notebook.  Walks through pure vs mixed states, the partial
+  trace and the Bell pair, von Neumann entropy and its bounds,
+  Schmidt decomposition, a smooth interpolation between product
+  and Bell states (with the bell-curve plot of $S(\\theta)$), the
+  3-qubit GHZ state and its bipartitions, quantum mutual
+  information, and the bridge to holography.  Closing gate cell
+  hard-asserts every canonical value.
+
+### Tests
+
+- `tests/test_entropy.py` — 58 new tests:
+  - `density_matrix` and predicates (`is_pure`,
+    `is_density_matrix`)
+  - `partial_trace` against the Bell pair (→ maximally mixed),
+    product states, and GHZ; trace-preservation; error paths for
+    bad dimensions, out-of-range indices, duplicate indices
+  - `von_neumann_entropy` against pure states (= 0), the
+    maximally mixed state in dimensions 2-16 (= log d in nats,
+    log_2 d in bits, log_10 d in dits), unitary invariance,
+    additivity, the :math:`0 \\log 0 = 0` convention
+  - `schmidt_decomposition` against the Bell pair, product states,
+    state reconstruction (using fixed `Vh.T` instead of
+    `Vh.conj().T`), normalisation, error paths
+  - `schmidt_rank` for product (=1), Bell (=2), and maximally
+    entangled states in $d \\times d$ for $d = 2, 3, 4$
+  - `entanglement_entropy` against Bell pair (= log 2), Bell in
+    bits (= 1), product (= 0), maximally entangled $d \\times d$
+    (= log d), and round-trip agreement with the
+    `partial_trace` + `von_neumann_entropy` route
+  - GHZ state: every 1-vs-2 bipartition gives log 2, and the
+    qubit-pair marginal has zero off-diagonal entries (separable)
+  - `mutual_information` for Bell pair (= 2 log 2), product
+    states (= 0), and a non-negativity smoke test
+- Total project test suite: **313 tests** passing (up from 255 in
+  v0.5.0; +58 entropy).
+
+### Bug found and fixed during implementation
+
+- The first cut of `schmidt_decomposition` returned
+  `V = Vh.conj().T` rather than `Vh.T`.  The conjugation made the
+  reconstruction `sum_i lambda_i kron(U[:, i], V[:, i])` come out
+  as the complex conjugate of the original state for non-real
+  states.  Fixed by removing the `.conj()` (the SVD relation
+  $C = U\\Sigma V^\\dagger$ already accounts for it).  The
+  reconstruction round-trip test caught this immediately.
+
+### Notes
+
+- This release has no new external dependencies.  The entire
+  module is pure numpy with optional `scipy.linalg` calls.  No
+  `quimb`, no `qutip`.  This was a deliberate scope choice to
+  keep the install simple and the code self-contained.
+- The bridge to Phase 7+ is the verification that Bell pair
+  entanglement = exactly $\\log 2$.  That number is the simplest
+  case of the Ryu-Takayanagi formula on its smallest possible
+  geometry — and Phase 7 will reproduce the more general
+  $S = (c/3) \\log(L/\\epsilon)$ formula for a 1D CFT interval
+  using AdS$_3$ geodesic lengths.
+
 ## [0.5.0] — 2026-04-11 — Phase 5: Quasinormal modes + ringdown
 
 Fifth substantive release. Closes Phase 5 of the 18-month

@@ -148,19 +148,27 @@ Ship every 2-4 weeks. Learn by building.
 
 ## Phase 6 — Quantum Information Basics (months 11-12)
 
+**Status:** ✅ Done — shipped as v0.6.0 on 2026-04-11.
+
 **Physics concepts:**
-- Density matrices, purity, von Neumann entropy
-- Entanglement measures
-- Quantum channels
-- Replica trick for entropy
+- Density matrices and the partial trace
+- Von Neumann entropy and its bounds
+- Schmidt decomposition via SVD
+- Entanglement entropy of bipartite pure states
+- Quantum mutual information
 
 **Deliverables:**
-- `spacetime_lab.entropy.quantum_info` helpers
-- Integration with quimb for TN states
-- Educational notebooks on entanglement
-- Notebook: `06_entanglement_intro.ipynb`
+- [x] `spacetime_lab.entropy` subpackage (pure numpy, no quimb dep)
+- [x] `density_matrix`, `partial_trace`, `is_pure`, `is_density_matrix`
+- [x] `von_neumann_entropy`, `mutual_information`
+- [x] `schmidt_decomposition`, `schmidt_rank`, `entanglement_entropy`
+- [x] Notebook `06_entanglement_entropy.ipynb` with closing gate
+- [x] All canonical examples verified to machine precision: Bell pair = log 2, GHZ bipartitions = log 2, max mixed I_d/d = log d, product = 0, additivity, mutual info
+- [x] 58 unit tests
+- [ ] Integration with quimb for tensor-network states — *deferred until Phase 7+ when DMRG/MERA become physically motivated*
+- [ ] Replica-trick entropy computation — *deferred (relevant for Phase 8 holographic computations)*
 
-**Release:** v0.6.0
+**Release:** v0.6.0 — tagged 2026-04-11.
 
 ---
 

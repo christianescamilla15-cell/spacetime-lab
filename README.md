@@ -29,8 +29,9 @@ Spacetime Lab is an interactive web platform and Python SDK for exploring black 
 | `geodesics/` | Symplectic geodesic integration in curved spacetime | ✅ implicit-midpoint (v0.3) |
 | `horizons/` | Event horizon, ISCO, photon shadow finders | ✅ algebraic + Bardeen 1973 shadow (v0.4) |
 | `waves/` | Quasinormal modes + ringdown waveforms | ✅ Schwarzschild QNM + ringdown (v0.5) |
+| `entropy/` | Quantum information primitives (von Neumann, Schmidt, partial trace) | ✅ pure-numpy implementation (v0.6) |
 | `waves/` | Quasinormal modes, ringdown, LIGO integration | 📅 Phase 5 |
-| `entropy/` | Holographic entanglement entropy (RT/HRT surfaces) | 📅 Phase 7 |
+| (RT/HRT surfaces) | Holographic entanglement entropy via geodesic / minimal surface integration | 📅 Phase 7-8 |
 | `edu/` | Interactive tutorials and educational notebooks | 🔄 Continuous |
 
 ## Quick Start
@@ -90,8 +91,8 @@ spacetime-lab/
 - ✅ Phase 3 — Kerr geodesics (v0.3.0)
 - ✅ Phase 4 — Horizon finders + photon shadow (v0.4.0)
 - ✅ Phase 5 — Quasinormal modes + ringdown (v0.5.0)
-- 🏗️ Phase 6 — Quantum information basics
-- 📅 Phase 7 — AdS/CFT foundations
+- ✅ Phase 6 — Quantum information primitives (v0.6.0)
+- 🏗️ Phase 7 — AdS/CFT foundations
 - 📅 Phase 8 — Holographic entanglement (RT/HRT)
 - 📅 Phase 9 — v1.0 release
 
@@ -106,6 +107,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 03 | [`03_kerr_geodesics.ipynb`](./notebooks/03_kerr_geodesics.ipynb) | 3 | Boyer–Lindquist Kerr, horizons + ergoregion, prograde/retrograde ISCO and photon sphere, Hamilton's equations, implicit-midpoint symplectic integrator, Carter's constant, 2nd-order convergence |
 | 04 | [`04_horizon_topology.ipynb`](./notebooks/04_horizon_topology.ipynb) | 4 | Event vs apparent horizon, MOTS, numerical horizon and ISCO finders, Schwarzschild critical impact parameter, Bardeen 1973 photon shadow with frame-dragging asymmetries (the EHT geometry) |
 | 05 | [`05_quasinormal_modes.ipynb`](./notebooks/05_quasinormal_modes.ipynb) | 5 | Linear perturbations of Schwarzschild, Regge-Wheeler equation, Leaver continued fraction, dominant gravitational mode `M*omega ~ 0.37 - 0.09 i`, ringdown waveform generator, no-hair theorem test |
+| 06 | [`06_entanglement_entropy.ipynb`](./notebooks/06_entanglement_entropy.ipynb) | 6 | Density matrices, partial traces, von Neumann entropy, Schmidt decomposition, Bell pair = log 2, GHZ bipartitions, mutual information, the bridge to holographic entanglement entropy |
 
 ## Upstream contributions
 
