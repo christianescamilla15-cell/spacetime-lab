@@ -387,11 +387,27 @@ class PenroseChart(ABC):
         :meth:`physical_to_compact` and then constructs the rays
         directly.  Subclasses usually do not need to override it.
         """
-        raise NotImplementedError(
-            "PenroseChart.light_cone_at will be implemented in the "
-            "Phase 2 coding pass — requires physical_to_compact to "
-            "return a valid Vec2 first."
+        vertex = self.physical_to_compact(region, **coords)
+        # Future light cone: half-length along +U and +V respectively.
+        future = Path(
+            points=(
+                Vec2(vertex.U + length, vertex.V),
+                vertex,
+                Vec2(vertex.U, vertex.V + length),
+            ),
+            style=PathStyle(stroke="#1a9a4a", width=1.2),
+            kind="lightcone",
         )
+        past = Path(
+            points=(
+                Vec2(vertex.U - length, vertex.V),
+                vertex,
+                Vec2(vertex.U, vertex.V - length),
+            ),
+            style=PathStyle(stroke="#1a9a4a", width=1.2, dash=(3.0, 2.0)),
+            kind="lightcone",
+        )
+        return future, past
 
     def map_curve(
         self,
@@ -422,9 +438,15 @@ class PenroseChart(ABC):
         This default implementation is a thin wrapper over
         :meth:`physical_to_compact` and does no resampling or clipping.
         """
-        raise NotImplementedError(
-            "PenroseChart.map_curve will be implemented alongside "
-            "physical_to_compact in the Phase 2 coding pass."
+        if len(samples) < 2:
+            raise ValueError("map_curve needs at least two samples")
+        points = tuple(
+            self.physical_to_compact(region, **sample) for sample in samples
+        )
+        return Path(
+            points=points,
+            style=PathStyle(stroke="#c64a0b", width=1.5),
+            kind="world_line",
         )
 
     # ------------------------------------------------------------
@@ -462,11 +484,19 @@ class PenroseChart(ABC):
         implementation calls the abstract primitives in the right
         order.
         """
-        raise NotImplementedError(
-            "PenroseChart.to_scene will be implemented once the "
-            "boundary_paths / infinities / physical_to_compact "
-            "primitives have concrete implementations."
-        )
+        scene = Scene(name=self.name)
+        for path in self.boundary_paths():
+            scene.add(path)
+        for infinity in self.infinities():
+            scene.add_infinity(infinity)
+        for region, samples in world_lines:
+            scene.add(self.map_curve(region, samples))
+        for region, coords in light_cones:
+            future, past = self.light_cone_at(region, **coords)
+            scene.add(future)
+            scene.add(past)
+        scene.metadata["regions"] = list(self.regions)
+        return scene
 
 
 # ======================================================================
@@ -518,24 +548,116 @@ class MinkowskiPenrose(PenroseChart):
     def physical_to_compact(self, region: int, **coords: float) -> Vec2:
         r"""Map ``(t, x)`` to ``(U, V) = (arctan(t - x), arctan(t + x))``.
 
-        Raises
-        ------
-        NotImplementedError
-            Stub — not yet implemented.
+        Parameters
+        ----------
+        region : int
+            Must equal 1 (Minkowski has a single region).
+        **coords : float
+            ``t`` and ``x`` — any finite real numbers.
         """
-        raise NotImplementedError("MinkowskiPenrose.physical_to_compact (stub)")
+        import math
+
+        if region != 1:
+            raise ValueError(
+                f"MinkowskiPenrose has only region 1, got region={region}"
+            )
+        missing = {"t", "x"} - coords.keys()
+        if missing:
+            raise ValueError(f"Missing physical coordinates: {sorted(missing)}")
+        t = float(coords["t"])
+        x = float(coords["x"])
+        return Vec2(U=math.atan(t - x), V=math.atan(t + x))
 
     def compact_to_physical(self, region: int, point: Vec2) -> dict[str, float]:
-        """Inverse map for Minkowski.  Stub."""
-        raise NotImplementedError("MinkowskiPenrose.compact_to_physical (stub)")
+        r"""Inverse map: :math:`t = (\tan V + \tan U)/2`, :math:`x = (\tan V - \tan U)/2`.
+
+        Parameters
+        ----------
+        region : int
+            Must equal 1.
+        point : Vec2
+            A point strictly inside :math:`(-\pi/2, \pi/2)^2` — the
+            boundary maps to infinity and cannot be inverted.
+        """
+        import math
+
+        if region != 1:
+            raise ValueError(
+                f"MinkowskiPenrose has only region 1, got region={region}"
+            )
+        half_pi = math.pi / 2
+        if abs(point.U) >= half_pi or abs(point.V) >= half_pi:
+            raise ValueError(
+                "compact_to_physical is undefined on the boundary "
+                f"(|U| or |V| >= pi/2). Got U={point.U}, V={point.V}"
+            )
+        u = math.tan(point.U)
+        v = math.tan(point.V)
+        return {"t": 0.5 * (v + u), "x": 0.5 * (v - u)}
 
     def boundary_paths(self) -> list[Path]:
-        """Four edges of the diamond.  Stub."""
-        raise NotImplementedError("MinkowskiPenrose.boundary_paths (stub)")
+        r"""Return the four edges of the Minkowski diamond.
+
+        In compactified null coordinates :math:`(U, V)` the diamond is
+        simply the square :math:`[-\pi/2, +\pi/2]^2`.  The four edges
+        correspond, in order, to:
+
+        - upper: :math:`V = +\pi/2` (future-null asymptote, hosts
+          :math:`\mathscr{I}^+` when oriented in ``(T, X)``)
+        - right: :math:`U = +\pi/2` (the other future-null asymptote)
+        - lower: :math:`V = -\pi/2` (past-null asymptote)
+        - left: :math:`U = -\pi/2` (past-null asymptote)
+
+        Each edge is tagged ``kind='boundary'`` so renderers style
+        them with the asymptotic boundary palette.
+        """
+        import math
+
+        h = math.pi / 2
+        style = PathStyle(stroke="#000000", width=1.5)
+        return [
+            Path(points=(Vec2(-h, h), Vec2(h, h)), style=style, kind="boundary"),
+            Path(points=(Vec2(h, -h), Vec2(h, h)), style=style, kind="boundary"),
+            Path(points=(Vec2(-h, -h), Vec2(h, -h)), style=style, kind="boundary"),
+            Path(points=(Vec2(-h, -h), Vec2(-h, h)), style=style, kind="boundary"),
+        ]
 
     def infinities(self) -> list[Infinity]:
-        """Five named infinities (i+, i-, i0, scri+, scri-).  Stub."""
-        raise NotImplementedError("MinkowskiPenrose.infinities (stub)")
+        r"""Return the eight named infinities of the Minkowski diamond.
+
+        A 1+1 Minkowski spacetime has ``x`` running over
+        :math:`\mathbb{R}`, so spatial infinity splits into two
+        distinct points (left and right), and each of :math:`\mathscr{I}^\pm`
+        is a pair of disjoint null edges (one for right-moving, one for
+        left-moving rays).  The four corners of the :math:`(U, V)`
+        square and the midpoints of the four edges give:
+
+        - :math:`i^+` at :math:`(+\pi/2, +\pi/2)` (top vertex of diamond)
+        - :math:`i^-` at :math:`(-\pi/2, -\pi/2)` (bottom vertex)
+        - :math:`i^0` (right) at :math:`(-\pi/2, +\pi/2)`
+        - :math:`i^0` (left)  at :math:`(+\pi/2, -\pi/2)`
+        - :math:`\mathscr{I}^+` upper-right midpoint at :math:`(-\pi/4, +\pi/2)`
+        - :math:`\mathscr{I}^+` upper-left midpoint at :math:`(+\pi/2, +\pi/4)`
+        - :math:`\mathscr{I}^-` lower-right midpoint at :math:`(-\pi/2, -\pi/4)`
+        - :math:`\mathscr{I}^-` lower-left midpoint at :math:`(+\pi/4, -\pi/2)`
+
+        All eight entries share ``region=1`` since Minkowski has a
+        single region.
+        """
+        import math
+
+        h = math.pi / 2
+        q = math.pi / 4
+        return [
+            Infinity("i+", Vec2(h, h)),
+            Infinity("i-", Vec2(-h, -h)),
+            Infinity("i0", Vec2(-h, h)),    # right
+            Infinity("i0", Vec2(h, -h)),    # left
+            Infinity("scri+", Vec2(-q, h)),  # upper right
+            Infinity("scri+", Vec2(h, q)),   # upper left
+            Infinity("scri-", Vec2(-h, -q)), # lower right
+            Infinity("scri-", Vec2(q, -h)),  # lower left
+        ]
 
 
 class SchwarzschildPenrose(PenroseChart):
@@ -594,7 +716,35 @@ class SchwarzschildPenrose(PenroseChart):
     def physical_coordinate_names(self) -> tuple[str, ...]:
         return ("t", "r")
 
-    # --- forward / inverse maps (Phase 2 coding pass) -------------
+    # --- internal helpers ----------------------------------------
+
+    def _radial_prefactor(self, region: int, r: float) -> float:
+        r"""Return :math:`\sqrt{|r/(2M) - 1|}` with region-domain validation.
+
+        Raises :class:`ValueError` if ``r`` is not strictly inside the
+        admissible range for the given region (the horizon itself is
+        not included).
+        """
+        import math
+
+        M = self.mass
+        if region in (1, 3):
+            if r <= 2 * M:
+                raise ValueError(
+                    f"Region {region} requires r > 2M ({2 * M}), got r={r}"
+                )
+            return math.sqrt(r / (2 * M) - 1.0)
+        if region in (2, 4):
+            if not (0.0 < r < 2 * M):
+                raise ValueError(
+                    f"Region {region} requires 0 < r < 2M ({2 * M}), got r={r}"
+                )
+            return math.sqrt(1.0 - r / (2 * M))
+        raise ValueError(
+            f"SchwarzschildPenrose has regions 1-4, got region={region}"
+        )
+
+    # --- forward / inverse maps ----------------------------------
 
     def physical_to_compact(self, region: int, **coords: float) -> Vec2:
         r"""Map Schwarzschild :math:`(t, r)` to compactified :math:`(U, V)`.
@@ -610,72 +760,251 @@ class SchwarzschildPenrose(PenroseChart):
 
         Then :math:`U = \arctan U_K`, :math:`V = \arctan V_K`.
 
+        Parameters
+        ----------
+        region : int
+            One of 1 (exterior), 2 (BH interior), 3 (mirror exterior),
+            4 (WH interior).
+        **coords : float
+            Must contain ``t`` and ``r``.  ``r`` must respect the
+            strict inequality for its region (``r > 2M`` for I/III,
+            ``0 < r < 2M`` for II/IV).
+
         Raises
         ------
-        NotImplementedError
-            Stub — not yet implemented.  The Phase 2 coding pass will
-            use :meth:`spacetime_lab.metrics.Schwarzschild.tortoise_coordinate`
-            to compute :math:`r^*`.
+        ValueError
+            If ``region`` is not 1-4, if ``r`` is not in the allowed
+            range for that region, or if required coordinates are
+            missing.
         """
-        raise NotImplementedError(
-            "SchwarzschildPenrose.physical_to_compact (stub)"
-        )
+        import math
+
+        missing = {"t", "r"} - coords.keys()
+        if missing:
+            raise ValueError(f"Missing physical coordinates: {sorted(missing)}")
+        t = float(coords["t"])
+        r = float(coords["r"])
+
+        radial = self._radial_prefactor(region, r)
+        # Signs of (U_K, V_K) by region (Carroll convention):
+        #   Region I   (-,+)   Region II  (+,+)
+        #   Region III (+,-)   Region IV  (-,-)
+        signs = {1: (-1, +1), 2: (+1, +1), 3: (+1, -1), 4: (-1, -1)}
+        sU, sV = signs[region]
+
+        M = self.mass
+        # Combined exponents: exp((r - t)/(4M)) for U_K, exp((r + t)/(4M))
+        # for V_K.  This avoids the factor * exp overflow dance.
+        inf = float("inf")
+
+        def _safe_exp(arg: float) -> float:
+            # math.exp overflows near 709.  Saturate explicitly.
+            if arg > 700.0:
+                return inf
+            if arg < -700.0:
+                return 0.0
+            return math.exp(arg)
+
+        expU = _safe_exp((r - t) / (4.0 * M))
+        expV = _safe_exp((r + t) / (4.0 * M))
+        # If radial == 0 (we never admit it here; strict inequalities) and
+        # exp is inf, we'd get NaN — but that path is closed by the domain
+        # checks in _radial_prefactor.  Plain multiplication suffices.
+        U_K = sU * radial * expU
+        V_K = sV * radial * expV
+        return Vec2(U=math.atan(U_K), V=math.atan(V_K))
 
     def compact_to_physical(self, region: int, point: Vec2) -> dict[str, float]:
         r"""Invert the Penrose compactification back to Schwarzschild :math:`(t, r)`.
 
-        Recover :math:`(U_K, V_K)` via ``tan``, then use
-        :math:`U_K V_K = (1 - r/(2M)) e^{r/(2M)}` to solve for
-        :math:`r` (this is transcendental — use the Lambert :math:`W`
-        function or a 1D root solver), and
-        :math:`V_K / U_K = -\exp(t/(2M))` (sign depends on region) for
-        :math:`t`.
+        Recover :math:`(U_K, V_K)` via :math:`\tan`, then use
+        :math:`U_K V_K = (1 - r/(2M)) e^{r/(2M)}` to solve for :math:`r`
+        via the principal branch :math:`W_0` of the Lambert function:
 
-        Raises
-        ------
-        NotImplementedError
-            Stub.
+        .. math::
+
+            \frac{r}{2M} = 1 + W_0\!\left(-\frac{U_K V_K}{e}\right).
+
+        The coordinate :math:`t` is then :math:`t = 2M \ln|V_K / U_K|`
+        (valid in every region up to an overall sign that is fixed by
+        ``region``).
+
+        Parameters
+        ----------
+        region : int
+            Which region of the chart the point belongs to (1-4).
+        point : Vec2
+            Strictly inside its region (not on a horizon or at
+            infinity) — :math:`|U|, |V| < \pi/2` and the region sign
+            constraints must hold.
         """
-        raise NotImplementedError(
-            "SchwarzschildPenrose.compact_to_physical (stub)"
-        )
+        import cmath
+        import math
+
+        from scipy.special import lambertw
+
+        half_pi = math.pi / 2
+        if abs(point.U) >= half_pi or abs(point.V) >= half_pi:
+            raise ValueError(
+                "compact_to_physical undefined on the boundary "
+                f"(|U|, |V| < pi/2 required). Got U={point.U}, V={point.V}"
+            )
+
+        U_K = math.tan(point.U)
+        V_K = math.tan(point.V)
+
+        # Check the region sign constraints before inverting.
+        signs = {1: (-1, +1), 2: (+1, +1), 3: (+1, -1), 4: (-1, -1)}
+        if region not in signs:
+            raise ValueError(f"region must be 1-4, got {region}")
+        sU, sV = signs[region]
+        if (sU * U_K < 0) or (sV * V_K < 0):
+            raise ValueError(
+                f"point is outside region {region}: (U_K={U_K}, V_K={V_K}) "
+                f"does not match required signs {(sU, sV)}"
+            )
+
+        # Avoid the degenerate case U_K=V_K=0 (bifurcation sphere).
+        if U_K == 0 and V_K == 0:
+            return {"t": 0.0, "r": 2.0 * self.mass}
+
+        # r comes from U_K * V_K = (1 - r/(2M)) exp(r/(2M)).
+        prod = U_K * V_K
+        w = lambertw(-prod / math.e, k=0)
+        # w should be real for admissible inputs; guard just in case.
+        if abs(w.imag) > 1e-9:
+            raise ValueError(
+                f"Lambert W returned complex value ({w}) for prod={prod}; "
+                "point may be outside the physical domain."
+            )
+        x = 1.0 + float(w.real)  # x = r / (2M)
+        r = 2.0 * self.mass * x
+
+        # t from |V_K / U_K| = exp(t/(2M)); the overall sign is fixed by
+        # which region we are in via the signs tuple above.  Within a
+        # region, the ratio is positive so the log is well-defined.
+        if U_K == 0:
+            # On a horizon — t is undefined (it runs to +/- infinity).
+            raise ValueError(
+                "point lies on a horizon (U_K=0); t is infinite there."
+            )
+        ratio = V_K / U_K
+        # In regions 1,3 the ratio is negative; in 2,4 it is positive.
+        # |ratio| is what we need.
+        t = 2.0 * self.mass * math.log(abs(ratio))
+
+        return {"t": t, "r": r}
 
     # --- global structure (Phase 2 coding pass) -------------------
 
     def boundary_paths(self) -> list[Path]:
-        """Return the outer boundary, horizons, and both singularities.
+        r"""Return the outer asymptotic edges, horizons, and singularities.
 
-        Expected contents (after implementation):
+        In :math:`(U, V)` compactified null coordinates the four-region
+        Schwarzschild diagram has a beautifully simple structure:
 
-        - Two asymptotic edges for region I (``scri+`` upper-right,
-          ``scri-`` lower-right), ``kind='boundary'``.
-        - Two asymptotic edges for region III (mirror on the left),
-          ``kind='boundary'``.
-        - Four horizon null lines separating the four regions,
-          ``kind='horizon'``.
-        - Two singularity curves (top and bottom), sampled from
-          :math:`\\tan U \\cdot \\tan V = \\pm 1`, ``kind='singularity'``,
-          with a dashed / jagged style to distinguish them from
-          boundaries.
+        - **Four asymptotic edges** at :math:`U = \pm\pi/2` or
+          :math:`V = \pm\pi/2` — the :math:`\mathscr{I}^\pm` of
+          regions I and III.
+        - **Two singularity edges** on the straight lines
+          :math:`U + V = \pm\pi/2` (the future and past singularities).
+          The straightness is not an approximation: the equation
+          :math:`U_K V_K = 1` is equivalent to :math:`\tan U\,\tan V = 1`,
+          which for :math:`U, V \in (0, \pi/2)` simplifies to
+          :math:`U + V = \pi/2`.
+        - **Four horizon null lines** meeting at the bifurcation
+          sphere :math:`(U, V) = (0, 0)`.
 
-        Raises
-        ------
-        NotImplementedError
-            Stub.
+        Total: 10 paths, tagged ``kind='boundary'``, ``'singularity'``,
+        or ``'horizon'`` respectively.
         """
-        raise NotImplementedError("SchwarzschildPenrose.boundary_paths (stub)")
+        import math
+
+        h = math.pi / 2
+        boundary_style = PathStyle(stroke="#000000", width=1.5)
+        horizon_style = PathStyle(stroke="#444444", width=1.0, dash=(4.0, 3.0))
+        singularity_style = PathStyle(stroke="#b30000", width=1.8, dash=(2.0, 2.0))
+
+        def line(a: Vec2, b: Vec2, *, style: PathStyle, kind: str) -> Path:
+            return Path(points=(a, b), style=style, kind=kind)
+
+        paths: list[Path] = [
+            # --- scri of region I (right-side exterior) ---------------
+            # scri+(I): V = pi/2, U in [-pi/2, 0]
+            line(Vec2(-h, h), Vec2(0.0, h), style=boundary_style, kind="boundary"),
+            # scri-(I): U = -pi/2, V in [0, pi/2]
+            line(Vec2(-h, 0.0), Vec2(-h, h), style=boundary_style, kind="boundary"),
+
+            # --- scri of region III (left-side exterior) --------------
+            # scri+(III): U = pi/2, V in [-pi/2, 0]
+            line(Vec2(h, -h), Vec2(h, 0.0), style=boundary_style, kind="boundary"),
+            # scri-(III): V = -pi/2, U in [0, pi/2]
+            line(Vec2(0.0, -h), Vec2(h, -h), style=boundary_style, kind="boundary"),
+
+            # --- singularities -----------------------------------------
+            # Future singularity: straight line U + V = pi/2
+            # from i+(I)=(0, pi/2) to i+(III)=(pi/2, 0)
+            line(
+                Vec2(0.0, h), Vec2(h, 0.0),
+                style=singularity_style, kind="singularity",
+            ),
+            # Past singularity: straight line U + V = -pi/2
+            # from i-(I)=(-pi/2, 0) to i-(III)=(0, -pi/2)
+            line(
+                Vec2(-h, 0.0), Vec2(0.0, -h),
+                style=singularity_style, kind="singularity",
+            ),
+
+            # --- horizons ----------------------------------------------
+            # Future horizon of I (between I and II): U = 0, V in [0, pi/2]
+            line(Vec2(0.0, 0.0), Vec2(0.0, h), style=horizon_style, kind="horizon"),
+            # Past horizon of I (between I and IV): V = 0, U in [-pi/2, 0]
+            line(Vec2(-h, 0.0), Vec2(0.0, 0.0), style=horizon_style, kind="horizon"),
+            # Future horizon of III (between III and II): V = 0, U in [0, pi/2]
+            line(Vec2(0.0, 0.0), Vec2(h, 0.0), style=horizon_style, kind="horizon"),
+            # Past horizon of III (between III and IV): U = 0, V in [-pi/2, 0]
+            line(Vec2(0.0, -h), Vec2(0.0, 0.0), style=horizon_style, kind="horizon"),
+        ]
+        return paths
 
     def infinities(self) -> list[Infinity]:
-        """Return the named infinities of the Schwarzschild diagram.
+        r"""Return the 10 named infinities of the eternal Schwarzschild diagram.
 
-        Region I hosts :math:`i^+`, :math:`i^-`, :math:`i^0`,
-        :math:`\\mathscr{I}^+`, :math:`\\mathscr{I}^-`.
-        Region III hosts a mirror set.  Regions II and IV host none
-        (they end at the spacelike singularity).
+        Region I and region III each host a full set :math:`(i^+, i^-,
+        i^0, \mathscr{I}^+, \mathscr{I}^-)`; regions II and IV have no
+        infinities of their own (their future / past ends in the
+        spacelike singularity).  The point / edge positions are:
 
-        Raises
-        ------
-        NotImplementedError
-            Stub.
+        - Region I  (right exterior):
+          :math:`i^+ = (0, \pi/2)`, :math:`i^- = (-\pi/2, 0)`,
+          :math:`i^0 = (-\pi/2, \pi/2)`, with
+          :math:`\mathscr{I}^+` midpoint :math:`(-\pi/4, \pi/2)` and
+          :math:`\mathscr{I}^-` midpoint :math:`(-\pi/2, \pi/4)`.
+        - Region III (left exterior): mirror of region I under
+          :math:`(U, V) \to (V, U)` then :math:`(U, V) \to (-U, -V)`
+          — concretely, :math:`i^+ = (\pi/2, 0)`,
+          :math:`i^- = (0, -\pi/2)`, :math:`i^0 = (\pi/2, -\pi/2)`,
+          with scri midpoints at :math:`(\pi/4, -\pi/2)` and
+          :math:`(\pi/2, -\pi/4)`.
         """
-        raise NotImplementedError("SchwarzschildPenrose.infinities (stub)")
+        import math
+
+        h = math.pi / 2
+        q = math.pi / 4
+        return [
+            # Region I
+            Infinity("i+", Vec2(0.0, h), region=1),
+            Infinity("i-", Vec2(-h, 0.0), region=1),
+            Infinity("i0", Vec2(-h, h), region=1),
+            Infinity("scri+", Vec2(-q, h), region=1),
+            Infinity("scri-", Vec2(-h, q), region=1),
+            # Region III (mirror exterior).  The global time arrow of
+            # the eternal diagram points up in (T, X), so scri+(III) is
+            # the upper-left null edge (U = pi/2, V in (-pi/2, 0)) and
+            # scri-(III) is the lower-left edge (V = -pi/2, U in (0, pi/2)).
+            Infinity("i+", Vec2(h, 0.0), region=3),
+            Infinity("i-", Vec2(0.0, -h), region=3),
+            Infinity("i0", Vec2(h, -h), region=3),
+            Infinity("scri+", Vec2(h, -q), region=3),   # upper-left edge
+            Infinity("scri-", Vec2(q, -h), region=3),   # lower-left edge
+        ]

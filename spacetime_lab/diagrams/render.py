@@ -195,12 +195,24 @@ def render_tikz(
 # ----------------------------------------------------------------------
 
 
+_INFINITY_LATEX = {
+    "i+": r"$i^{+}$",
+    "i-": r"$i^{-}$",
+    "i0": r"$i^{0}$",
+    "scri+": r"$\mathscr{I}^{+}$",
+    "scri-": r"$\mathscr{I}^{-}$",
+}
+
+
 def render_matplotlib(
     scene: "Scene",
     ax: "matplotlib.axes.Axes | None" = None,
+    *,
+    show_labels: bool = True,
+    label_offset: float = 0.08,
     **plot_kwargs: Any,
 ) -> "matplotlib.axes.Axes":
-    """Render a :class:`Scene` onto a matplotlib Axes.
+    r"""Render a :class:`Scene` onto a matplotlib Axes.
 
     Parameters
     ----------
@@ -208,7 +220,13 @@ def render_matplotlib(
         The scene produced by a :meth:`PenroseChart.to_scene` call.
     ax : matplotlib.axes.Axes, optional
         An existing Axes to draw onto.  If ``None`` a new figure and
-        Axes are created.
+        Axes are created at a reasonable default size.
+    show_labels : bool
+        If ``True`` (default) place a LaTeX label at each named
+        infinity.  Set to ``False`` to get a bare diagram.
+    label_offset : float
+        Radial push applied to infinity labels so they do not
+        overlap the boundary lines.  In :math:`(T, X)` units.
     **plot_kwargs
         Extra keyword arguments forwarded to every ``ax.plot`` call
         (e.g. ``alpha=0.8``).  Individual paths override these with
@@ -222,24 +240,97 @@ def render_matplotlib(
     Notes
     -----
     The matplotlib renderer is the most forgiving of the three and is
-    intended for Jupyter notebooks.  The Phase 2 coding pass will:
-
-    1. Import matplotlib lazily (only when this function is called).
-    2. Create or reuse an Axes.
-    3. Rotate every scene point into :math:`(T, X)` via
-       :func:`_rotate_uv_to_tx`.
-    4. Group paths by :attr:`Path.kind` and draw them with a sensible
-       default style per kind (solid for boundaries, dashed for
-       horizons, zig-zag for singularities, thick for world lines).
-    5. Place infinity labels using ``ax.annotate``.
-
-    Raises
-    ------
-    NotImplementedError
-        Stub.
+    intended for Jupyter notebooks.  It rotates every scene point from
+    :math:`(U, V)` null coordinates into the conventional
+    :math:`(T, X)` orientation so light cones render at 45 degrees.
     """
-    raise NotImplementedError(
-        "render_matplotlib: Phase 2 coding pass will implement. "
-        "Keep the matplotlib import inside the function body so the "
-        "module remains importable in environments without matplotlib."
-    )
+    import matplotlib.pyplot as plt  # lazy import
+
+    from spacetime_lab.diagrams.penrose import Path as _Path  # for isinstance
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(6, 6))
+
+    def _to_tx(path: _Path) -> tuple[list[float], list[float]]:
+        Ts: list[float] = []
+        Xs: list[float] = []
+        for pt in path.points:
+            T, X = _rotate_uv_to_tx(pt.U, pt.V)
+            Ts.append(T)
+            Xs.append(X)
+        return Ts, Xs
+
+    # Group paths by kind so we can impose a consistent default style
+    # per kind while still letting individual path styles override.
+    kind_defaults = {
+        "boundary":    dict(color="#000000", linewidth=1.6, linestyle="-"),
+        "horizon":     dict(color="#444444", linewidth=1.1, linestyle="--"),
+        "singularity": dict(color="#b30000", linewidth=1.8, linestyle=(0, (2, 2))),
+        "lightcone":   dict(color="#1a9a4a", linewidth=1.2, linestyle="-"),
+        "world_line":  dict(color="#c64a0b", linewidth=1.6, linestyle="-"),
+        "guide":       dict(color="#888888", linewidth=1.0, linestyle=":"),
+    }
+
+    # Stable draw order: boundaries first (under everything), then
+    # horizons, singularities, world lines, and finally light cones.
+    draw_order = ["boundary", "horizon", "singularity", "world_line", "lightcone", "guide"]
+    paths_by_kind: dict[str, list[_Path]] = {k: [] for k in draw_order}
+    for p in scene.paths:
+        paths_by_kind.setdefault(p.kind, []).append(p)
+
+    for kind in draw_order:
+        for path in paths_by_kind.get(kind, []):
+            Ts, Xs = _to_tx(path)
+            base = dict(kind_defaults.get(kind, dict(color="#333333", linewidth=1.0)))
+            # The PathStyle can refine stroke/width; leave linestyle alone
+            # so the kind-level default wins for dashes.
+            base.update({"color": path.style.stroke})
+            if path.style.width:
+                base["linewidth"] = path.style.width
+            base.update(plot_kwargs)
+            ax.plot(Xs, Ts, **base)
+
+    if show_labels:
+        for inf in scene.infinities:
+            T, X = _rotate_uv_to_tx(inf.position.U, inf.position.V)
+            # Push the label radially outward from the diagram centre
+            # so it does not overlap the boundary.
+            import math as _math
+
+            r = _math.hypot(T, X)
+            if r > 1e-9:
+                dx = X / r * label_offset
+                dy = T / r * label_offset
+            else:
+                dx = dy = 0.0
+            ax.annotate(
+                _INFINITY_LATEX.get(inf.symbol, inf.symbol),
+                xy=(X, T),
+                xytext=(X + dx, T + dy),
+                fontsize=13,
+                ha="center",
+                va="center",
+            )
+
+    ax.set_aspect("equal")
+    ax.set_xlabel("X")
+    ax.set_ylabel("T")
+    ax.set_title(scene.name)
+    # Let the data drive the limits, with a modest padding.
+    all_T = []
+    all_X = []
+    for path in scene.paths:
+        for pt in path.points:
+            T, X = _rotate_uv_to_tx(pt.U, pt.V)
+            all_T.append(T)
+            all_X.append(X)
+    if all_T:
+        from math import pi
+
+        pad = 0.2
+        ax.set_xlim(min(all_X) - pad, max(all_X) + pad)
+        ax.set_ylim(min(all_T) - pad, max(all_T) + pad)
+        # Reduce visual clutter
+        for spine in ("top", "right"):
+            ax.spines[spine].set_visible(False)
+    return ax
