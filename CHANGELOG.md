@@ -6,6 +6,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-04-11 — Phase 5: Quasinormal modes + ringdown
+
+Fifth substantive release. Closes Phase 5 of the 18-month
+[ROADMAP](./ROADMAP.md). Spacetime Lab now has Schwarzschild
+quasinormal mode finders and a time-domain ringdown waveform
+generator — the canonical 'ringtone' of a perturbed black hole and
+the basis for the no-hair theorem test that LIGO/Virgo runs on
+every binary merger.
+
+### Added
+
+- `spacetime_lab.waves` — new subpackage:
+  - `leaver_qnm_schwarzschild(l, n, s=-2)` — returns the complex
+    QNM frequency `M*omega` for a Schwarzschild black hole.  Thin
+    wrapper over Stein's `qnm` package
+    (`pip install qnm`, JOSS 4 1683, arXiv:1908.10377), which is
+    the canonical Python implementation of Leaver's 1985
+    continued-fraction method via the Cook-Zalutskiy 2014 form.
+  - `QNMResult` dataclass holding the complex frequency, the CF
+    truncation error (typically ~1e-16) and the number of CF
+    terms used.
+  - `RingdownMode` dataclass for a single damped sinusoid
+    (frequency, amplitude, phase).
+  - `RingdownWaveform(mass, modes)` — pure-Python time-domain
+    waveform generator: sum of damped sinusoids
+    `h(t) = sum_i A_i cos(omega_R^i (t - t_0) + phi_i)
+                    exp(-omega_I^i (t - t_0))`.
+    Includes diagnostics `fundamental_period()` and
+    `longest_damping_time()`.
+- `notebooks/05_quasinormal_modes.ipynb` — Phase 5 concept + demo
+  notebook.  Walks through linear perturbations, Regge-Wheeler,
+  the radiating boundary conditions that make QNMs complex,
+  Leaver's continued-fraction method, verification against
+  Berti et al 2009 Table 1, the QNM tower (4 overtones), higher
+  multipoles, ringdown waveform generation with single and
+  multi-mode superposition, and the no-hair theorem test.
+  Closing gate cell hard-asserts every claim including all three
+  Berti et al reference values.
+- Optional dependency `qnm>=0.4` via the new `[waves]` extra in
+  `pyproject.toml`.  Install with `pip install spacetime-lab[waves]`.
+
+### Tests
+
+- `tests/test_waves.py` — 25 new tests:
+  - `QNMResult` dataclass construction
+  - Argument validation (`l < |s|`, `n < 0`)
+  - **Hard-pinned to Berti, Cardoso & Starinets 2009 Table 1**:
+    `(l=2, n=0)`, `(l=2, n=1)`, `(l=3, n=0)` to ~1e-4 (limited by
+    the 5-decimal precision of the published table)
+  - Sign convention: `Im(omega) < 0` for damped modes
+  - Higher overtones damp faster
+  - Higher multipoles oscillate faster
+  - Internal CF convergence to ~1e-12 or better
+  - `RingdownMode` and `RingdownWaveform` validation
+  - Strain at `t = 0` matches `sum of amplitudes`
+  - Strain after one period matches `A * exp(-omega_I * T)` to 1e-6
+  - Mass scaling: doubling `M` doubles the period
+  - Phase offset: `cos(pi/2)` gives `h(0) = 0`
+  - Multi-mode superposition
+  - End-to-end pipeline: `leaver_qnm_schwarzschild` ->
+    `RingdownMode` -> `RingdownWaveform.evaluate`
+- Total project test suite: **255 tests** passing (up from 230 in
+  v0.4.0; +25 waves).
+
+### Honest scope notes
+
+- **The QNM finder is a wrapper, not a from-scratch implementation.**
+  The Leaver recurrence coefficients have at least three
+  different sign / spin-weight conventions floating around the
+  literature, and our first attempt to write them from memory
+  failed verification at the canonical Berti et al value
+  `M*omega = 0.37367 - 0.08896 i` (off by ~20%).  Rather than
+  blindly tune signs we chose to wrap Stein's `qnm` package,
+  which is verified against published tables to ~1e-16 and is
+  the canonical reference implementation.  This is the same
+  honest-scope decision pattern used in Phase 4 (the experimental
+  ray-shooting horizon finder) and Phase 3 (the Killing-tensor
+  matrix stub).  A from-scratch implementation may land in a
+  future patch when we are willing to invest the time to derive
+  the coefficients via a sympy reduction of Regge-Wheeler.
+- **Kerr QNMs are not yet exposed.** `qnm` provides them and a
+  Spacetime Lab wrapper will land in a future patch.  The
+  Schwarzschild case verifies the entire pipeline against
+  published tables and demonstrates every concept needed for
+  the Phase 5 deliverables.
+- **`RingdownWaveform` is pure Spacetime Lab code.**  No
+  dependency on `qnm`; users can supply any list of
+  `RingdownMode` objects (e.g. hardcoded literature values, or
+  Kerr modes from another solver).
+
 ## [0.4.0] — 2026-04-11 — Phase 4: Horizon finders + photon shadow
 
 Fourth substantive release. Closes Phase 4 of the 18-month

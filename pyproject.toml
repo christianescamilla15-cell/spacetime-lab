@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spacetime-lab"
-version = "0.4.0"
+version = "0.5.0"
 description = "Interactive platform for exploring black hole physics — from Schwarzschild to holographic entanglement entropy."
 readme = "README.md"
 license = {text = "MIT"}
@@ -55,11 +55,14 @@ viz = [
     "ipywidgets>=8.0",
     "jupyter>=1.0",
 ]
+waves = [
+    "qnm>=0.4",
+]
 quantum = [
     "quimb>=1.7",
 ]
 all = [
-    "spacetime-lab[dev,viz,quantum]",
+    "spacetime-lab[dev,viz,waves,quantum]",
 ]
 
 [project.urls]

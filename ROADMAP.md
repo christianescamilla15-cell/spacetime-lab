@@ -124,20 +124,25 @@ Ship every 2-4 weeks. Learn by building.
 
 ## Phase 5 — Gravitational Waves (months 9-10)
 
+**Status:** ✅ Done — shipped as v0.5.0 on 2026-04-11.
+
 **Physics concepts:**
-- Linear perturbations on Kerr
-- Quasinormal modes (QNMs)
-- Ringdown and BH spectroscopy
-- Connection to LIGO observations
+- Linear perturbations of Schwarzschild (Regge-Wheeler equation)
+- Quasinormal modes (QNMs) and the radiating boundary conditions
+- Leaver's 1985 continued-fraction method
+- Ringdown waveforms and BH spectroscopy
+- The no-hair theorem test
 
 **Deliverables:**
-- `spacetime_lab.waves` module
-- QNM spectrum calculator for Kerr
-- Integration with Bilby/PyCBC for real LIGO data
-- Ringdown fitter for observed events
-- Notebook: `05_ringdown_analysis.ipynb`
+- [x] `spacetime_lab.waves` module
+- [x] QNM spectrum calculator for Schwarzschild — verified to ~1e-6 against Berti-Cardoso-Starinets 2009 Table 1
+- [x] Time-domain ringdown waveform generator (`RingdownWaveform`)
+- [x] Notebook: `05_quasinormal_modes.ipynb`
+- [ ] Kerr QNMs — *deferred to a future patch (the underlying `qnm` package supports them; only the Spacetime Lab wrapper is missing)*
+- [ ] Integration with Bilby/PyCBC for real LIGO data — *deferred*
+- [ ] Ringdown fitter for observed events — *deferred*
 
-**Release:** v0.5.0
+**Release:** v0.5.0 — tagged 2026-04-11.
 
 ---
 

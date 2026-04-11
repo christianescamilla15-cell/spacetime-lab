@@ -28,6 +28,7 @@ Spacetime Lab is an interactive web platform and Python SDK for exploring black 
 | `diagrams/` | Penrose and embedding diagram generators | ✅ Minkowski + Schwarzschild (v0.2) |
 | `geodesics/` | Symplectic geodesic integration in curved spacetime | ✅ implicit-midpoint (v0.3) |
 | `horizons/` | Event horizon, ISCO, photon shadow finders | ✅ algebraic + Bardeen 1973 shadow (v0.4) |
+| `waves/` | Quasinormal modes + ringdown waveforms | ✅ Schwarzschild QNM + ringdown (v0.5) |
 | `waves/` | Quasinormal modes, ringdown, LIGO integration | 📅 Phase 5 |
 | `entropy/` | Holographic entanglement entropy (RT/HRT surfaces) | 📅 Phase 7 |
 | `edu/` | Interactive tutorials and educational notebooks | 🔄 Continuous |
@@ -88,8 +89,8 @@ spacetime-lab/
 - ✅ Phase 2 — Penrose diagrams (v0.2.0)
 - ✅ Phase 3 — Kerr geodesics (v0.3.0)
 - ✅ Phase 4 — Horizon finders + photon shadow (v0.4.0)
-- 🏗️ Phase 5 — Gravitational waves
-- 📅 Phase 6 — Quantum information basics
+- ✅ Phase 5 — Quasinormal modes + ringdown (v0.5.0)
+- 🏗️ Phase 6 — Quantum information basics
 - 📅 Phase 7 — AdS/CFT foundations
 - 📅 Phase 8 — Holographic entanglement (RT/HRT)
 - 📅 Phase 9 — v1.0 release
@@ -104,6 +105,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 02 | [`02_penrose_diagrams.ipynb`](./notebooks/02_penrose_diagrams.ipynb) | 2 | Conformal compactification, the five infinities, Minkowski diamond, Schwarzschild four-region Penrose diagram, the straight-line singularity identity |
 | 03 | [`03_kerr_geodesics.ipynb`](./notebooks/03_kerr_geodesics.ipynb) | 3 | Boyer–Lindquist Kerr, horizons + ergoregion, prograde/retrograde ISCO and photon sphere, Hamilton's equations, implicit-midpoint symplectic integrator, Carter's constant, 2nd-order convergence |
 | 04 | [`04_horizon_topology.ipynb`](./notebooks/04_horizon_topology.ipynb) | 4 | Event vs apparent horizon, MOTS, numerical horizon and ISCO finders, Schwarzschild critical impact parameter, Bardeen 1973 photon shadow with frame-dragging asymmetries (the EHT geometry) |
+| 05 | [`05_quasinormal_modes.ipynb`](./notebooks/05_quasinormal_modes.ipynb) | 5 | Linear perturbations of Schwarzschild, Regge-Wheeler equation, Leaver continued fraction, dominant gravitational mode `M*omega ~ 0.37 - 0.09 i`, ringdown waveform generator, no-hair theorem test |
 
 ## Upstream contributions
 
