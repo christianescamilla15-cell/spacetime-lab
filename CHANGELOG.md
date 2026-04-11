@@ -6,6 +6,164 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-04-11 — Phase 8: Holographic depth (BTZ + Strominger + two-interval phase transition)
+
+Eighth substantive release. Closes Phase 8 of the 18-month
+[ROADMAP](./ROADMAP.md). Where Phase 7 verified the simplest
+non-trivial check of the holographic dictionary, Phase 8 extends
+to **non-trivial situations**: black holes (BTZ), finite temperature,
+microscopic Bekenstein-Hawking from boundary CFT (Strominger 1998),
+and the holographic phase transition between connected and
+disconnected bulk minimal-surface configurations (Headrick 2010).
+
+Every quantitative result is verified to **bit-exact agreement**:
+
+- BTZ Bekenstein-Hawking entropy = sum of two CFT Cardy contributions
+- Bulk RT in BTZ = boundary thermal Calabrese-Cardy
+- Two-interval critical gap = `sqrt(2) - 1` for equal unit intervals
+- Cross-ratio at the holographic phase transition = exactly `1/2`
+- Mutual information = exactly `0` in the disconnected phase
+
+### Added
+
+- `spacetime_lab.metrics.BTZ(horizon_radius, ads_radius)` — the
+  non-rotating, uncharged BTZ black hole as a `Metric` subclass.
+  Coordinates `(t, r, phi)` with `phi in [0, 2 pi)` periodic; bulk
+  at `r > r_+`; conformal boundary at `r -> infinity`.
+  - `hawking_temperature()` returns `T_H = r_+ / (2 pi L^2)`.
+  - `bekenstein_hawking_entropy(G_N=1.0)` returns
+    `S_BH = pi r_+ / (2 G_N)` (the 2D area law: horizon "area" =
+    circumference).
+  - `mass_parameter(G_N=1.0)` returns `M = r_+^2 / (8 G_N L^2)`.
+  - `thermal_beta()` returns `beta = 2 pi L^2 / r_+`.
+  - `verify_einstein_constant_curvature()` confirms BTZ is locally
+    AdS_3 (`R_munu = -2/L^2 g_munu`) numerically. Verified to
+    machine precision (1 ULP at most).
+- `spacetime_lab.holography.btz` module:
+  - `cardy_formula(c, Delta)` — `S = 2 pi sqrt(c Delta / 6)`
+  - `thermal_calabrese_cardy(L_A, c, beta, eps)` — finite-T 2D CFT
+    formula `(c/3) log[(beta/(pi eps)) sinh(pi L_A / beta)]`. Uses
+    a numerically stable `_log_sinh` helper that handles arbitrarily
+    large arguments without overflow.
+  - `thermal_entropy_density_high_T(L_A, c, beta)` — the extensive
+    piece `pi c L_A / (3 beta)` for the high-T limit.
+  - `geodesic_length_btz(L_A, r_+, L, eps)` — closed-form
+    regularised length of a BTZ boundary geodesic.
+  - `ryu_takayanagi_btz(...)` — apply RT formula in BTZ background.
+  - `verify_btz_against_thermal_calabrese_cardy(...)` — gate
+    function returning `(rt, cc, residual)`. Residual is bit-exact
+    zero for consistent inputs.
+  - `verify_strominger_btz_cardy(r_+, L, G_N=1.0)` — Strominger's
+    1998 microscopic derivation. BTZ Bekenstein-Hawking entropy
+    equals sum of two Cardy contributions (left + right Virasoro
+    towers). Bit-exact agreement.
+- `spacetime_lab.holography.two_interval` module:
+  - `cross_ratio(a, b, c, d)` — `(b-a)(d-c) / ((c-a)(d-b))`
+  - `two_interval_disconnected_length(...)` — `L^D`
+  - `two_interval_connected_length(...)` — `L^C`
+  - `two_interval_entropy(...)` — RT picks the minimum of `L^D`
+    and `L^C`. Returns a dict with the chosen entropy, the phase
+    name, both candidate lengths, and the cross ratio.
+  - `two_interval_mutual_information(...)` — exactly zero in the
+    disconnected phase, positive in the connected phase, with a
+    sharp non-analyticity at the transition.
+  - `critical_separation_for_phase_transition(L1, L2)` —
+    closed-form critical gap from solving `x = 1/2`. For equal
+    unit intervals this is exactly `sqrt(2) - 1`.
+- `notebooks/08_holographic_phase_transitions.ipynb` — concept +
+  demo + closing gate cell. Walks through BTZ thermodynamics, the
+  Strominger derivation, finite-T Calabrese-Cardy with limit
+  checks, the bulk-vs-boundary table at finite temperature, the
+  two-interval phase transition with the mutual information plot,
+  and the Phase 9 (island formula) teaser.
+
+### Tests
+
+- `tests/test_phase8.py` — 63 new tests:
+  - `BTZ` construction, validation, repr
+  - BTZ thermodynamics: closed-form `T_H`, `S_BH`, `M`, `beta`,
+    first-law consistency
+  - BTZ is locally AdS_3 (`R_munu = -2/L^2 g_munu`) at multiple
+    parameter combinations
+  - `cardy_formula` canonical value, error paths
+  - **Strominger 1998**: `verify_strominger_btz_cardy` for 6
+    parameter combinations, all residuals < 1e-12
+  - `thermal_calabrese_cardy` canonical value, low-T limit reduces
+    to zero-T, high-T limit gives the extensive thermal entropy
+    plus a cutoff-dependent constant, overflow safety for large
+    `L_A / beta`
+  - `geodesic_length_btz` canonical value
+  - **Bulk RT in BTZ vs thermal CC** for 6 parameter sets, all
+    residuals < 1e-12, bit-exact zero for unit inputs
+  - `cross_ratio` canonical value, ordering validation
+  - Two-interval lengths (connected and disconnected) canonical
+    values
+  - Phase identification: connected when intervals close,
+    disconnected when far
+  - **Critical gap = `sqrt(2) - 1`** for equal unit intervals,
+    closed form for unequal intervals
+  - **Cross-ratio at critical = exactly `1/2`**
+  - Mutual information: exactly zero in disconnected phase,
+    positive in connected, exactly zero at the critical gap,
+    cutoff-independent (the `epsilon` cancels), non-negative,
+    continuous across the transition (`L^D = L^C` at critical)
+- Total project test suite: **431 tests** passing (up from 368 in
+  v0.7.0; +63 Phase 8).
+
+### Verification trail
+
+Following the pattern from Phases 5-7, every formula was pinned to
+an external source before implementation:
+
+| Formula | Source |
+|---|---|
+| BTZ metric | Bañados, Teitelboim & Zanelli 1992 (Phys. Rev. Lett. 69 1849); Wikipedia *BTZ black hole* |
+| BTZ T_H = r_+ / (2 pi L^2), S_BH = pi r_+ / (2 G_N) | standard, BTZ 1992 |
+| BTZ M = r_+^2 / (8 G_N L^2) | Wikipedia |
+| Cardy formula `S = 2 pi sqrt(c Delta / 6)` | Cardy 1986 |
+| Strominger BTZ-Cardy match (sum of L_0 + bar L_0) | Strominger 1998 (hep-th/9712251) |
+| Thermal Calabrese-Cardy `(c/3) log[(beta/(pi eps)) sinh(pi L_A/beta)]` | Calabrese-Cardy 2004 |
+| Two-interval RT phase transition | Headrick 2010 (arXiv:1006.0047) |
+| Critical cross-ratio `x = 1/2` | Headrick 2010 |
+
+### Bug found and fixed during implementation
+
+The first cut of `verify_strominger_btz_cardy` returned the
+single-Virasoro-tower Cardy formula `S = 2 pi sqrt(c Delta / 6)`
+with `Delta = M L`, which gave a residual of `~1/sqrt(2)` from the
+target. The fix is the **two-Virasoro-tower formula** of the
+Strominger derivation: for non-rotating BTZ, the left and right
+Virasoro modes are symmetric with `L_0 = bar L_0 = M L / 2`, and
+the Cardy entropy is the *sum* of the two contributions:
+`S = 2 * (2 pi sqrt(c L_0 / 6))`. After this fix the agreement is
+bit-exact at all parameter values.
+
+A second issue was numerical: the naive
+`math.sinh(pi * L_A / beta)` overflows when `L_A / beta` is large
+(the high-temperature regime, which is precisely the regime where
+the holographic dictionary becomes most interesting because
+thermal entropy starts to dominate). Fixed by adding a
+`_log_sinh(x)` helper that uses the asymptotic expansion
+`log sinh(x) ~ x - log 2 + log(1 - exp(-2x))` for `x > 20`,
+combined into the formula in log-space arithmetic. Now handles
+arbitrarily extreme parameter combinations.
+
+### Honest scope notes
+
+- Only **non-rotating, uncharged BTZ**. Rotating BTZ has inner and
+  outer horizons and richer thermodynamics; deferred to a future
+  patch.
+- Only the **equatorial-observer two-interval RT** (no time-
+  dependent / HRT generalisation). Deferred.
+- **No numerical bulk minimal-surface finder** for higher-dimensional
+  AdS. The closed-form AdS_3 / BTZ cases give us bit-exact
+  verification of every Phase 8 deliverable, which is plenty. A
+  general numerical surface finder will land in v0.8.1 when there
+  is a higher-dimensional case that genuinely requires it.
+- **No Lewkowycz-Maldacena 2013 derivation of RT.** That is a
+  beautiful entirely analytical argument that does not become more
+  illuminating by being coded up. Mentioned in the notebook prose.
+
 ## [0.7.0] — 2026-04-11 — Phase 7: AdS/CFT foundations + Ryu-Takayanagi
 
 Seventh substantive release. Closes Phase 7 of the 18-month

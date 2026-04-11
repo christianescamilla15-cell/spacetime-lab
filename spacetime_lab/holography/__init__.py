@@ -55,6 +55,15 @@ References
   and supergravity*, Adv. Theor. Math. Phys. **2** 231 (1998).
 """
 
+from spacetime_lab.holography.btz import (
+    cardy_formula,
+    geodesic_length_btz,
+    ryu_takayanagi_btz,
+    thermal_calabrese_cardy,
+    thermal_entropy_density_high_T,
+    verify_btz_against_thermal_calabrese_cardy,
+    verify_strominger_btz_cardy,
+)
 from spacetime_lab.holography.geodesics import (
     brown_henneaux_central_charge,
     geodesic_length_ads3,
@@ -64,11 +73,32 @@ from spacetime_lab.holography.ryu_takayanagi import (
     ryu_takayanagi_ads3,
     verify_rt_against_calabrese_cardy,
 )
+from spacetime_lab.holography.two_interval import (
+    critical_separation_for_phase_transition,
+    cross_ratio,
+    two_interval_connected_length,
+    two_interval_disconnected_length,
+    two_interval_entropy,
+    two_interval_mutual_information,
+)
 
 __all__ = [
     "brown_henneaux_central_charge",
     "calabrese_cardy_2d",
+    "cardy_formula",
+    "critical_separation_for_phase_transition",
+    "cross_ratio",
     "geodesic_length_ads3",
+    "geodesic_length_btz",
     "ryu_takayanagi_ads3",
+    "ryu_takayanagi_btz",
+    "thermal_calabrese_cardy",
+    "thermal_entropy_density_high_T",
+    "two_interval_connected_length",
+    "two_interval_disconnected_length",
+    "two_interval_entropy",
+    "two_interval_mutual_information",
+    "verify_btz_against_thermal_calabrese_cardy",
     "verify_rt_against_calabrese_cardy",
+    "verify_strominger_btz_cardy",
 ]

@@ -9,6 +9,8 @@ Available metrics:
     Kerr          — stationary, axisymmetric, rotating vacuum black hole
     AdS           — anti-de Sitter spacetime in Poincare coordinates
                     (the bulk geometry of holographic AdS/CFT)
+    BTZ           — non-rotating BTZ black hole in 2+1 dimensions
+                    (the simplest known black hole; quotient of AdS_3)
 
 Example:
     >>> from spacetime_lab.metrics import Schwarzschild, Kerr, AdS
@@ -25,11 +27,13 @@ Example:
 
 from spacetime_lab.metrics.ads import AdS
 from spacetime_lab.metrics.base import Metric
+from spacetime_lab.metrics.btz import BTZ
 from spacetime_lab.metrics.kerr import Kerr
 from spacetime_lab.metrics.schwarzschild import Schwarzschild
 
 __all__ = [
     "AdS",
+    "BTZ",
     "Kerr",
     "Metric",
     "Schwarzschild",

@@ -200,22 +200,42 @@ Ship every 2-4 weeks. Learn by building.
 
 ---
 
-## Phase 8 — Holographic Entanglement (months 15-16)
+## Phase 8 — Holographic Depth (months 15-16)
+
+**Status:** ✅ Done — shipped as v0.8.0 on 2026-04-11.
 
 **Physics concepts:**
-- Ryu-Takayanagi formula
-- HRT surfaces (covariant extension)
-- Subregion duality
-- Entanglement wedge
+- BTZ black hole as a quotient of AdS_3
+- BTZ thermodynamics (Hawking T, Bekenstein-Hawking entropy, first law)
+- Strominger 1998: BTZ entropy from CFT Cardy formula
+- Finite-temperature Calabrese-Cardy entanglement entropy
+- Two-interval RT phase transition (Headrick 2010)
+- Holographic mutual information kink at cross-ratio = 1/2
 
 **Deliverables:**
-- `spacetime_lab.entropy.rt_surface` module
-- `spacetime_lab.entropy.hrt_surface` module
-- RT surface computation for simple geometries
-- Comparison: holographic vs direct TN entropy
-- Notebook: `08_holographic_entanglement.ipynb`
+- [x] `spacetime_lab.metrics.BTZ` (non-rotating, uncharged)
+- [x] BTZ verified locally AdS_3 (Einstein-constant residual ~ 0)
+- [x] `spacetime_lab.holography.btz` — `cardy_formula`,
+      `thermal_calabrese_cardy`, `geodesic_length_btz`,
+      `ryu_takayanagi_btz`, `verify_strominger_btz_cardy`,
+      `verify_btz_against_thermal_calabrese_cardy`
+- [x] `spacetime_lab.holography.two_interval` — `cross_ratio`,
+      `two_interval_*`, `critical_separation_for_phase_transition`
+- [x] **Bit-exact verification**:
+      Strominger BTZ vs Cardy across 6 parameter combinations,
+      finite-T RT vs CC across 6 parameter sets,
+      critical gap = `sqrt(2) - 1` for unit equal intervals,
+      cross-ratio at critical = exactly 1/2,
+      mutual information = exactly 0 in disconnected phase
+- [x] Notebook `08_holographic_phase_transitions.ipynb`
+- [x] 63 unit tests
+- [ ] Rotating BTZ (with inner horizon and ergoregion) — *deferred*
+- [ ] Numerical bulk minimal-surface finder for higher-dimensional AdS
+      — *deferred to v0.8.1 or v0.9.0 patch when needed*
+- [ ] HRT (covariant Ryu-Takayanagi) for time-dependent backgrounds
+      — *deferred*
 
-**Release:** v0.8.0 → v0.9.0
+**Release:** v0.8.0 — tagged 2026-04-11.
 
 ---
 

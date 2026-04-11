@@ -24,13 +24,13 @@ Spacetime Lab is an interactive web platform and Python SDK for exploring black 
 
 | Module | What it does | Status |
 |--------|-------------|--------|
-| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | ✅ Schwarzschild + Kerr + AdS (v0.7) |
+| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | ✅ Schwarzschild + Kerr + AdS + BTZ (v0.8) |
 | `diagrams/` | Penrose and embedding diagram generators | ✅ Minkowski + Schwarzschild (v0.2) |
 | `geodesics/` | Symplectic geodesic integration in curved spacetime | ✅ implicit-midpoint (v0.3) |
 | `horizons/` | Event horizon, ISCO, photon shadow finders | ✅ algebraic + Bardeen 1973 shadow (v0.4) |
 | `waves/` | Quasinormal modes + ringdown waveforms | ✅ Schwarzschild QNM + ringdown (v0.5) |
 | `entropy/` | Quantum information primitives (von Neumann, Schmidt, partial trace) | ✅ pure-numpy implementation (v0.6) |
-| `holography/` | Holographic entanglement entropy: AdS geodesics, RT, Brown-Henneaux | ✅ AdS_3/CFT_2 RT verified bit-exact (v0.7) |
+| `holography/` | Holographic entanglement entropy: AdS geodesics, RT, Brown-Henneaux | ✅ AdS_3/CFT_2 RT (v0.7) + BTZ + Strominger + two-interval phase transition (v0.8) |
 | `waves/` | Quasinormal modes, ringdown, LIGO integration | 📅 Phase 5 |
 | (RT/HRT surfaces) | Holographic entanglement entropy via geodesic / minimal surface integration | 📅 Phase 7-8 |
 | `edu/` | Interactive tutorials and educational notebooks | 🔄 Continuous |
@@ -94,8 +94,8 @@ spacetime-lab/
 - ✅ Phase 5 — Quasinormal modes + ringdown (v0.5.0)
 - ✅ Phase 6 — Quantum information primitives (v0.6.0)
 - ✅ Phase 7 — AdS/CFT foundations + Ryu-Takayanagi (v0.7.0)
-- 🏗️ Phase 8 — Holographic entanglement (RT/HRT extensions)
-- 📅 Phase 9 — v1.0 release
+- ✅ Phase 8 — Holographic depth: BTZ, Strominger, two-interval phase transition (v0.8.0)
+- 🏗️ Phase 9 — Island formula and the Page curve (v1.0 milestone)
 
 ## Tutorial notebooks
 
@@ -110,6 +110,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 05 | [`05_quasinormal_modes.ipynb`](./notebooks/05_quasinormal_modes.ipynb) | 5 | Linear perturbations of Schwarzschild, Regge-Wheeler equation, Leaver continued fraction, dominant gravitational mode `M*omega ~ 0.37 - 0.09 i`, ringdown waveform generator, no-hair theorem test |
 | 06 | [`06_entanglement_entropy.ipynb`](./notebooks/06_entanglement_entropy.ipynb) | 6 | Density matrices, partial traces, von Neumann entropy, Schmidt decomposition, Bell pair = log 2, GHZ bipartitions, mutual information, the bridge to holographic entanglement entropy |
 | 07 | [`07_ads_cft_foundations.ipynb`](./notebooks/07_ads_cft_foundations.ipynb) | 7 | Pure AdS in Poincare coordinates, R = -n(n-1)/L^2 verified, Brown-Henneaux c = 3L/(2G_N), AdS_3 boundary geodesics, Ryu-Takayanagi formula bit-exactly equal to Calabrese-Cardy 2D CFT entropy across 5 orders of magnitude |
+| 08 | [`08_holographic_phase_transitions.ipynb`](./notebooks/08_holographic_phase_transitions.ipynb) | 8 | BTZ black hole as a quotient of AdS_3, Strominger 1998 microscopic derivation S_BH from CFT Cardy, finite-T Calabrese-Cardy with limit checks, two-interval phase transition with mutual information kink at cross-ratio = 1/2 |
 
 ## Upstream contributions
 
