@@ -6,19 +6,24 @@ library of exact solutions to the Einstein field equations.
 
 Available metrics:
     Schwarzschild — static, spherically symmetric vacuum black hole
-    (more coming in future phases)
+    Kerr          — stationary, axisymmetric, rotating vacuum black hole
 
 Example:
-    >>> from spacetime_lab.metrics import Schwarzschild
+    >>> from spacetime_lab.metrics import Schwarzschild, Kerr
     >>> bh = Schwarzschild(mass=1.0)
     >>> bh.event_horizon()
     2.0
+    >>> kerr = Kerr(mass=1.0, spin=0.5)
+    >>> round(kerr.outer_horizon(), 6)
+    1.866025
 """
 
 from spacetime_lab.metrics.base import Metric
+from spacetime_lab.metrics.kerr import Kerr
 from spacetime_lab.metrics.schwarzschild import Schwarzschild
 
 __all__ = [
+    "Kerr",
     "Metric",
     "Schwarzschild",
 ]
