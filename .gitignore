@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────
+# Spacetime Lab — Security & Build Artifacts
+# ─────────────────────────────────────────────────────────────
+
+# Environment variables
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Credentials & Keys
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+credentials.json
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg
+
+# Node / Frontend
+node_modules/
+.parcel-cache/
+.cache/
+.vite/
+.next/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+backend/dist/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Deployment
+.vercel/
+.netlify/
+.render/
+
+# Generated docs
+site/
+docs/_build/

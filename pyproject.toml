@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spacetime-lab"
+version = "0.0.1"
+description = "Interactive platform for exploring black hole physics — from Schwarzschild to holographic entanglement entropy."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Christian Hernández Escamilla", email = "christianescamilla15@gmail.com"}
+]
+keywords = [
+    "general-relativity",
+    "black-holes",
+    "physics",
+    "gravitational-waves",
+    "holography",
+    "schwarzschild",
+    "kerr",
+    "penrose-diagrams",
+    "quantum-information",
+    "entanglement-entropy",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "sympy>=1.12",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+    "black>=24.0",
+    "ruff>=0.3",
+    "mypy>=1.8",
+]
+viz = [
+    "plotly>=5.18",
+    "ipywidgets>=8.0",
+    "jupyter>=1.0",
+]
+quantum = [
+    "quimb>=1.7",
+]
+all = [
+    "spacetime-lab[dev,viz,quantum]",
+]
+
+[project.urls]
+Homepage = "https://github.com/christianescamilla15-cell/spacetime-lab"
+Documentation = "https://github.com/christianescamilla15-cell/spacetime-lab#readme"
+Repository = "https://github.com/christianescamilla15-cell/spacetime-lab"
+Issues = "https://github.com/christianescamilla15-cell/spacetime-lab/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["spacetime_lab*"]
+exclude = ["tests*", "backend*", "frontend*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
