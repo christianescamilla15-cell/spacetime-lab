@@ -174,18 +174,29 @@ Ship every 2-4 weeks. Learn by building.
 
 ## Phase 7 — AdS/CFT Foundations (months 13-14)
 
+**Status:** ✅ Done — shipped as v0.7.0 on 2026-04-11.
+
 **Physics concepts:**
-- Anti-de Sitter geometry
-- BTZ black hole
-- Conformal field theory basics
-- GKP-Witten prescription
+- Anti-de Sitter geometry in Poincaré coordinates
+- Constant negative curvature: `R_munu = -(n-1)/L^2 g_munu`
+- Brown-Henneaux relation `c = 3 L / (2 G_N)`
+- AdS_3 boundary geodesics as semicircles in the upper half-plane
+- Ryu-Takayanagi formula `S = Length(geodesic) / (4 G_N)`
+- Calabrese-Cardy 2D CFT entanglement entropy `S = (c/3) log(L_A/eps)`
+- The simplest non-trivial check of holographic entanglement entropy
 
 **Deliverables:**
-- `spacetime_lab.metrics.AdS` and `spacetime_lab.metrics.BTZ`
-- CFT boundary observables
-- Notebook: `07_ads_cft_intro.ipynb`
+- [x] `spacetime_lab.metrics.AdS` (Poincaré coordinates, multi-dimensional)
+- [x] Numerical verification of Einstein constant curvature `R_munu = -(n-1)/L^2 g_munu` for AdS_3, AdS_4, AdS_5 (residual exactly zero)
+- [x] `spacetime_lab.holography` subpackage: `geodesic_length_ads3`, `brown_henneaux_central_charge`, `ryu_takayanagi_ads3`, `calabrese_cardy_2d`
+- [x] **Bit-exact verification** that `RT == CC` via Brown-Henneaux across 5+ parameter combinations
+- [x] Notebook `07_ads_cft_foundations.ipynb` with closing gate cell
+- [x] 55 unit tests pinned to closed-form invariants
+- [ ] `spacetime_lab.metrics.BTZ` — *deferred to Phase 8 (BTZ thermodynamics + Hawking-Page)*
+- [ ] CFT boundary observables (operator dimensions, OPE coefficients) — *deferred*
+- [ ] GKP-Witten prescription for boundary correlators — *deferred*
 
-**Release:** v0.7.0
+**Release:** v0.7.0 — tagged 2026-04-11.
 
 ---
 

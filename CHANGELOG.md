@@ -6,6 +6,143 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-04-11 — Phase 7: AdS/CFT foundations + Ryu-Takayanagi
+
+Seventh substantive release. Closes Phase 7 of the 18-month
+[ROADMAP](./ROADMAP.md). **The simplest non-trivial test of the
+holographic entanglement entropy correspondence is now numerically
+verified, end-to-end, to bit-exact agreement.**
+
+This is the release where general relativity (Phases 1-5) and
+quantum information theory (Phase 6) finally meet via holography.
+The bulk-side Ryu-Takayanagi computation (geodesic length in AdS_3)
+and the boundary-side Calabrese-Cardy computation (entanglement
+entropy of a 2D CFT interval) give *exactly* the same number when
+the central charge is determined from the AdS radius via Brown-
+Henneaux. The factor of 1/(4 G_N) — the same factor that appears in
+the Bekenstein-Hawking formula S = A/(4 G_N) for a black hole — is
+universal.
+
+### Added
+
+- `spacetime_lab.metrics.AdS(dimension, radius)` — pure anti-de
+  Sitter spacetime in Poincare coordinates as a `Metric` subclass.
+  - Coordinates `(t, x_1, ..., x_{n-2}, z)` with `z > 0`; conformal
+    boundary at `z -> 0`.
+  - Symbolic line element `ds^2 = (L^2 / z^2)(-dt^2 + sum dx_i^2 + dz^2)`.
+  - `cosmological_constant()` returns `Lambda = -(n-1)(n-2)/(2 L^2)`.
+  - `expected_ricci_scalar()` returns `R = -n(n-1)/L^2`.
+  - `verify_einstein_constant_curvature()` confirms
+    `R_munu - c g_munu = 0` numerically (lambdified, not symbolic),
+    where `c = -(n-1)/L^2`. Verified to exact zero residual for
+    AdS_3, AdS_4, AdS_5 at multiple radii.
+- `spacetime_lab.holography` — new subpackage:
+  - `geodesic_length_ads3(x_A, x_B, radius, epsilon)` — closed-form
+    regularised length of a Poincare AdS_3 boundary geodesic. The
+    spatial slice is the upper half-plane model of 2D hyperbolic
+    space; the geodesic is a semicircle anchored to the two
+    boundary points; the length is `2 L log(|x_B - x_A| / epsilon)`.
+  - `brown_henneaux_central_charge(radius, G_N=1.0)` — the relation
+    `c = 3 L / (2 G_N)`. Returns the central charge of the boundary
+    CFT in AdS_3/CFT_2.
+  - `ryu_takayanagi_ads3(interval_length, radius, epsilon, G_N=1.0)` —
+    apply the RT formula `S = Length / (4 G_N)` for a single
+    boundary interval.
+  - `calabrese_cardy_2d(interval_length, central_charge, epsilon)` —
+    the boundary CFT formula `S = (c/3) log(L_A / epsilon)`, derived
+    by Calabrese & Cardy 2004 from a CFT replica trick.
+  - `verify_rt_against_calabrese_cardy(...)` — the gate function: it
+    computes both sides of the holographic dictionary and returns
+    `(rt_value, cc_value, residual)`. The residual is *exactly zero*
+    for all consistent inputs — the two code paths reduce to the
+    same floating-point computation.
+- `notebooks/07_ads_cft_foundations.ipynb` — concept + demo + closing
+  gate cell. Walks through pure AdS in Poincare coordinates,
+  numerical verification of Einstein-constant curvature, the Brown-
+  Henneaux relation, semicircular geodesics in the upper half-plane,
+  the closed-form regularised length, the RT formula, the
+  bit-exact agreement with Calabrese-Cardy across 5 parameter sets,
+  and a wide-range comparison plot showing the two formulas
+  overlapping across 5 orders of magnitude in interval length.
+
+### Tests
+
+- `tests/test_holography.py` — 55 new tests:
+  - `AdS` construction, validation, repr, dimension and coordinate
+    counts
+  - **Pinned to closed-form invariants** for the Ricci scalar,
+    cosmological constant, Ricci-proportionality constant, in
+    multiple dimensions and at multiple radii
+  - `verify_einstein_constant_curvature` for AdS_3, AdS_4, AdS_5
+    (residual < 1e-10)
+  - `geodesic_length_ads3` against the closed form, swap symmetry,
+    translation invariance, radius scaling, log-scaling in interval
+    length, error paths
+  - `brown_henneaux_central_charge` for the unit case, the
+    free-boson `c=1` (radius `2/3`), large radius, `1/G_N` scaling
+  - `calabrese_cardy_2d` against canonical values, central-charge
+    scaling, log-scaling
+  - `ryu_takayanagi_ads3` against canonical values, scaling
+  - **THE Phase 7 gate**: `verify_rt_against_calabrese_cardy` for 7
+    different parameter combinations, all with residual < 1e-12
+  - Bit-exact equality for unit inputs (residual is *literally*
+    zero, not just below tolerance)
+  - Pipeline cross-validation: building RT manually from primitives
+    matches the helper exactly
+- Total project test suite: **368 tests** passing (up from 313 in
+  v0.6.0; +55 holography).
+
+### Verification trail
+
+All formulas pinned to external sources before implementation,
+following the verification pattern from Phase 5 onward:
+
+| Formula | Source |
+|---|---|
+| AdS_n Ricci tensor `R_munu = -(n-1)/L^2 g_munu` | Wikipedia *Anti-de Sitter space* |
+| AdS_n Ricci scalar `R = -n(n-1)/L^2` | same |
+| Brown-Henneaux `c = 3 L / (2 G_N)` | Brown & Henneaux 1986 (CMP 104 207) |
+| Poincare AdS_3 geodesic length `2 L log(L_A/eps)` | arxiv 1708.02958, direct derivation |
+| Calabrese-Cardy `S = (c/3) log(L_A/eps)` | Calabrese & Cardy 2004 (J. Stat. Mech. 0406:P06002) |
+| Ryu-Takayanagi `S = Length(geodesic) / (4 G_N)` | Ryu & Takayanagi 2006 (PRL 96 181602) |
+
+### Key technical decisions
+
+1. **`AdS` is a `Metric` subclass** consistent with `Schwarzschild`
+   and `Kerr`, exposing the same `metric_tensor` / `coordinates`
+   API. The `verify_einstein_constant_curvature` method follows
+   the Phase 3 lambdified-numerical pattern (sympy `simplify` is
+   pathologically slow).
+2. **`spacetime_lab.holography` is a new top-level subpackage**
+   rather than living in `entropy/` or `metrics/`. Holographic
+   entropy is a cross-cutting concern: it relates bulk geometry to
+   boundary entropy, so it needs its own home. Phase 8-9 will add
+   minimal-surface finders, BTZ thermodynamics, and the island
+   formula here.
+3. **Closed-form first, ODE solver later.** Phase 7 uses the
+   explicit Poincare AdS_3 geodesic formula because it makes the
+   verification *bit-exact*. A general numerical bulk minimal-
+   surface finder is Phase 8 territory.
+4. **`G_N` defaults to 1** consistent with the geometric units used
+   throughout Phases 1-5.
+
+### Honest scope notes
+
+This release implements the **simplest non-trivial test** of
+holographic entanglement entropy. We deliberately deferred:
+
+- **Two-interval entanglement** (mutual information phase
+  transition) — Phase 8.
+- **BTZ black hole** and finite-temperature RT — Phase 8.
+- **Numerical bulk minimal-surface finder** for higher dimensions
+  — Phase 8.
+- **Quantum corrections / island formula** — Phase 9.
+
+These are real, hard problems that justify their own phases. Phase
+7 establishes that the bulk and boundary computations agree
+exactly in the simplest case, which is the existence proof that
+the rest of the program is well-posed.
+
 ## [0.6.0] — 2026-04-11 — Phase 6: Quantum information primitives
 
 Sixth substantive release. Closes Phase 6 of the 18-month

@@ -24,12 +24,13 @@ Spacetime Lab is an interactive web platform and Python SDK for exploring black 
 
 | Module | What it does | Status |
 |--------|-------------|--------|
-| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | ✅ Schwarzschild + Kerr (v0.3) |
+| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | ✅ Schwarzschild + Kerr + AdS (v0.7) |
 | `diagrams/` | Penrose and embedding diagram generators | ✅ Minkowski + Schwarzschild (v0.2) |
 | `geodesics/` | Symplectic geodesic integration in curved spacetime | ✅ implicit-midpoint (v0.3) |
 | `horizons/` | Event horizon, ISCO, photon shadow finders | ✅ algebraic + Bardeen 1973 shadow (v0.4) |
 | `waves/` | Quasinormal modes + ringdown waveforms | ✅ Schwarzschild QNM + ringdown (v0.5) |
 | `entropy/` | Quantum information primitives (von Neumann, Schmidt, partial trace) | ✅ pure-numpy implementation (v0.6) |
+| `holography/` | Holographic entanglement entropy: AdS geodesics, RT, Brown-Henneaux | ✅ AdS_3/CFT_2 RT verified bit-exact (v0.7) |
 | `waves/` | Quasinormal modes, ringdown, LIGO integration | 📅 Phase 5 |
 | (RT/HRT surfaces) | Holographic entanglement entropy via geodesic / minimal surface integration | 📅 Phase 7-8 |
 | `edu/` | Interactive tutorials and educational notebooks | 🔄 Continuous |
@@ -92,8 +93,8 @@ spacetime-lab/
 - ✅ Phase 4 — Horizon finders + photon shadow (v0.4.0)
 - ✅ Phase 5 — Quasinormal modes + ringdown (v0.5.0)
 - ✅ Phase 6 — Quantum information primitives (v0.6.0)
-- 🏗️ Phase 7 — AdS/CFT foundations
-- 📅 Phase 8 — Holographic entanglement (RT/HRT)
+- ✅ Phase 7 — AdS/CFT foundations + Ryu-Takayanagi (v0.7.0)
+- 🏗️ Phase 8 — Holographic entanglement (RT/HRT extensions)
 - 📅 Phase 9 — v1.0 release
 
 ## Tutorial notebooks
@@ -108,6 +109,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 04 | [`04_horizon_topology.ipynb`](./notebooks/04_horizon_topology.ipynb) | 4 | Event vs apparent horizon, MOTS, numerical horizon and ISCO finders, Schwarzschild critical impact parameter, Bardeen 1973 photon shadow with frame-dragging asymmetries (the EHT geometry) |
 | 05 | [`05_quasinormal_modes.ipynb`](./notebooks/05_quasinormal_modes.ipynb) | 5 | Linear perturbations of Schwarzschild, Regge-Wheeler equation, Leaver continued fraction, dominant gravitational mode `M*omega ~ 0.37 - 0.09 i`, ringdown waveform generator, no-hair theorem test |
 | 06 | [`06_entanglement_entropy.ipynb`](./notebooks/06_entanglement_entropy.ipynb) | 6 | Density matrices, partial traces, von Neumann entropy, Schmidt decomposition, Bell pair = log 2, GHZ bipartitions, mutual information, the bridge to holographic entanglement entropy |
+| 07 | [`07_ads_cft_foundations.ipynb`](./notebooks/07_ads_cft_foundations.ipynb) | 7 | Pure AdS in Poincare coordinates, R = -n(n-1)/L^2 verified, Brown-Henneaux c = 3L/(2G_N), AdS_3 boundary geodesics, Ryu-Takayanagi formula bit-exactly equal to Calabrese-Cardy 2D CFT entropy across 5 orders of magnitude |
 
 ## Upstream contributions
 
