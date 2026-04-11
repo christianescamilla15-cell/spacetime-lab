@@ -182,6 +182,174 @@ class Schwarzschild(Metric):
         return 4 * sp.pi * self.mass**2
 
     # ──────────────────────────────────────────────────────────────
+    # Geodesics and coordinate transformations
+    # ──────────────────────────────────────────────────────────────
+
+    def tortoise_coordinate(self, r: float | sp.Expr) -> float | sp.Expr:
+        """Compute the tortoise coordinate r*.
+
+        The tortoise coordinate is defined by:
+            r* = r + 2M ln(r/2M - 1)
+
+        It satisfies dr*/dr = 1 / f(r) where f(r) = 1 - 2M/r.
+
+        Physical meaning: r* → -∞ as r → 2M+ (the horizon is pushed to
+        infinity in the new coordinate). This is useful for studying
+        wave propagation and ingoing/outgoing null coordinates.
+
+        Args:
+            r: Radial Schwarzschild coordinate (must be > 2M).
+
+        Returns:
+            The tortoise coordinate r*.
+
+        Raises:
+            ValueError: If r <= 2M (inside horizon).
+
+        References:
+            Wald, "General Relativity", eq. 6.4.25
+        """
+        M = self.mass
+        if isinstance(r, (int, float)):
+            if r <= 2 * M:
+                raise ValueError(f"Tortoise coordinate undefined for r={r} <= 2M={2*M}")
+            import math
+            return r + 2 * M * math.log(r / (2 * M) - 1)
+        # Symbolic case
+        return r + 2 * M * sp.log(r / (2 * M) - 1)
+
+    def effective_potential(
+        self,
+        r: float | sp.Expr,
+        L: float | sp.Expr,
+        particle_type: str = "massive",
+    ) -> float | sp.Expr:
+        """Compute the effective potential V_eff(r) for geodesic motion.
+
+        For equatorial geodesics (theta = pi/2), the radial motion reduces
+        to an effective one-dimensional problem:
+
+            (dr/dtau)^2 = E^2 - V_eff(r)
+
+        where V_eff depends on the particle type:
+
+            Massive:  V_eff = (1 - 2M/r)(1 + L^2/r^2)
+            Photon:   V_eff = (1 - 2M/r)(L^2/r^2)
+
+        Args:
+            r: Radial coordinate.
+            L: Angular momentum per unit mass (or per unit energy for photons).
+            particle_type: "massive" or "photon".
+
+        Returns:
+            The effective potential V_eff(r).
+
+        References:
+            Wald eq. 6.3.12, Carroll eq. 5.63
+        """
+        M = self.mass
+        f = 1 - 2 * M / r
+
+        if particle_type == "massive":
+            return f * (1 + L**2 / r**2)
+        elif particle_type == "photon":
+            return f * (L**2 / r**2)
+        else:
+            raise ValueError(f"Unknown particle_type: {particle_type}")
+
+    def kruskal_coordinates(
+        self,
+        t: float | sp.Expr,
+        r: float | sp.Expr,
+        region: int = 1,
+    ) -> tuple[sp.Expr, sp.Expr] | tuple[float, float]:
+        """Transform (t, r) to Kruskal-Szekeres coordinates (T, X).
+
+        The Kruskal-Szekeres coordinates provide the maximal analytic
+        extension of the Schwarzschild spacetime. They remove the
+        coordinate singularity at r = 2M and reveal 4 distinct regions:
+
+            Region I:   Exterior (our universe), r > 2M
+            Region II:  Future interior (black hole), inside horizon
+            Region III: Other exterior (parallel universe)
+            Region IV:  Past interior (white hole)
+
+        For Region I (r > 2M):
+            T = sqrt(r/2M - 1) exp(r/4M) sinh(t/4M)
+            X = sqrt(r/2M - 1) exp(r/4M) cosh(t/4M)
+
+        For Region II (r < 2M):
+            T = sqrt(1 - r/2M) exp(r/4M) cosh(t/4M)
+            X = sqrt(1 - r/2M) exp(r/4M) sinh(t/4M)
+
+        Args:
+            t: Schwarzschild time coordinate.
+            r: Schwarzschild radial coordinate.
+            region: Which region (1=exterior, 2=interior).
+
+        Returns:
+            Tuple (T, X) in Kruskal-Szekeres coordinates.
+
+        References:
+            Wald eqs. 6.4.28-6.4.31, Carroll eqs. 5.86-5.87
+        """
+        M = self.mass
+        is_numeric = isinstance(r, (int, float)) and isinstance(t, (int, float))
+
+        if is_numeric:
+            import math
+            if region == 1:
+                if r <= 2 * M:
+                    raise ValueError(f"Region I requires r > 2M, got r={r}")
+                factor = math.sqrt(r / (2 * M) - 1) * math.exp(r / (4 * M))
+                T = factor * math.sinh(t / (4 * M))
+                X = factor * math.cosh(t / (4 * M))
+            elif region == 2:
+                if r >= 2 * M:
+                    raise ValueError(f"Region II requires r < 2M, got r={r}")
+                factor = math.sqrt(1 - r / (2 * M)) * math.exp(r / (4 * M))
+                T = factor * math.cosh(t / (4 * M))
+                X = factor * math.sinh(t / (4 * M))
+            else:
+                raise ValueError(f"Unsupported region: {region}")
+            return (T, X)
+
+        # Symbolic case
+        if region == 1:
+            factor = sp.sqrt(r / (2 * M) - 1) * sp.exp(r / (4 * M))
+            T = factor * sp.sinh(t / (4 * M))
+            X = factor * sp.cosh(t / (4 * M))
+        elif region == 2:
+            factor = sp.sqrt(1 - r / (2 * M)) * sp.exp(r / (4 * M))
+            T = factor * sp.cosh(t / (4 * M))
+            X = factor * sp.sinh(t / (4 * M))
+        else:
+            raise ValueError(f"Unsupported region: {region}")
+
+        return (T, X)
+
+    def kretschmann_scalar(self, r: float | sp.Expr) -> float | sp.Expr:
+        """Compute the Kretschmann scalar K = R_{abcd} R^{abcd} at radius r.
+
+        For Schwarzschild:
+            K(r) = 48 M^2 / r^6
+
+        This scalar is finite at the horizon r = 2M (confirming it's a
+        coordinate singularity) but diverges as r → 0 (the true curvature
+        singularity).
+
+        Args:
+            r: Radial coordinate.
+
+        Returns:
+            The Kretschmann scalar K(r).
+
+        References:
+            MTW eq. 31.5
+        """
+        return 48 * self.mass**2 / r**6
+
+    # ──────────────────────────────────────────────────────────────
     # Representation
     # ──────────────────────────────────────────────────────────────
 

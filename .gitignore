@@ -68,3 +68,5 @@ logs/
 # Generated docs
 site/
 docs/_build/
+
+.vercel

@@ -1,7 +1,6 @@
 """Tests for the Schwarzschild metric."""
 
 import numpy as np
-import sympy as sp
 
 from spacetime_lab.metrics import Schwarzschild
 
@@ -100,3 +99,100 @@ class TestSchwarzschild:
         bh = Schwarzschild(mass=1.0)
         assert "Schwarzschild" in repr(bh)
         assert "mass=1.0" in repr(bh)
+
+    # ──────────────────────────────────────────────────────────────
+    # Phase 1 additions: coordinates and geodesics
+    # ──────────────────────────────────────────────────────────────
+
+    def test_tortoise_coordinate_outside_horizon(self):
+        """Tortoise coordinate is finite outside horizon."""
+        bh = Schwarzschild(mass=1.0)
+        # At r = 4M, r* = 4 + 2 ln(1) = 4
+        r_star = bh.tortoise_coordinate(4.0)
+        assert np.isclose(r_star, 4.0)  # 4 + 2*ln(1) = 4
+
+    def test_tortoise_coordinate_diverges_at_horizon(self):
+        """Tortoise r* → -∞ as r → 2M+."""
+        bh = Schwarzschild(mass=1.0)
+        r_star_3 = bh.tortoise_coordinate(3.0)
+        r_star_close = bh.tortoise_coordinate(2.01)
+        # Close to horizon should be very negative
+        assert r_star_close < r_star_3
+        assert r_star_close < -5
+
+    def test_tortoise_coordinate_raises_inside_horizon(self):
+        """Tortoise is undefined inside horizon."""
+        import pytest
+        bh = Schwarzschild(mass=1.0)
+        with pytest.raises(ValueError):
+            bh.tortoise_coordinate(1.0)  # r < 2M
+
+    def test_effective_potential_massive_at_isco(self):
+        """V_eff(r=6, L=sqrt(12)) is at max for massive particle — ISCO."""
+        bh = Schwarzschild(mass=1.0)
+        # Massive particle at ISCO
+        L_isco = np.sqrt(12)  # Angular momentum for ISCO
+        V = bh.effective_potential(6.0, L_isco, "massive")
+        # V_eff = (1 - 1/3)(1 + 12/36) = (2/3)(4/3) = 8/9
+        assert np.isclose(float(V), 8/9)
+
+    def test_effective_potential_photon_sphere(self):
+        """V_eff_photon has max at r=3M (photon sphere)."""
+        bh = Schwarzschild(mass=1.0)
+        # Photon at photon sphere
+        L = 1.0  # Arbitrary, the max location doesn't depend on L
+        V_at_3 = bh.effective_potential(3.0, L, "photon")
+        V_at_2_5 = bh.effective_potential(2.5, L, "photon")
+        V_at_4 = bh.effective_potential(4.0, L, "photon")
+        # Maximum should be at r=3
+        assert V_at_3 > V_at_2_5
+        assert V_at_3 > V_at_4
+
+    def test_kruskal_exterior_at_t_zero(self):
+        """Kruskal coordinates in Region I at t=0: T=0."""
+        bh = Schwarzschild(mass=1.0)
+        T, X = bh.kruskal_coordinates(t=0, r=3.0, region=1)
+        # At t=0, sinh(0)=0, so T=0
+        assert np.isclose(T, 0.0)
+        # X > 0 for exterior
+        assert X > 0
+
+    def test_kruskal_interior(self):
+        """Kruskal coordinates in Region II (inside horizon)."""
+        bh = Schwarzschild(mass=1.0)
+        T, X = bh.kruskal_coordinates(t=0, r=1.0, region=2)
+        # At t=0 in Region II, cosh(0)=1 so T > 0
+        assert T > 0
+        # X = factor * sinh(0) = 0
+        assert np.isclose(X, 0.0)
+
+    def test_kruskal_wrong_region_raises(self):
+        """Using wrong region for r value raises error."""
+        import pytest
+        bh = Schwarzschild(mass=1.0)
+        # r=3 (exterior) with region=2 should fail
+        with pytest.raises(ValueError):
+            bh.kruskal_coordinates(t=0, r=3.0, region=2)
+
+    def test_kretschmann_scalar_scaling(self):
+        """K(r) scales as r^-6."""
+        bh = Schwarzschild(mass=1.0)
+        K_at_2 = bh.kretschmann_scalar(2.0)
+        K_at_4 = bh.kretschmann_scalar(4.0)
+        # K(2)/K(4) should be 64 (2^6)
+        assert np.isclose(float(K_at_2) / float(K_at_4), 64.0)
+
+    def test_kretschmann_at_horizon_matches_cached(self):
+        """kretschmann_scalar(2M) equals kretschmann_scalar_at_horizon()."""
+        bh = Schwarzschild(mass=1.0)
+        K_method = bh.kretschmann_scalar(2.0)
+        K_cached = bh.kretschmann_scalar_at_horizon()
+        assert np.isclose(float(K_method), float(K_cached))
+
+    def test_kretschmann_divergence_at_singularity(self):
+        """K(r) → ∞ as r → 0."""
+        bh = Schwarzschild(mass=1.0)
+        K_close_to_zero = bh.kretschmann_scalar(0.1)
+        K_at_horizon = bh.kretschmann_scalar(2.0)
+        # K(0.1) should be massively larger than K(2)
+        assert K_close_to_zero > 10000 * K_at_horizon
