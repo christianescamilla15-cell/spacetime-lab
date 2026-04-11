@@ -78,6 +78,8 @@ Ship every 2-4 weeks. Learn by building.
 
 ## Phase 3 — Kerr Geodesics (months 5-6)
 
+**Status:** ✅ Done — shipped as v0.3.0 on 2026-04-11.
+
 **Physics concepts:**
 - Kerr metric in Boyer-Lindquist
 - Carter's constant (4th integral of motion)
@@ -85,13 +87,14 @@ Ship every 2-4 weeks. Learn by building.
 - ISCO, photon sphere, ergosphere
 
 **Deliverables:**
-- `spacetime_lab.metrics.Kerr` full implementation
-- `spacetime_lab.geodesics` symplectic integrator
-- 3D interactive geodesic explorer (three.js)
-- Notebook: `03_kerr_orbits.ipynb`
-- Contributions to EinsteinPy revival
+- [x] `spacetime_lab.metrics.Kerr` full implementation (59 tests, vacuum Einstein verified numerically to ~1e-15)
+- [x] `spacetime_lab.geodesics` symplectic integrator — implicit-midpoint, works for Kerr's non-separable Hamiltonian
+- [x] Carter's constant (`carter_constant_from_state`) and `constants_of_motion`
+- [x] Notebook: `03_kerr_geodesics.ipynb` with concept session, integrator demo, conservation diagnostics, and 2nd-order convergence test
+- [ ] 3D interactive geodesic explorer (three.js) — *deferred to the frontend sprint*
+- [ ] Contributions to EinsteinPy revival — *deferred*
 
-**Release:** v0.3.0
+**Release:** v0.3.0 — tagged 2026-04-11.
 
 ---
 

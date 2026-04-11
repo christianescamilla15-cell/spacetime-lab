@@ -441,16 +441,160 @@ class Kerr(Metric):
             symplectic integrator that uses :math:`\mathcal{K}` as a
             conservation diagnostic.
         """
-        # Stub.  Implementation deferred until the geodesic integrator
-        # arrives — at that point K_{\mu\nu} u^mu u^nu becomes the
-        # primary numerical conservation diagnostic and we will want
-        # to test it against a known equatorial orbit.  For now we
-        # return a clearly-marked placeholder so callers can detect
-        # that it is not yet available.
+        # Stub.  The explicit 4x4 Killing tensor matrix is not needed
+        # by the integrator-conservation diagnostic, which uses the
+        # equivalent polynomial form ``carter_constant(state)`` below.
+        # The Walker-Penrose construction is left for a future
+        # holography-driven extension where K_{munu} itself appears.
         raise NotImplementedError(
-            "Kerr.killing_tensor will be implemented alongside the "
-            "symplectic geodesic integrator in the Phase 3 coding pass."
+            "Kerr.killing_tensor (explicit 4x4 matrix) is not yet "
+            "implemented.  Use carter_constant_from_state(state) for "
+            "the conserved quantity along a geodesic — it is the "
+            "polynomial form of K_{mu nu} u^mu u^nu and is what the "
+            "symplectic integrator uses as its conservation diagnostic."
         )
+
+    def carter_constant(
+        self,
+        E: float,
+        L_z: float,
+        p_theta: float,
+        theta: float,
+        mu_squared: float = 1.0,
+    ) -> float:
+        r"""Compute Carter's constant :math:`\mathcal{Q}` directly from physics inputs.
+
+        .. math::
+
+            \mathcal{Q} = p_\theta^2 + \cos^2\theta\!\left[
+                a^2(\mu^2 - E^2) + \frac{L_z^2}{\sin^2\theta}\right].
+
+        Parameters
+        ----------
+        E : float
+            Conserved energy at infinity, :math:`E = -p_t`.
+        L_z : float
+            Conserved axial angular momentum, :math:`L_z = p_\varphi`.
+        p_theta : float
+            Polar momentum component.
+        theta : float
+            Polar angle (colatitude).
+        mu_squared : float
+            Rest mass squared :math:`\mu^2`.  Use ``1.0`` for a
+            massive particle on a normalised geodesic
+            (:math:`-2H = 1`), or ``0.0`` for a photon.  Default 1.0.
+
+        Returns
+        -------
+        float
+            The value of :math:`\mathcal{Q}`.
+
+        Notes
+        -----
+        For an *equatorial* geodesic (:math:`\theta = \pi/2`,
+        :math:`p_\theta = 0`) the formula gives :math:`\mathcal{Q} = 0`
+        identically — equatorial orbits sit on the boundary
+        :math:`\mathcal{Q} = 0`.  Non-trivial values of
+        :math:`\mathcal{Q}` characterise off-equator orbits.
+        """
+        a = self.spin
+        cos2 = math.cos(theta) ** 2
+        sin2 = math.sin(theta) ** 2
+        if sin2 < 1e-300:
+            raise ValueError(
+                f"theta = {theta} is on the symmetry axis (sin theta -> 0); "
+                f"Carter's constant has a coordinate singularity there. "
+                f"Use a value strictly inside (0, pi)."
+            )
+        return p_theta * p_theta + cos2 * (
+            a * a * (mu_squared - E * E) + L_z * L_z / sin2
+        )
+
+    def carter_constant_from_state(self, state) -> float:  # type: ignore[no-untyped-def]
+        r"""Compute Carter's :math:`\mathcal{Q}` for the given geodesic state.
+
+        Reads :math:`E = -p_t`, :math:`L_z = p_\varphi`, :math:`p_\theta`
+        and :math:`\theta` from the state, infers the rest mass via
+        the mass-shell :math:`\mu^2 = -2H = -g^{\mu\nu} p_\mu p_\nu`,
+        and returns
+
+        .. math::
+
+            \mathcal{Q} = p_\theta^2 + \cos^2\theta\!\left[
+                a^2(\mu^2 - E^2) + \frac{L_z^2}{\sin^2\theta}\right].
+
+        Used by the integrator-conservation diagnostic in
+        :class:`spacetime_lab.geodesics.GeodesicIntegrator`: along an
+        accurately-integrated geodesic this value should be constant
+        to within the integrator's accumulated error.
+
+        Parameters
+        ----------
+        state : GeodesicState
+            A point on the cotangent bundle, with covariant momentum
+            ``p`` ordered as :math:`(p_t, p_r, p_\theta, p_\varphi)`
+            in Boyer-Lindquist coordinates.
+
+        Returns
+        -------
+        float
+            The value of Carter's constant for that state.
+        """
+        # Local import to avoid a circular dependency at package
+        # initialisation time.
+        from spacetime_lab.geodesics import GeodesicState  # noqa: F401
+
+        x = state.x
+        p = state.p
+        theta = float(x[2])
+        E = -float(p[0])
+        L_z = float(p[3])
+        p_theta = float(p[2])
+
+        # Mass-shell: mu^2 = -2H = -g^{munu} p_mu p_nu, evaluated
+        # numerically.  We avoid recomputing the inverse metric here
+        # by reusing the cached metric_at and inverting numerically.
+        g = self.metric_at(t=float(x[0]), r=float(x[1]), theta=theta, phi=float(x[3]))
+        import numpy as np
+
+        g_inv = np.linalg.inv(g)
+        mu_squared = -float(p @ g_inv @ p)
+        return self.carter_constant(E, L_z, p_theta, theta, mu_squared)
+
+    def constants_of_motion(self, state) -> dict:  # type: ignore[no-untyped-def]
+        r"""Return the four constants of motion for a Kerr geodesic.
+
+        Returns a dictionary with keys:
+
+        - ``"E"``         — energy at infinity, :math:`-p_t`
+        - ``"L_z"``       — axial angular momentum, :math:`p_\varphi`
+        - ``"mu_squared"``— rest mass squared, :math:`-2H`
+        - ``"Q"``         — Carter's constant
+
+        For an exact geodesic all four are conserved along the orbit.
+        Used by the test suite as a one-shot diagnostic of the
+        symplectic integrator.
+        """
+        E = -float(state.p[0])
+        L_z = float(state.p[3])
+        Q = self.carter_constant_from_state(state)
+
+        x = state.x
+        p = state.p
+        g = self.metric_at(
+            t=float(x[0]), r=float(x[1]), theta=float(x[2]), phi=float(x[3])
+        )
+        import numpy as np
+
+        g_inv = np.linalg.inv(g)
+        mu_squared = -float(p @ g_inv @ p)
+
+        return {
+            "E": E,
+            "L_z": L_z,
+            "mu_squared": mu_squared,
+            "Q": Q,
+        }
 
     # ──────────────────────────────────────────────────────────────
     # Sanity checks

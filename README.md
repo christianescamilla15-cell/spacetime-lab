@@ -24,9 +24,9 @@ Spacetime Lab is an interactive web platform and Python SDK for exploring black 
 
 | Module | What it does | Status |
 |--------|-------------|--------|
-| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | ✅ Schwarzschild (v0.1) |
+| `metrics/` | Exact solutions (Schwarzschild, Kerr, AdS, BTZ) | ✅ Schwarzschild + Kerr (v0.3) |
 | `diagrams/` | Penrose and embedding diagram generators | ✅ Minkowski + Schwarzschild (v0.2) |
-| `geodesics/` | Symplectic geodesic integration in curved spacetime | 📅 Phase 3 |
+| `geodesics/` | Symplectic geodesic integration in curved spacetime | ✅ implicit-midpoint (v0.3) |
 | `horizons/` | Event horizon, ISCO, photon sphere finders | 📅 Phase 4 |
 | `waves/` | Quasinormal modes, ringdown, LIGO integration | 📅 Phase 5 |
 | `entropy/` | Holographic entanglement entropy (RT/HRT surfaces) | 📅 Phase 7 |
@@ -86,8 +86,8 @@ spacetime-lab/
 - ✅ Phase 0 — Bootstrap
 - ✅ Phase 1 — Schwarzschild foundations (v0.1.0)
 - ✅ Phase 2 — Penrose diagrams (v0.2.0)
-- 🏗️ Phase 3 — Kerr geodesics
-- 📅 Phase 4 — Horizon finders
+- ✅ Phase 3 — Kerr geodesics (v0.3.0)
+- 🏗️ Phase 4 — Horizon finders
 - 📅 Phase 5 — Gravitational waves
 - 📅 Phase 6 — Quantum information basics
 - 📅 Phase 7 — AdS/CFT foundations
@@ -102,6 +102,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 |---|----------|-------|----------------|
 | 01 | [`01_schwarzschild_basics.ipynb`](./notebooks/01_schwarzschild_basics.ipynb) | 1 | Line element, vacuum Einstein equations, Kretschmann scalar, tortoise and Kruskal coordinates, effective potential, horizon thermodynamics |
 | 02 | [`02_penrose_diagrams.ipynb`](./notebooks/02_penrose_diagrams.ipynb) | 2 | Conformal compactification, the five infinities, Minkowski diamond, Schwarzschild four-region Penrose diagram, the straight-line singularity identity |
+| 03 | [`03_kerr_geodesics.ipynb`](./notebooks/03_kerr_geodesics.ipynb) | 3 | Boyer–Lindquist Kerr, horizons + ergoregion, prograde/retrograde ISCO and photon sphere, Hamilton's equations, implicit-midpoint symplectic integrator, Carter's constant, 2nd-order convergence |
 
 ## Upstream contributions
 

@@ -6,6 +6,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-11 — Phase 3: Kerr geodesics
+
+Third substantive release.  Closes Phase 3 of the 18-month
+[ROADMAP](./ROADMAP.md).  Spacetime Lab now has a working Kerr metric
+and a symplectic geodesic integrator that experimentally verifies the
+existence of Carter's irreducible Killing tensor by conserving its
+constant along integrated trajectories.
+
+### Added
+
+- `spacetime_lab.metrics.Kerr` — full Boyer-Lindquist Kerr metric
+  parametrised by `(mass, spin)` with cosmic-censorship validation
+  `0 <= spin <= mass`.  Symbolic line element with the off-diagonal
+  `g_{t phi}` frame-dragging term, plus all the physical observables:
+  - `outer_horizon` (`r_+`) and `inner_horizon` (`r_-`) — both real
+    iff `a <= M`; the inner Cauchy horizon is the new feature with
+    no Schwarzschild analogue
+  - `ergosphere(theta)` — the static-limit surface, bulging out to
+    `2M` at the equator
+  - `isco(prograde)` — Bardeen-Press-Teukolsky 1972 closed form with
+    the `Z_1`, `Z_2` helpers, prograde (smaller) and retrograde
+    branches
+  - `photon_sphere_equatorial(prograde)` —
+    `2M[1 + cos(2/3 arccos(-+ a/M))]`
+  - `angular_velocity_horizon`, `horizon_area`, `surface_gravity`,
+    `hawking_temperature`, `bekenstein_hawking_entropy`
+  - `verify_vacuum_numerical()` — strong test of the line element
+    via `R_{munu} = 0`, computed numerically (max ~1e-15) so it
+    finishes in seconds rather than minutes
+- `spacetime_lab.geodesics` — new subpackage:
+  - `GeodesicState` dataclass holding 4-position `x` and covariant
+    4-momentum `p` (in that order, since cyclic-coordinate
+    conservation laws are statements about `p_mu`)
+  - `GeodesicIntegrator` — implicit-midpoint symplectic integrator
+    for Hamilton's equations on `H = (1/2) g^{munu}(x) p_mu p_nu`.
+    Symplectic, time-reversible, 2nd-order accurate, and works for
+    non-separable Hamiltonians (which Kerr's is).  Lambdifies the
+    inverse metric and its derivatives once at construction.
+- `Kerr.carter_constant(E, L_z, p_theta, theta, mu_squared)` and
+  `Kerr.carter_constant_from_state(state)` — the irreducible
+  Killing-tensor invariant in its polynomial form
+  `Q = p_theta^2 + cos^2(theta) [a^2(mu^2 - E^2) + L_z^2/sin^2(theta)]`.
+  This is the *practical* form of Carter's constant — it is what
+  the integrator's conservation diagnostic uses.
+- `Kerr.constants_of_motion(state)` — convenience method that
+  returns `{E, L_z, mu_squared, Q}` for any geodesic state, so test
+  suites and notebooks can compare drift across all four conserved
+  quantities at once.
+- `notebooks/03_kerr_geodesics.ipynb` — Phase 3 concept + demo
+  notebook.  Walks through Kerr line element, three surfaces
+  (horizons + static limit), prograde/retrograde ISCO and photon
+  sphere, vacuum verification, Hamilton's equations, the implicit
+  midpoint method, conservation diagnostics, and a quadratic
+  convergence test in `h`.  Closing "Phase 3 gate" cell hard-asserts
+  every claim.
+
+### Tests
+
+- `tests/test_kerr.py` — 59 unit tests for the Kerr metric class.
+  See v0.2.0 changelog entry; this set was actually committed with
+  v0.2.x but ships as part of v0.3.0.
+- `tests/test_geodesics_kerr.py` — 26 new tests covering:
+  - `GeodesicState` dataclass shape, validation, copy semantics,
+    array independence
+  - `GeodesicIntegrator` construction, step, integrate API
+  - **Killing-vector exact conservation**: `E` and `L_z` drift by
+    less than `1e-12` over 200 steps
+  - **Symplectic mass-shell conservation**: `H` drift bounded
+    over 200 steps
+  - **Quadratic convergence in step size**: halving `h` reduces
+    drift by a factor of 4 in both `H` and Carter's `Q`
+  - **Carter's constant closed-form**: `Q = 0` for equatorial
+    orbits, axis singularity raises, Schwarzschild limit reduces
+    to `L_perp^2`
+  - **Carter's constant conservation along geodesics** at the same
+    order as the Hamiltonian
+- Total project test suite: **194 tests** passing (up from 109 in
+  v0.2.0; +59 Kerr metric and +26 geodesic integrator).
+
+### Notes
+
+- The integrator uses **implicit midpoint** rather than leapfrog
+  because Kerr's Hamiltonian is non-separable
+  (`g^{munu}(x) p_mu p_nu` depends on `x` through the inverse
+  metric).  Implicit midpoint is symplectic for non-separable
+  Hamiltonians and exactly conserves cyclic-coordinate momenta.
+- `verify_vacuum_numerical()` was forced to be numerical rather
+  than symbolic because `sympy.simplify` is pathologically slow on
+  Kerr expressions (>5 minutes per Ricci component).  The
+  numerical version evaluates `R_{munu}` at sample points via
+  `lambdify` and runs in ~2 seconds.  This is the same trick that
+  any future Kerr-Newman / RN extension will need.
+- The explicit 4x4 Killing tensor matrix `K_{munu}` is left as a
+  documented stub.  The integrator-conservation diagnostic only
+  needs the polynomial form, and the matrix form is more book-
+  keeping than physics.
+
 ## [0.2.0] — 2026-04-10 — Phase 2: Penrose diagrams
 
 Second substantive release. Closes Phase 2 of the 18-month
