@@ -100,19 +100,25 @@ Ship every 2-4 weeks. Learn by building.
 
 ## Phase 4 — Horizon Finders (months 7-8)
 
+**Status:** ✅ Done — shipped as v0.4.0 on 2026-04-11.
+
 **Physics concepts:**
 - Event vs apparent horizon
-- Trapped surfaces
-- ISCO computation
+- Trapped surfaces (MOTS / outermost expansion zero)
+- ISCO computation via the effective potential
 - Photon sphere and its stability
+- Bardeen 1973 photon shadow
 
 **Deliverables:**
-- `spacetime_lab.horizons` module
-- Automatic horizon detection for arbitrary metrics
-- Visualization of trapped regions
-- Notebook: `04_horizon_topology.ipynb`
+- [x] `spacetime_lab.horizons` module (event finder + ISCO finder + Bardeen shadow)
+- [x] Automatic horizon detection for arbitrary axisymmetric stationary metrics — verified against Schwarzschild and Kerr to ~`1e-9`
+- [x] Numerical ISCO via the effective potential — Schwarzschild verified to ~`1e-7`
+- [x] Bardeen 1973 photon shadow generator — verified Schwarzschild limit to ~`1e-2`
+- [x] Notebook: `04_horizon_topology.ipynb` with the headline near-extremal Kerr shadow plot
+- [ ] General apparent horizon finder for dynamical spacetimes — *deferred (would require a 2D nonlinear PDE solver)*
+- [ ] Production-quality ray-shooting finder — *experimental version exists but is not exported; deferred until needed*
 
-**Release:** v0.4.0
+**Release:** v0.4.0 — tagged 2026-04-11.
 
 ---
 

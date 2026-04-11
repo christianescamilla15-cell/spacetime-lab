@@ -6,6 +6,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-04-11 — Phase 4: Horizon finders + photon shadow
+
+Fourth substantive release. Closes Phase 4 of the 18-month
+[ROADMAP](./ROADMAP.md). Spacetime Lab now has numerical horizon
+finders and the Bardeen 1973 photon shadow generator — the same
+shadow geometry that EHT measured for M87* in 2019 and Sgr A* in 2022.
+
+### Added
+
+- `spacetime_lab.horizons` — new subpackage with three production
+  finders, all pinned to closed-form values from Phases 1-3:
+  - `find_event_horizon(metric, ...)` — locates the outer event
+    horizon by sign-change scan + Brent's method on `g_rr` along
+    the equatorial slice. Falls back to a parabolic-touch
+    detection for the extremal Kerr case where the two horizons
+    merge. Generic over any axisymmetric stationary metric in
+    `spacetime_lab.metrics`. Verified to ~`1e-9` against
+    Schwarzschild (`r = 2M`) and Kerr (`r_+ = M + sqrt(M^2 - a^2)`)
+    over a wide range of masses and spins.
+  - `find_isco_numerical(metric, ...)` — locates the equatorial
+    ISCO by simultaneously root-finding on
+    `V_eff'(r; L) = V_eff''(r; L) = 0`. Uses sympy to differentiate
+    the metric's `effective_potential` and `scipy.optimize.fsolve`
+    to solve the 2x2 system. Currently only Schwarzschild
+    implements `effective_potential`; for Kerr the closed-form
+    `Kerr.isco()` from v0.3.0 should be used. Verified to ~`1e-7`
+    against `r = 6M` for Schwarzschild over multiple masses.
+  - `photon_shadow_kerr(spin, mass, ...)` — returns the closed
+    Bardeen 1973 shadow boundary `(alpha, beta)` in the observer's
+    image plane. Uses the parametric form via the spherical photon
+    orbits' conserved quantities `xi(r_p)` and `eta(r_p)`. The
+    full `csc theta_o` / `cot theta_o` formulas are implemented,
+    but the test suite only pins the equatorial-observer case
+    (the EHT geometry). Verified to ~`1e-2` against the
+    Schwarzschild limit `b_crit = 3 sqrt(3) M`.
+- `spherical_photon_orbit_xi(r_p, M, a)` and
+  `spherical_photon_orbit_eta(r_p, M, a)` — closed-form helpers
+  for the conserved impact parameters of a Kerr spherical photon
+  orbit at radius `r_p`. Used internally by `photon_shadow_kerr`
+  but exported for direct access.
+- `kerr_critical_curve_xi_eta(M, a, n_points)` — sample the
+  `(r_p, xi, eta)` curve over the photon-region range
+  `[r_p^prograde, r_p^retrograde]`.
+- `find_event_horizon_via_shooting` — experimental ray-shooting
+  finder using `GeodesicIntegrator`. Documented but **not exported**
+  from the package and **not relied on by tests**, because the
+  event horizon is the asymptote of geodesic motion in affine
+  parameter and any finite integration window gives a biased
+  estimate. Kept in the codebase as a starting point for a future
+  smarter implementation with adaptive affine reparametrisation.
+- `notebooks/04_horizon_topology.ipynb` — Phase 4 concept + demo
+  notebook. Walks through the three notions of horizon, the
+  rediscovery cross-validation against Schwarzschild and Kerr
+  closed forms, the Schwarzschild critical impact parameter, and
+  the Bardeen 1973 photon shadow with the headline near-extremal
+  Kerr image. Closing gate cell hard-asserts every claim.
+
+### Tests
+
+- `tests/test_horizons.py` — 36 new tests:
+  - `find_event_horizon` against Schwarzschild `r = 2M` (5 masses),
+    Kerr `r_+` (7 spins), extremal `r_+ = M`, multi-mass + multi-spin
+    combinations, and bracket-failure error path
+  - `find_isco_numerical` against Schwarzschild `r = 6M` (4 masses),
+    plus the AttributeError raised when called on Kerr (which has
+    no `effective_potential`)
+  - `spherical_photon_orbit_xi/eta` zero-spin error path and the
+    `eta = 0` boundary at the equatorial photon-sphere endpoints
+  - `photon_shadow_kerr` zero-spin and `spin > mass` error paths,
+    closed-curve property, Schwarzschild limit (`b -> 3 sqrt 3`),
+    centred at origin for tiny spin, asymmetric for extremal,
+    frame-drag shift, linear scaling with mass
+- Total project test suite: **230 tests** passing (up from 194 in
+  v0.3.0; +36 horizons).
+
+### Cross-validation
+
+The point of Phase 4 is end-to-end **rediscovery**: every textbook
+closed-form value should pop out of the numerical finder applied to
+only the metric implementation. The test suite verifies:
+
+- Schwarzschild outer horizon at `r = 2M` to ~`1e-9`
+- Kerr outer horizon at `r_+ = M + sqrt(M^2 - a^2)` to ~`1e-9` for
+  6 sub-extremal spins, ~`1e-6` at extremal
+- Schwarzschild ISCO at `r = 6M` to ~`1e-7`
+- Schwarzschild critical impact parameter `b_crit = 3 sqrt(3) M`
+  to ~`1e-2` (this last one limited by the parametric formula
+  becoming singular as `a -> 0`)
+
+If any of these had failed, we would know exactly which layer of
+the stack was broken: the metric tensor (Phase 1/3), the inverse
+metric, or the finder itself.
+
+### Notes
+
+- The general-inclination Bardeen formulas are implemented but the
+  test suite only pins the equatorial observer case `theta_o = pi/2`
+  to known closed-form values. The EHT geometry for both M87* and
+  Sgr A* is nearly equatorial.
+- A general apparent-horizon finder for dynamical spacetimes
+  requires solving a nonlinear elliptic PDE on a 2-sphere — not
+  in scope for v0.4.0. For stationary spacetimes the apparent and
+  event horizons coincide and `find_event_horizon` returns both.
+- The ray-shooting finder is documented but not production-quality.
+  See `find_event_horizon_via_shooting` for the explanation.
+
 ## [0.3.0] — 2026-04-11 — Phase 3: Kerr geodesics
 
 Third substantive release.  Closes Phase 3 of the 18-month
