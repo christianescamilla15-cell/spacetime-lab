@@ -6,6 +6,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-04-11 — v1.1 patch: the evaporating Page curve
+
+First post-v1.0 patch.  Extends the Phase 9 island formula module
+from the **eternal BTZ** Page curve (rises and saturates) to the
+**evaporating Schwarzschild** Page curve (rises, peaks, **falls back
+to zero**).  The bell-shaped curve is the visual demonstration of
+toy-model unitarity: every bit of entropy radiated comes back at the
+end of evaporation.
+
+### Added
+
+- `spacetime_lab.holography.evaporating` — new module:
+  - `schwarzschild_evaporation_time(M0, G_N)` — Page 1976 lifetime
+    `t_evap = 5120 π G_N² M_0³` in geometric units.
+  - `schwarzschild_mass(t, M0, G_N, t_evap)` — cubic shrinking law
+    `M(t) = M_0 (1 - t/t_evap)^(1/3)`, clamped to zero for
+    `t ≥ t_evap`.
+  - `bekenstein_hawking_entropy(M, G_N)` — `S = 4π M² / G_N` (the
+    universal `1/(4 G_N)` factor that ties every Spacetime Lab
+    phase together).
+  - `hawking_saddle_entropy(t, M0, G_N, t_evap)` — no-island
+    Penington 2019 saddle, `S_BH(0) - S_BH(t)`.
+  - `island_saddle_entropy_evaporating(t, M0, G_N, t_evap)` —
+    quantum extremal surface saddle, `S_BH(t)` (the *current*
+    horizon area entropy of the shrinking BH).
+  - `page_curve_evaporating(t, M0, G_N, t_evap)` — returns
+    `(entropy, phase)` where the entropy is `min(S_H, S_island)`
+    and the phase is `"hawking"` or `"island"`.
+  - `page_time_evaporating(M0, G_N, t_evap)` — **closed-form** Page
+    time `t_P = (1 - √2/4) t_evap ≈ 0.6464 t_evap`.  No transcendental
+    equation, no log corrections.
+  - `page_time_evaporating_numerical(M0, G_N, t_evap)` — independent
+    `brentq` cross-check; agrees with the closed form to 1e-12.
+  - `verify_evaporating_unitarity(M0, G_N, t_evap, n_samples)` —
+    end-to-end gate function returning bit-exact diagnostics on
+    every closed-form invariant.
+- `notebooks/10_evaporating_page_curve.ipynb` — concept + headline
+  bell-curve plot + side-by-side comparison with the Phase 9 eternal
+  BH curve + closing gate cell.
+- `tests/test_phase_v1_1.py` — 37 new tests pinned to closed-form
+  invariants.  Total project suite grows from **472 to 509 passing
+  tests**.
+
+### Verified
+
+| Closed-form invariant | Bit-exact |
+|---|---|
+| `t_evap = 5120 π M_0³` | `abs_tol=1e-12` |
+| `M(t_evap) = 0` exactly | exact |
+| `M(t_P) = M_0/√2` | `abs_tol=1e-12` |
+| `t_P / t_evap = 1 - √2/4` | `abs_tol=1e-12` |
+| `S_rad,max = S_BH(0)/2 = 2π M_0²` | `abs_tol=1e-12` |
+| `S_rad(0) = S_rad(t_evap) = 0` | exact (unitarity) |
+| `S_H(t_P) = S_island(t_P)` | `~1e-15` (continuity) |
+| Closed-form Page time vs `brentq` | `~1e-12` |
+| Bell-shape monotonicity | `n=2000` samples |
+
+### Surprise found and documented
+
+The Page time is **not at** `t_evap/2`.  Because `S_BH ∝ M²` falls
+faster than linearly in time, half the BH entropy is lost at
+`t_P = (1 - √2/4) t_evap ≈ 0.6464 t_evap`, well past the temporal
+midpoint of evaporation.  This is testable bit-exactly and is one
+of the visually striking features of the bell curve.
+
+### Honest scope notes (deferred to v2.0)
+
+- **JT gravity + CFT bath** setup of Penington / AEMM — analytical
+  rigour upgrade.
+- **Quantum extremal surface finder** — currently the island is
+  identified by hand at the bifurcation surface.
+- **Replica wormhole** Euclidean path integral derivation —
+  analytical, not coded.
+- **Backreaction** of radiation on the geometry — assumes
+  quasi-static evaporation throughout.
+- **Grey-body factors** and species multiplicity — folded into the
+  `t_evap` parameter; not modelled separately.
+- **Higher-dimensional BHs** — the cubic law is specific to D=4.
+
+These are the same honest-scope decisions that shipped Phases 3-9
+without ever shipping a broken-but-deferred feature.  Each is
+documented with the *reason* and the *trigger condition*.
+
+### Methodology
+
+This patch followed the same verify-before-code → bit-exact gate →
+honest-scope-keeping discipline that produced Phases 1-9.  Formulas
+were pinned against Page 1976, Penington 2019 (arXiv:1905.08255),
+AEMM 2019 (arXiv:1905.08762), and the AHMST 2020 review
+(arXiv:2006.06872) **before** writing any code.
+
 ## [1.0.0] — 2026-04-11 — Phase 9: Island formula and the Page curve (v1.0 MILESTONE)
 
 **The v1.0 milestone of Spacetime Lab.**  Closes Phase 9 of the

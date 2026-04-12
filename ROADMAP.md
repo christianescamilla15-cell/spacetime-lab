@@ -258,8 +258,8 @@ Ship every 2-4 weeks. Learn by building.
 - [x] Notebook `09_island_formula.ipynb` with the headline Page curve plot
 - [x] 41 unit tests pinned to closed-form invariants
 - [x] **Bit-exact verification**: continuity at the Page time, Page time independent of `G_N`, monotonicity of the Page curve, qualitative shape (trivial early, island late)
-- [ ] Evaporating-BH Page curve (with reservoir coupling) — *deferred to v1.1*
-- [ ] Numerical quantum extremal surface finder — *deferred*
+- [x] Evaporating-BH Page curve (toy model: Page 1976 + island saddle) — *shipped as v1.1.0 on 2026-04-11*
+- [ ] Numerical quantum extremal surface finder — *deferred to v2.0*
 - [ ] Replica wormhole derivation — *not implementable in code*
 
 **Release:** **v1.0.0** 🚀 — tagged 2026-04-11.
@@ -267,6 +267,36 @@ Ship every 2-4 weeks. Learn by building.
 **This is the v1.0 milestone.** The complete project arc from
 Schwarzschild to the resolution of the Hawking information paradox
 is now in one unified codebase.
+
+---
+
+## v1.1 patch — Evaporating Schwarzschild Page curve
+
+**Status:** ✅ Done — shipped as v1.1.0 on 2026-04-11.
+
+First post-v1.0 patch.  Extends the eternal-BH island formula module
+to a real evaporating BH and ships the bell-shaped Page curve that
+returns to zero at `t_evap` (toy-model unitarity).
+
+**Physics concepts added:**
+- Schwarzschild evaporation law (Page 1976): `t_evap = 5120 π G² M_0³`
+- Cubic shrinking law `M(t) = M_0 (1 - t/t_evap)^(1/3)`
+- No-island Hawking saddle `S_H(t) = S_BH(0) - S_BH(t)`
+- QES saddle `S_island(t) = S_BH(t)` (the *current* horizon area)
+- Closed-form Page time `t_P = (1 - √2/4) t_evap ≈ 0.6464 t_evap`
+- Maximum entropy `S_rad,max = S_BH(0)/2 = 2π M_0²`
+
+**Deliverables:**
+- [x] `spacetime_lab.holography.evaporating` subpackage
+- [x] Closed-form `page_time_evaporating` + numerical `brentq` cross-check
+- [x] `verify_evaporating_unitarity` gate function
+- [x] Notebook `10_evaporating_page_curve.ipynb` with bell-curve headline plot and side-by-side comparison vs Phase 9 eternal-BH curve
+- [x] 37 new tests pinned to closed-form invariants (suite: 472 → **509 passing**)
+- [x] **Bit-exact verification**: endpoint zeros, Page time closed form vs numerical, mass at Page time, saddle continuity, max entropy, bell-shape monotonicity
+
+**Honest scope deferred to v2.0:** JT gravity + CFT bath, real QES finder, replica wormholes, backreaction, grey-body factors.
+
+**Release:** **v1.1.0** 🚀 — tagged 2026-04-11.
 
 ---
 

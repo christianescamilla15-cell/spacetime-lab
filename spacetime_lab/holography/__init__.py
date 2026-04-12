@@ -68,6 +68,17 @@ from spacetime_lab.holography.geodesics import (
     brown_henneaux_central_charge,
     geodesic_length_ads3,
 )
+from spacetime_lab.holography.evaporating import (
+    bekenstein_hawking_entropy,
+    hawking_saddle_entropy,
+    island_saddle_entropy_evaporating,
+    page_curve_evaporating,
+    page_time_evaporating,
+    page_time_evaporating_numerical,
+    schwarzschild_evaporation_time,
+    schwarzschild_mass,
+    verify_evaporating_unitarity,
+)
 from spacetime_lab.holography.island import (
     hartman_maldacena_entropy,
     hartman_maldacena_growth_rate,
@@ -91,6 +102,7 @@ from spacetime_lab.holography.two_interval import (
 )
 
 __all__ = [
+    "bekenstein_hawking_entropy",
     "brown_henneaux_central_charge",
     "calabrese_cardy_2d",
     "cardy_formula",
@@ -100,11 +112,18 @@ __all__ = [
     "geodesic_length_btz",
     "hartman_maldacena_entropy",
     "hartman_maldacena_growth_rate",
+    "hawking_saddle_entropy",
     "island_saddle_entropy",
+    "island_saddle_entropy_evaporating",
     "page_curve",
+    "page_curve_evaporating",
     "page_time",
+    "page_time_evaporating",
+    "page_time_evaporating_numerical",
     "ryu_takayanagi_ads3",
     "ryu_takayanagi_btz",
+    "schwarzschild_evaporation_time",
+    "schwarzschild_mass",
     "thermal_calabrese_cardy",
     "thermal_entropy_density_high_T",
     "two_interval_connected_length",
@@ -112,6 +131,7 @@ __all__ = [
     "two_interval_entropy",
     "two_interval_mutual_information",
     "verify_btz_against_thermal_calabrese_cardy",
+    "verify_evaporating_unitarity",
     "verify_page_curve_unitarity",
     "verify_rt_against_calabrese_cardy",
     "verify_strominger_btz_cardy",
