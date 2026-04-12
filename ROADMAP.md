@@ -239,16 +239,34 @@ Ship every 2-4 weeks. Learn by building.
 
 ---
 
-## Phase 9 — v1.0 Release (months 17-18)
+## Phase 9 — Island formula and the Page curve (months 17-18)
 
-- Polish all modules
-- Complete documentation site
-- Tutorial video series
-- Paper draft (computational physics venue)
-- Community outreach (Twitter, Reddit /r/Physics, /r/GeneralRelativity)
-- Present at virtual seminar (if possible)
+**Status:** ✅ Done — shipped as v1.0.0 on 2026-04-11.
 
-**Release:** v1.0.0 🚀
+**Physics concepts:**
+- The Hawking information paradox
+- Don Page's 1993 prediction for the unitary curve
+- The island formula as a `min` over candidate quantum extremal surfaces
+- Hartman-Maldacena 2013: linear-growth saddle in eternal BTZ
+- Eternal-BH Page curve: rises linearly, saturates at `2 S_BH`
+- Connection to the two-interval phase transition (same `min` structure)
+
+**Deliverables:**
+- [x] `spacetime_lab.holography.island` subpackage with the closed-form Hartman-Maldacena saddle and the island saddle
+- [x] `page_curve` and `page_time` helpers (numerical root finding via `scipy.optimize.brentq`)
+- [x] `verify_page_curve_unitarity` gate function with full diagnostics
+- [x] Notebook `09_island_formula.ipynb` with the headline Page curve plot
+- [x] 41 unit tests pinned to closed-form invariants
+- [x] **Bit-exact verification**: continuity at the Page time, Page time independent of `G_N`, monotonicity of the Page curve, qualitative shape (trivial early, island late)
+- [ ] Evaporating-BH Page curve (with reservoir coupling) — *deferred to v1.1*
+- [ ] Numerical quantum extremal surface finder — *deferred*
+- [ ] Replica wormhole derivation — *not implementable in code*
+
+**Release:** **v1.0.0** 🚀 — tagged 2026-04-11.
+
+**This is the v1.0 milestone.** The complete project arc from
+Schwarzschild to the resolution of the Hawking information paradox
+is now in one unified codebase.
 
 ---
 

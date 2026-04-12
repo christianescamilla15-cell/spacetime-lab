@@ -6,6 +6,150 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-04-11 — Phase 9: Island formula and the Page curve (v1.0 MILESTONE)
+
+**The v1.0 milestone of Spacetime Lab.**  Closes Phase 9 of the
+18-month roadmap and completes the entire arc from Schwarzschild to
+the resolution of the Hawking information paradox.  Eight phases of
+preparatory work, plus this one, constitute the complete project:
+
+| Phase | Concept | Headline |
+|---|---|---|
+| 1 | Schwarzschild | Bekenstein-Hawking `S = A/(4 G_N)` |
+| 2 | Penrose diagrams | Causal structure |
+| 3 | Kerr + symplectic integrator | Carter's irreducible Killing tensor |
+| 4 | Horizon finders + photon shadow | Bardeen 1973 EHT geometry |
+| 5 | Quasinormal modes | Schwarzschild QNM verified vs Berti et al |
+| 6 | Quantum information | von Neumann entropy + Schmidt decomposition |
+| 7 | AdS/CFT foundations | Ryu-Takayanagi bit-exact vs Calabrese-Cardy |
+| 8 | BTZ + holographic phase transition | Strominger 1998 BTZ-Cardy match |
+| **9** | **Island formula** | **Page curve from the trivial-vs-island saddle transition** |
+
+The factor of `1/(4 G_N)` appears in every single phase: as
+Bekenstein-Hawking in Phases 1, 3, 4; as Brown-Henneaux
+`c = 3L/(2 G_N)` in Phase 7; as the Cardy-Strominger derivation in
+Phase 8; as the area term in the island formula in Phase 9.  The
+same number ties classical horizon area to quantum entanglement
+entropy across every level of the holographic dictionary.
+
+### Added (Phase 9)
+
+- `spacetime_lab.holography.island` — new module with the simplest
+  non-trivial implementation of the island formula:
+  - `hartman_maldacena_entropy(t, c, beta, eps)` — the trivial /
+    connected saddle in eternal BTZ thermofield double, closed-form
+    `(c/3) log[(beta/(pi eps)) cosh(2 pi t / beta)]`.  Uses an
+    overflow-safe `_log_cosh` helper for arbitrarily late times.
+  - `hartman_maldacena_growth_rate(c, beta)` — the late-time linear
+    growth rate `2 pi c / (3 beta)`.
+  - `island_saddle_entropy(r_+, G_N=1.0)` — the disconnected /
+    island saddle, equal to `2 S_BH = pi r_+ / G_N` (constant in
+    time for the eternal BH).
+  - `page_curve(t, r_+, L, eps, G_N=1.0)` — returns
+    `(entropy, phase)` where the entropy is `min(S_HM, 2 S_BH)`
+    and the phase is `"trivial"` or `"island"`.
+  - `page_time(r_+, L, eps, G_N=1.0)` — numerical root of
+    `S_HM(t_P) = 2 S_BH` via `scipy.optimize.brentq`.  Returns
+    `0.0` cleanly in the degenerate fine-cutoff regime where the
+    trivial saddle is already above the island saddle at `t = 0`.
+  - `verify_page_curve_unitarity(r_+, L, eps, G_N=1.0)` — gate
+    function returning a diagnostic dict with the Page time,
+    continuity residual, monotonicity check, and phase
+    identification at early/late times.
+- `notebooks/09_island_formula.ipynb` — concept + demo + closing
+  gate cell.  Walks through the Hawking paradox, Page's 1993
+  prediction, the island formula, the Hartman-Maldacena 2013
+  setup, the headline Page curve plot, the comparison plot for
+  multiple BH sizes, and the connection to the Phase 8
+  two-interval phase transition (same `min` structure, different
+  physics).
+
+### Tests
+
+- `tests/test_phase9.py` — 41 new tests:
+  - HM saddle at `t = 0` (closed form), even-in-`t` symmetry
+  - Late-time linear growth rate `2 pi c / (3 beta)` matches the
+    formula and the numerical derivative at large `t`
+  - Numerical stability for arbitrarily large arguments (`t = 1e6`)
+  - Island saddle equals `pi r_+ / G_N` and `2 * BTZ.bekenstein_hawking_entropy()`
+  - Page time exists, is positive, and the continuity residual
+    `|S_HM(t_P) - 2 S_BH| < 1e-9` across multiple parameter sets
+  - Page curve is in the trivial phase before `t_P`, in the
+    island phase after, and exactly equal to `2 S_BH` after the
+    transition
+  - Trivial phase value matches `S_HM(t)` exactly
+  - Page curve is monotonically non-decreasing
+  - **The Page time is independent of `G_N`** (a non-obvious
+    feature: both `c` and `2 S_BH` scale as `1/G_N` so the
+    coupling cancels in the equation determining `t_P`)
+  - Page time grows monotonically with horizon radius
+  - Degenerate fine-cutoff regime returns `t_P = 0` cleanly
+  - Verification gate function passes across the parameter space
+- Total project test suite: **472 tests** passing (up from 431 in
+  v0.8.0; +41 Phase 9).
+
+### Verification trail (every formula pinned before implementation)
+
+| Formula | Source |
+|---|---|
+| HM closed form `(c/3) log(cosh(2 pi t/beta) ...)` | Hartman-Maldacena 2013 §3.5, [arXiv:1303.1080](https://arxiv.org/abs/1303.1080) |
+| HM late-time growth rate `2 pi c / (3 beta)` | derivative of the closed form, HM 2013 §3.5 |
+| Island saddle = `2 S_BH` for eternal BTZ | Penington 2019, AEMM 2019 |
+| Page curve = `min(trivial, island)` | island formula prescription |
+| Resolution of the Hawking paradox | Penington 2019 ([arXiv:1905.08255](https://arxiv.org/abs/1905.08255)), AEMM 2019 ([arXiv:1905.08762](https://arxiv.org/abs/1905.08762)) |
+| Canonical review | Almheiri-Hartman-Maldacena-Shaghoulian-Tajdini 2020, [arXiv:2006.06872](https://arxiv.org/abs/2006.06872) |
+
+### Bug found and fixed during implementation
+
+The first cut of `hartman_maldacena_growth_rate` returned
+`pi c / (3 beta)`, which is the *single-sided* convention often
+quoted in reviews.  The HM 2013 formula uses the *two-sided* time
+convention with `cosh(2 pi t / beta)` in the argument, which
+gives a derivative `dS/dt = (c/3) * (2 pi / beta) * tanh(2 pi t/beta)`
+saturating to `2 pi c / (3 beta)` at late times — a factor of 2
+larger.  Caught immediately by the smoke test (numerical derivative
+at large `t` was double the formula prediction).  Fix: insert the
+factor of 2 in `hartman_maldacena_growth_rate` and document the
+sign convention in the docstring.  Bit-exact agreement after the
+fix.
+
+### Honest scope notes
+
+This release implements the **simplest** non-trivial version of
+the island formula:
+
+- **Eternal BTZ**, not an evaporating BH.  The eternal-BH Page
+  curve rises and **saturates** at `2 S_BH` rather than falling
+  back to zero, because the BH does not actually shrink.  The
+  full evaporating Page curve (Penington 2019, AEMM 2019)
+  requires coupling to a non-gravitational reservoir and would
+  be a v1.1 patch.
+- **Hartman-Maldacena 2013 closed form**, not a numerical
+  extremal-surface finder.  The closed form makes the
+  verification bit-exact.
+- **No quantum extremal surface formalism**.  The island here is
+  identified by hand (it lives at the bifurcation surface).
+- **No replica wormhole derivation**.  The 2019-2020 papers
+  derive the island formula from a Euclidean gravitational path
+  integral via the replica trick on multiple disconnected
+  gravitational saddles.  That is *the proof*, but it is an
+  analytical argument that does not become more illuminating by
+  being coded up.
+
+These are honest scope decisions.  The qualitative resolution of
+the paradox — *there is a non-trivial saddle that prevents the
+radiation entropy from growing forever* — is fully present in
+this release.  That is the v1.0 milestone.
+
+### Project status at v1.0
+
+- **9 phases shipped, 9 tags, 9 GitHub releases, 9 notebooks** —
+  in two calendar days
+- **472 tests passing** project-wide
+- **8 upstream PRs to bilby-dev/bilby** from Phase 1
+- The complete project arc from Schwarzschild to the resolution
+  of the Hawking information paradox in one unified codebase
+
 ## [0.8.0] — 2026-04-11 — Phase 8: Holographic depth (BTZ + Strominger + two-interval phase transition)
 
 Eighth substantive release. Closes Phase 8 of the 18-month

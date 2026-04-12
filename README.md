@@ -6,7 +6,8 @@ From Schwarzschild geodesics to holographic entanglement entropy — a modern, o
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
+[![Version 1.0.0](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/christianescamilla15-cell/spacetime-lab/releases/tag/v1.0.0)
+[![Tests](https://img.shields.io/badge/tests-472%20passing-brightgreen.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
 
 ---
 
@@ -30,7 +31,7 @@ Spacetime Lab is an interactive web platform and Python SDK for exploring black 
 | `horizons/` | Event horizon, ISCO, photon shadow finders | ✅ algebraic + Bardeen 1973 shadow (v0.4) |
 | `waves/` | Quasinormal modes + ringdown waveforms | ✅ Schwarzschild QNM + ringdown (v0.5) |
 | `entropy/` | Quantum information primitives (von Neumann, Schmidt, partial trace) | ✅ pure-numpy implementation (v0.6) |
-| `holography/` | Holographic entanglement entropy: AdS geodesics, RT, Brown-Henneaux | ✅ AdS_3/CFT_2 RT (v0.7) + BTZ + Strominger + two-interval phase transition (v0.8) |
+| `holography/` | Holographic entanglement entropy: AdS geodesics, RT, Brown-Henneaux, **island formula** | ✅ AdS_3/CFT_2 RT (v0.7) + BTZ + Strominger + two-interval phase transition (v0.8) + **Page curve from island formula (v1.0)** |
 | `waves/` | Quasinormal modes, ringdown, LIGO integration | 📅 Phase 5 |
 | (RT/HRT surfaces) | Holographic entanglement entropy via geodesic / minimal surface integration | 📅 Phase 7-8 |
 | `edu/` | Interactive tutorials and educational notebooks | 🔄 Continuous |
@@ -95,7 +96,7 @@ spacetime-lab/
 - ✅ Phase 6 — Quantum information primitives (v0.6.0)
 - ✅ Phase 7 — AdS/CFT foundations + Ryu-Takayanagi (v0.7.0)
 - ✅ Phase 8 — Holographic depth: BTZ, Strominger, two-interval phase transition (v0.8.0)
-- 🏗️ Phase 9 — Island formula and the Page curve (v1.0 milestone)
+- ✅ **Phase 9 — Island formula and the Page curve (v1.0.0)** ★ ROADMAP COMPLETE ★
 
 ## Tutorial notebooks
 
@@ -111,6 +112,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 06 | [`06_entanglement_entropy.ipynb`](./notebooks/06_entanglement_entropy.ipynb) | 6 | Density matrices, partial traces, von Neumann entropy, Schmidt decomposition, Bell pair = log 2, GHZ bipartitions, mutual information, the bridge to holographic entanglement entropy |
 | 07 | [`07_ads_cft_foundations.ipynb`](./notebooks/07_ads_cft_foundations.ipynb) | 7 | Pure AdS in Poincare coordinates, R = -n(n-1)/L^2 verified, Brown-Henneaux c = 3L/(2G_N), AdS_3 boundary geodesics, Ryu-Takayanagi formula bit-exactly equal to Calabrese-Cardy 2D CFT entropy across 5 orders of magnitude |
 | 08 | [`08_holographic_phase_transitions.ipynb`](./notebooks/08_holographic_phase_transitions.ipynb) | 8 | BTZ black hole as a quotient of AdS_3, Strominger 1998 microscopic derivation S_BH from CFT Cardy, finite-T Calabrese-Cardy with limit checks, two-interval phase transition with mutual information kink at cross-ratio = 1/2 |
+| 09 | [`09_island_formula.ipynb`](./notebooks/09_island_formula.ipynb) | 9 | The Hawking information paradox, Page's 1993 prediction, the island formula, Hartman-Maldacena 2013 closed form in eternal BTZ, **the Page curve plotted** — rises linearly until the Page time then saturates at 2 S_BH (the resolution of a 49-year-old paradox in one notebook) |
 
 ## Upstream contributions
 

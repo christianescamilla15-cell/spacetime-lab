@@ -68,6 +68,14 @@ from spacetime_lab.holography.geodesics import (
     brown_henneaux_central_charge,
     geodesic_length_ads3,
 )
+from spacetime_lab.holography.island import (
+    hartman_maldacena_entropy,
+    hartman_maldacena_growth_rate,
+    island_saddle_entropy,
+    page_curve,
+    page_time,
+    verify_page_curve_unitarity,
+)
 from spacetime_lab.holography.ryu_takayanagi import (
     calabrese_cardy_2d,
     ryu_takayanagi_ads3,
@@ -90,6 +98,11 @@ __all__ = [
     "cross_ratio",
     "geodesic_length_ads3",
     "geodesic_length_btz",
+    "hartman_maldacena_entropy",
+    "hartman_maldacena_growth_rate",
+    "island_saddle_entropy",
+    "page_curve",
+    "page_time",
     "ryu_takayanagi_ads3",
     "ryu_takayanagi_btz",
     "thermal_calabrese_cardy",
@@ -99,6 +112,7 @@ __all__ = [
     "two_interval_entropy",
     "two_interval_mutual_information",
     "verify_btz_against_thermal_calabrese_cardy",
+    "verify_page_curve_unitarity",
     "verify_rt_against_calabrese_cardy",
     "verify_strominger_btz_cardy",
 ]

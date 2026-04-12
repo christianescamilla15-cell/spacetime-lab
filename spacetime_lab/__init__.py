@@ -19,7 +19,7 @@ Modules:
     utils: Helpers, constants, plotting
 """
 
-__version__ = "0.8.0"
+__version__ = "1.0.0"
 __author__ = "Christian Hernández Escamilla"
 __license__ = "MIT"
 
