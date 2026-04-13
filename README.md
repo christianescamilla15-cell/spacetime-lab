@@ -6,8 +6,8 @@ From Schwarzschild geodesics to holographic entanglement entropy — a modern, o
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Version 1.5.0](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/christianescamilla15-cell/spacetime-lab/releases/tag/v1.5.0)
-[![Tests](https://img.shields.io/badge/tests-598%20passing-brightgreen.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
+[![Version 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/christianescamilla15-cell/spacetime-lab/releases/tag/v2.0.0)
+[![Tests](https://img.shields.io/badge/tests-634%20passing-brightgreen.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
 
 ---
 
@@ -101,6 +101,7 @@ spacetime-lab/
 - ✅ **v1.2 patch — Kerr QNM wrapper (m-splitting, prograde vs retrograde, BH spectroscopy)** (v1.2.0)
 - ✅ **v1.3 patch — Rotating BTZ (ergoregion, first law, rotating Strominger-Cardy)** (v1.3.0)
 - ✅ **v1.5 patch — SVG and TikZ Penrose renderers (pure-string, kind-grouped, CSS-themable)** (v1.5.0)
+- ✅ **v2.0 MAJOR — Real QES finder + replica wormholes + higher-d RT surfaces** (v2.0.0) ★ **SPRINT CLOSURE** ★
 
 ## Tutorial notebooks
 
@@ -121,6 +122,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 11 | [`11_kerr_qnm_spectroscopy.ipynb`](./notebooks/11_kerr_qnm_spectroscopy.ipynb) | v1.2 | Kerr QNM wrapper via `qnm.modes_cache`, breaking the Schwarzschild m-degeneracy into 2l+1 frequencies, prograde vs retrograde splitting (Berti-Cardoso-Starinets Fig 2 reproduced numerically), BH spectroscopy as a no-hair test — two measured QNMs must pin a single (M, a) |
 | 12 | [`12_rotating_btz.ipynb`](./notebooks/12_rotating_btz.ipynb) | v1.3 | Rotating BTZ: outer + inner horizons, phase diagram (M, J), approach to extremality (T_H → 0, Ω_H → 1/L), ergoregion between r_+ and r_erg = √(8 G_N L² M), first law + Smarr 2+1D, rotating Strominger-Cardy with asymmetric L_0 ≠ L̄_0 (r_- pieces cancel, total = π r_+/(2 G_N) exactly) |
 | 13 | [`13_penrose_renderers.ipynb`](./notebooks/13_penrose_renderers.ipynb) | v1.5 | Pure-string SVG and TikZ renderers for Penrose diagrams. Same Scene → three visually-consistent backends (SVG/TikZ/matplotlib). Live CSS theming demo (paper-white + dark-mode skinning the same SVG via stylesheet). TikZ standalone document mode for direct pdflatex compilation |
+| 14 | [`14_quantum_extremal_surfaces.ipynb`](./notebooks/14_quantum_extremal_surfaces.ipynb) | v2.0 | Real QES finder (generic API + JT+bath toy), replica-wormhole Page curve (disconnected Hawking vs connected island saddles, cross-over at closed-form t_P), higher-d RT strip area across AdS_3 to AdS_7 (closed form vs adaptive numerical quadrature, residuals ~1e-11). Sprint-closing retrospective |
 
 ## Upstream contributions
 

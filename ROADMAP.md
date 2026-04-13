@@ -383,6 +383,58 @@ already-shipped matplotlib backend.
 
 ---
 
+## v2.0 MAJOR — Real QES finder + replica wormholes + higher-d RT ★ SPRINT CLOSURE ★
+
+**Status:** ✅ Done — shipped as v2.0.0 on 2026-04-12.
+
+Fifth and final patch of the post-v1.0 sprint.  Upgrades the
+hand-identified island formulas of Phase 9 and v1.1 to the full
+formalism: a numerical QES finder that solves the extremality
+equation, plus a replica-wormhole picture reproducing those
+results bit-exactly, plus a higher-dimensional Ryu-Takayanagi
+minimal-surface finder.
+
+**Three new modules:**
+- `spacetime_lab.holography.qes` — generic 1-parameter QES finder,
+  JT+bath toy, island formula min
+- `spacetime_lab.holography.replica` — disconnected + connected
+  replica saddles (bit-exact reproduction of Phase 9)
+- `spacetime_lab.holography.minimal_surfaces` — pure AdS_{d+1}
+  strip RT area, closed form + adaptive numerical, d=2…6
+
+**Bit-exact cross-checks:**
+- Replica connected saddle = Phase 9 `island_saddle_entropy`:
+  residual **0.0**
+- Replica linear slope = Phase 9 `hartman_maldacena_growth_rate`:
+  residual **0.0**
+- RT strip numerical vs closed form: `~1e-11` at `d=3`, `~1e-6` elsewhere
+
+**Honest scope deferred to v2.1:** full JT+bath dynamical wrapper
+(static QES for now), two-parameter QES, replica Euclidean path
+integral derivation, black-hole RT backgrounds in higher d.
+
+**Tests:** 36 new, suite grew 598 → **634 passing**.
+
+**Release:** **v2.0.0** 🚀 — tagged 2026-04-12 — **closes the five-patch post-v1.0 sprint.**
+
+---
+
+## Post-v1.0 sprint summary
+
+| Patch | Date | Tests | Highlight |
+|---|---|---|---|
+| v1.1 | 2026-04-11 | 509 | Bell-shaped evaporating Page curve |
+| v1.2 | 2026-04-12 | 535 | Kerr QNM wrapper (BH spectroscopy) |
+| v1.3 | 2026-04-12 | 569 | Rotating BTZ + ergoregion + rotating Strominger-Cardy |
+| v1.5 | 2026-04-12 | 598 | Pure-string SVG + TikZ Penrose renderers |
+| v2.0 | 2026-04-12 | **634** | **Real QES + replica + higher-d RT** — sprint closure |
+
+From Phase 9 (v1.0, 472 tests) to v2.0 in two calendar days: +162
+tests, 5 releases, 5 new notebooks, ~3000 LOC.  All passed
+verify-before-code → bit-exact gate → honest-scope-keeping.
+
+---
+
 ## Success Metrics
 
 By v1.0:

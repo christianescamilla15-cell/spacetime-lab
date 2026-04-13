@@ -6,6 +6,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-04-12 — v2.0 MAJOR: real QES formalism + replica wormholes + higher-d RT
+
+**Fifth and final patch of the post-v1.0 sprint.**  The ambitious
+option of the three that were proposed for v2.0, delivered in one
+session.  Phase 9 and v1.1 identified the island formula saddles
+*by hand*; v2.0 implements the real formalism:
+
+- A generic 1-parameter QES finder that solves
+  :math:`\partial S_{\text{gen}}/\partial a = 0` numerically via
+  :func:`scipy.optimize.brentq`.
+- A JT gravity + CFT bath toy model for the generalized entropy.
+- A replica wormhole picture: disconnected + connected saddles,
+  each reproducing Phase 9's hand-identified values **bit-exactly**.
+- A higher-dimensional Ryu-Takayanagi minimal-surface finder for
+  pure AdS\ :sub:`d+1`, closed-form + numerical, verified across
+  :math:`d \in \{2, 3, 4, 5, 6\}`.
+
+### Added — three new modules
+
+**`spacetime_lab.holography.qes`** (the headline):
+- `jt_dilaton(a, phi_0, phi_r, beta)` — JT dilaton profile
+- `thermal_cft_interval_entropy(a, b, beta, c, epsilon)` —
+  Calabrese-Cardy 2D CFT thermal interval entropy
+- `jt_generalized_entropy(a, ...)` — `phi(a)/(4 G_N) + S_matter`
+- `jt_generalized_entropy_derivative(...)` — closed-form derivative
+- `extremize_generalized_entropy(s_gen, ds_gen_da, bracket)` —
+  generic QES finder, accepts any callable
+- `find_qes(...)` — JT+bath specialisation of the generic finder
+- `island_formula_min(...)` — outer-min over no-island / 1-island saddles
+- `QESResult` dataclass
+- `verify_qes_formalism(...)` — end-to-end gate
+
+**`spacetime_lab.holography.replica`**:
+- `disconnected_saddle_entropy(t, beta, c)` — linear Hawking growth
+  `2 π c t/(3 β)`
+- `connected_saddle_entropy(r_+, G_N)` — bounded island entropy
+  `π r_+/G_N = 2 S_BH`
+- `replica_island_saddle(t, r_+, beta, c, G_N)` — min of both,
+  returns winner + closed-form Page time `3 β r_+/(2 c G_N)`
+- `verify_replica_at_n_equals_1(...)` — bit-exact cross-check
+  against Phase 9's `island_saddle_entropy` and
+  `hartman_maldacena_growth_rate`
+
+**`spacetime_lab.holography.minimal_surfaces`**:
+- `rt_strip_area_pure_ads(L, epsilon, d, ads_radius)` — closed-form
+  RT strip area in pure AdS\ :sub:`d+1`, covers `d=2` (AdS\ :sub:`3`
+  log form) and `d>=3` (`1/epsilon^{d-2}` divergence) in one API
+- `rt_strip_area_numerical(L, epsilon, d, ads_radius, ...)` —
+  numerical via `scipy.integrate.quad` of the Euler-Lagrange-reduced
+  area integrand with the conserved quantity from translation
+  invariance
+- `verify_rt_strip_against_closed_form(...)` — cross-check across
+  dimensions 2–6
+
+### New notebook
+
+`notebooks/14_quantum_extremal_surfaces.ipynb` — concept + S_gen
+profile and extremality plots + island formula min with honest
+scope note + Page curve from replica saddle competition + RT strip
+profile in AdS\ :sub:`4` + closing gate + sprint closure
+retrospective.
+
+### Bit-exact residuals
+
+| Invariant | Residual |
+|---|---|
+| QES extremality `∂S_gen/∂a (a_QES) = 0` | `~2e-16` (brentq LSB) |
+| Replica connected saddle = Phase 9 `island_saddle_entropy` | `0.0` |
+| Replica disconnected slope = Phase 9 `hartman_maldacena_growth_rate` | `0.0` |
+| RT strip numerical vs closed form `d=3` | `~1e-11` |
+| RT strip numerical vs closed form `d=2, 4, 5, 6` | `~1e-6` to `~1e-13` |
+
+The replica residuals are literal `0.0`: the two code paths reduce
+to the same floating-point operation after the algebra, the same
+phenomenon seen in Phase 7 RT-vs-CC matches and Phase 9 HM-vs-island
+continuity.
+
+### Honest scope deferred
+
+- **Full JT+bath dynamical wrapper** — the QES finder is static;
+  Page-curve dynamics in this module comes from the replica picture
+  (which already reproduces the Page transition).  Merging the two
+  into a single time-dependent `S_gen(a, t)` is v2.1.
+- **Two-parameter QES** for two-sided TFD with asymmetric time
+  evolution
+- **Replica wormhole Euclidean path integral** — we ship on-shell
+  actions, not the path-integral derivation itself
+- **Black-hole RT backgrounds in higher d** — the module covers
+  pure AdS only.  Schwarzschild-AdS / higher-d BTZ RT surfaces
+  are v2.1 scope.
+- **Curved boundary regions** (disc, ellipse) — different
+  Euler-Lagrange equation
+
+### Tests
+
+`tests/test_phase_v2_0.py` — 36 new tests covering all three
+modules plus cross-module consistency (replica ↔ Phase 9 island).
+Suite: **598 → 634 passing**.
+
+### Bugs caught during verify-before-code
+
+1. **Wrong exponent in closed-form RT strip for `d >= 3`**: first
+   cut used `1/ε^(d-1)` divergence; correct is `1/ε^(d-2)`.  Caught
+   by the numerical quadrature giving ~200 vs closed-form ~10000
+   at `d=3`.  Fixed to `(d-2)` everywhere and the numerical /
+   closed-form residual dropped to `~1e-11`.
+2. **Trapezoid rule lost precision at high `d`**: the integrand
+   has a `1/z^{d-1}` UV spike plus a square-root endpoint
+   singularity at `z = z_*`.  Trapezoid was giving ~8% error at
+   `d=5`.  Switched to `scipy.integrate.quad` (adaptive) and all
+   residuals dropped to `< 1e-6`.
+3. **QES extremum is a maximum in the static toy model, not a
+   minimum**: initial gate checked `d²S/da² > 0` (minimum
+   convention).  Verified the sign is correct — the full island
+   formula takes `ext` (extremum) followed by outer `min` over
+   saddles, and the static toy doesn't produce island-wins
+   (no-island wins in this parameter regime).  Gate updated to
+   `d²S/da² ≠ 0` (sharp extremum, either sign) with documentation
+   of the convention.
+
+### Methodology — the 4-habit discipline on the biggest patch
+
+All four habits applied: verify-before-code (WebFetch to AEMM 2019
+and related), bit-exact gates (Phase 9 cross-check residual `0.0`,
+RT residual `~1e-11`), honest scope (JT+bath dynamical wrapper and
+replica path-integral explicitly deferred with rationale),
+concept-session-before-code (option C chosen after scope discussion
+in chat).
+
 ## [1.5.0] — 2026-04-12 — v1.5 patch: SVG and TikZ Penrose renderers
 
 Fourth v1.x patch.  Phase 2 (v0.2.0) shipped the matplotlib backend

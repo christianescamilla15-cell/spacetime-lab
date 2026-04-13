@@ -102,6 +102,31 @@ from spacetime_lab.holography.island import (
     page_time,
     verify_page_curve_unitarity,
 )
+from spacetime_lab.holography.minimal_surfaces import (
+    rt_strip_area_numerical,
+    rt_strip_area_pure_ads,
+    verify_rt_strip_against_closed_form,
+)
+from spacetime_lab.holography.qes import (
+    QESResult,
+    extremize_generalized_entropy,
+    find_qes,
+    island_formula_min,
+    jt_dilaton,
+    jt_dilaton_derivative,
+    jt_generalized_entropy,
+    jt_generalized_entropy_derivative,
+    no_island_saddle_entropy,
+    thermal_cft_interval_entropy,
+    thermal_cft_interval_entropy_derivative,
+    verify_qes_formalism,
+)
+from spacetime_lab.holography.replica import (
+    connected_saddle_entropy,
+    disconnected_saddle_entropy,
+    replica_island_saddle,
+    verify_replica_at_n_equals_1,
+)
 from spacetime_lab.holography.ryu_takayanagi import (
     calabrese_cardy_2d,
     ryu_takayanagi_ads3,
@@ -117,7 +142,26 @@ from spacetime_lab.holography.two_interval import (
 )
 
 __all__ = [
+    "QESResult",
     "bekenstein_hawking_entropy",
+    "connected_saddle_entropy",
+    "disconnected_saddle_entropy",
+    "extremize_generalized_entropy",
+    "find_qes",
+    "island_formula_min",
+    "jt_dilaton",
+    "jt_dilaton_derivative",
+    "jt_generalized_entropy",
+    "jt_generalized_entropy_derivative",
+    "no_island_saddle_entropy",
+    "replica_island_saddle",
+    "rt_strip_area_numerical",
+    "rt_strip_area_pure_ads",
+    "thermal_cft_interval_entropy",
+    "thermal_cft_interval_entropy_derivative",
+    "verify_qes_formalism",
+    "verify_replica_at_n_equals_1",
+    "verify_rt_strip_against_closed_form",
     "brown_henneaux_central_charge",
     "calabrese_cardy_2d",
     "cardy_formula",
