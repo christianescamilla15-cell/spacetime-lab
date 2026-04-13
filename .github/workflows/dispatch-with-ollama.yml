@@ -1,0 +1,186 @@
+name: dispatch-with-ollama
+
+# Autonomous dispatch with local Ollama inference (zero-cloud tokens).
+#
+# Unlike claude-dispatch.yml which only prepares the environment and waits
+# for Christian to arrive at the PC, this workflow actually runs the agent:
+#   1. git pull
+#   2. verify Ollama is up + model is pulled
+#   3. invoke aider (.agent/_wrapper/track_usage.py --executor aider)
+#      which runs the workflow prompt against a local Ollama model,
+#      auto-commits any code changes in the target repo, and logs
+#      input/output tokens to .agent/runs/_summary.jsonl
+#   4. commit + push the dispatch log entry
+#
+# Trigger from:
+#   - GitHub mobile app (Actions tab → "Run workflow")
+#   - gh CLI: gh workflow run dispatch-with-ollama.yml \
+#              -f workflow=check-deploys -f model=ollama/qwen2.5-coder:7b
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflow:
+        description: "Workflow slug from .agent/workflows/ (e.g. _smoke-aider, check-deploys)"
+        type: string
+        required: true
+        default: _smoke-aider
+      task:
+        description: "Plain-text context appended to the workflow prompt (optional)"
+        required: false
+        default: ""
+      model:
+        description: "Ollama model to use"
+        type: choice
+        required: true
+        default: ollama/qwen2.5-coder:7b
+        options:
+          - ollama/qwen2.5-coder:7b
+          - ollama/deepseek-r1:8b
+          - ollama/llama3.1:8b
+          - ollama/gemma3:4b
+      target_repo_path:
+        description: "Absolute path to the repo aider should edit (default: spacetime-lab itself)"
+        required: false
+        default: 'C:\Users\DANNY\Desktop\spacetime-lab'
+      timeout_minutes:
+        description: "Kill the aider run after N minutes (safety net)"
+        type: number
+        required: true
+        default: 10
+
+jobs:
+  dispatch-ollama:
+    runs-on: [self-hosted, windows, claude-dispatch]
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: powershell
+
+    env:
+      REPO_PATH: 'C:\Users\DANNY\Desktop\spacetime-lab'
+      OLLAMA_API_BASE: 'http://localhost:11434'
+
+    steps:
+      - name: Show inputs
+        run: |
+          Write-Host "workflow          : ${{ inputs.workflow }}"
+          Write-Host "model             : ${{ inputs.model }}"
+          Write-Host "target_repo_path  : ${{ inputs.target_repo_path }}"
+          Write-Host "task              : ${{ inputs.task }}"
+          Write-Host "timeout_minutes   : ${{ inputs.timeout_minutes }}"
+
+      - name: Pull latest master in the spacetime-lab repo
+        run: |
+          Set-Location $env:REPO_PATH
+          git fetch origin master
+          git checkout master
+          git pull --ff-only origin master
+
+      - name: Verify Ollama is up
+        run: |
+          try {
+              $r = Invoke-WebRequest -Uri "$env:OLLAMA_API_BASE/api/tags" `
+                   -UseBasicParsing -TimeoutSec 5
+              $body = ConvertFrom-Json $r.Content
+              Write-Host "Ollama OK. $($body.models.Count) models available."
+          } catch {
+              Write-Error "Ollama is not reachable at $env:OLLAMA_API_BASE."
+              Write-Error "Start the Ollama server and retry."
+              exit 1
+          }
+
+      - name: Verify selected model is pulled
+        run: |
+          $modelOnly = '${{ inputs.model }}' -replace '^ollama/', ''
+          $r = Invoke-WebRequest -Uri "$env:OLLAMA_API_BASE/api/tags" -UseBasicParsing
+          $body = ConvertFrom-Json $r.Content
+          $names = $body.models | ForEach-Object { $_.name }
+          if ($names -notcontains $modelOnly) {
+              Write-Error "Model $modelOnly is not pulled. Available: $($names -join ', ')"
+              Write-Error "Pull it with: ollama pull $modelOnly"
+              exit 1
+          }
+          Write-Host "Model $modelOnly is available."
+
+      - name: Verify target repo exists + clean working tree
+        run: |
+          $target = '${{ inputs.target_repo_path }}'
+          if (-not (Test-Path $target)) {
+              Write-Error "Target repo path does not exist: $target"
+              exit 1
+          }
+          Set-Location $target
+          $dirty = git status --porcelain
+          if ($dirty) {
+              Write-Warning "Target repo has uncommitted changes:"
+              $dirty | ForEach-Object { Write-Warning "  $_" }
+              Write-Warning "Aider will add its own commits on top of this dirty state."
+          } else {
+              Write-Host "Target repo clean."
+          }
+
+      - name: Invoke aider via track_usage.py (autonomous run)
+        # Runs aider with the selected workflow as its single message.
+        # Exit code is not a hard failure of this step: we still want to
+        # record the run in _summary.jsonl even if aider errored out, so
+        # continue-on-error: true and the next step checks the JSON.
+        continue-on-error: true
+        timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          Set-Location $env:REPO_PATH
+          & python .agent\_wrapper\track_usage.py `
+              --executor aider `
+              --model '${{ inputs.model }}' `
+              --repo-path '${{ inputs.target_repo_path }}' `
+              '${{ inputs.workflow }}' 2>&1 | Out-Host
+          Write-Host "aider exit code (track_usage.py): $LASTEXITCODE"
+
+      - name: Persist dispatch log + any aider commits to origin
+        run: |
+          $ErrorActionPreference = 'Continue'
+          Set-Location $env:REPO_PATH
+
+          # First: commit the summary.jsonl entry track_usage.py appended.
+          & git add .agent/runs/_summary.jsonl 2>&1 | Out-Host
+          & git diff --cached --quiet 2>&1 | Out-Host
+          if ($LASTEXITCODE -ne 0) {
+              $msg = "chore(dispatch-ollama): log run ${{ github.run_id }} model=${{ inputs.model }} workflow=${{ inputs.workflow }}"
+              & git -c user.email='dispatch-runner@local' `
+                    -c user.name='runner-desktop' `
+                    commit -m "$msg" --no-verify 2>&1 | Out-Host
+          }
+
+          # Second: push spacetime-lab (the log commit above).
+          $pushed = $false
+          for ($i = 1; $i -le 3; $i++) {
+              & git push origin master 2>&1 | Out-Host
+              if ($LASTEXITCODE -eq 0) { $pushed = $true; break }
+              Write-Host "push attempt $i returned $LASTEXITCODE, rebasing"
+              & git fetch origin master 2>&1 | Out-Host
+              & git rebase origin/master 2>&1 | Out-Host
+          }
+
+          # Third: if the target repo is different AND has aider commits,
+          # push those too.  target_repo_path may not be a git repo or
+          # may not have 'master' -- we tolerate either.
+          $target = '${{ inputs.target_repo_path }}'
+          if ($target -ne $env:REPO_PATH -and (Test-Path (Join-Path $target '.git'))) {
+              Set-Location $target
+              Write-Host "Pushing aider commits from $target"
+              & git push 2>&1 | Out-Host
+              if ($LASTEXITCODE -ne 0) {
+                  Write-Host "target-repo push skipped / failed (exit $LASTEXITCODE); leaving local."
+              }
+          }
+
+          exit 0
+
+      - name: Summary
+        run: |
+          Write-Host "=== dispatch-with-ollama complete ==="
+          Write-Host "  workflow: ${{ inputs.workflow }}"
+          Write-Host "  model:    ${{ inputs.model }}"
+          Write-Host "  target:   ${{ inputs.target_repo_path }}"
+          Write-Host "  summary:  .agent/runs/_summary.jsonl (latest entry auto-pushed)"
