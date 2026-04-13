@@ -75,3 +75,9 @@ docs/_build/
 # aggregated summary jsonl under version control.
 .agent/runs/*/
 !.agent/runs/_summary.jsonl
+
+# Aider conversation artifacts (auto-generated per run)
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v4/
+.aider*/
