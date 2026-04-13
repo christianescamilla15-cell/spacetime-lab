@@ -147,6 +147,11 @@ jobs:
           Write-Host "logged: $runId"
           Write-Host $json
 
+      - name: Write .agent/runs/LATEST.md briefing
+        run: |
+          Set-Location $env:REPO_PATH
+          & python .agent\_wrapper\write_latest.py 2>&1 | Out-Host
+
       - name: Persist dispatch log to origin
         # Auto-commits the appended _summary.jsonl line so dispatch history
         # is durable across machines / runner reinstalls.  Uses a local
@@ -162,7 +167,7 @@ jobs:
           $ErrorActionPreference = 'Continue'
           Set-Location $env:REPO_PATH
 
-          & git add .agent/runs/_summary.jsonl 2>&1 | Out-Host
+          & git add .agent/runs/_summary.jsonl .agent/runs/LATEST.md 2>&1 | Out-Host
           & git diff --cached --quiet 2>&1 | Out-Host
           if ($LASTEXITCODE -eq 0) {
               Write-Host "Nothing to commit (summary.jsonl unchanged)."

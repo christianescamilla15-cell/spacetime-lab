@@ -137,13 +137,18 @@ jobs:
               '${{ inputs.workflow }}' 2>&1 | Out-Host
           Write-Host "aider exit code (track_usage.py): $LASTEXITCODE"
 
+      - name: Write .agent/runs/LATEST.md briefing
+        run: |
+          Set-Location $env:REPO_PATH
+          & python .agent\_wrapper\write_latest.py 2>&1 | Out-Host
+
       - name: Persist dispatch log + any aider commits to origin
         run: |
           $ErrorActionPreference = 'Continue'
           Set-Location $env:REPO_PATH
 
-          # First: commit the summary.jsonl entry track_usage.py appended.
-          & git add .agent/runs/_summary.jsonl 2>&1 | Out-Host
+          # First: commit the summary.jsonl entry track_usage.py appended + LATEST briefing.
+          & git add .agent/runs/_summary.jsonl .agent/runs/LATEST.md 2>&1 | Out-Host
           & git diff --cached --quiet 2>&1 | Out-Host
           if ($LASTEXITCODE -ne 0) {
               $msg = "chore(dispatch-ollama): log run ${{ github.run_id }} model=${{ inputs.model }} workflow=${{ inputs.workflow }}"

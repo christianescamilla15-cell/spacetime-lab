@@ -255,7 +255,10 @@ jobs:
           $out = Join-Path $env:SPACETIME_LAB_PATH '.agent\runs\_summary.jsonl'
           Add-Content -Path $out -Value $json -Encoding UTF8
 
-          cmd /c "git add .agent/runs/_summary.jsonl 2>&1"
+          # Render LATEST.md briefing for the next interactive session.
+          & python .agent\_wrapper\write_latest.py 2>&1 | Out-Host
+
+          cmd /c "git add .agent/runs/_summary.jsonl .agent/runs/LATEST.md 2>&1"
           cmd /c "git diff --cached --quiet 2>&1"
           if ($LASTEXITCODE -ne 0) {
               $msg = "chore(bootstrap): ${{ inputs.project_name }} (${{ inputs.stack }})"

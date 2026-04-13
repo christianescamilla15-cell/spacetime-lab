@@ -1,5 +1,22 @@
 # Spacetime Lab — Claude Code Project Context
 
+## Session bootstrap (read first)
+
+When you open a new session in this repo, **immediately read
+`.agent/runs/LATEST.md` if it exists**.  That file is auto-generated
+by every dispatched workflow (claude-dispatch, dispatch-with-ollama,
+bootstrap-new-project) and summarises the most recent dispatch:
+its inputs, outputs, repo URL, duration, token usage, and a tail of
+the agent output.
+
+Without reading it you arrive blind to whatever the user just
+triggered from their phone or from `gh workflow run`.  With it, you
+already know what was scaffolded / opened / changed and can pick up
+the next step coherently.
+
+If `.agent/runs/LATEST.md` does **not** exist, no dispatch has run
+since the last full-clean checkout — proceed normally.
+
 ## What is this?
 Interactive platform for exploring black hole physics. Python SDK + FastAPI backend + React frontend. Combines visualization, simulation, and analysis in one unified toolkit.
 
