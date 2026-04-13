@@ -176,7 +176,7 @@ jobs:
                   $pushed = $true
                   break
               }
-              Write-Warning "push attempt $i failed — pulling and retrying"
+              Write-Warning "push attempt $i failed -- pulling and retrying"
               git fetch origin master
               git rebase origin/master
           }
