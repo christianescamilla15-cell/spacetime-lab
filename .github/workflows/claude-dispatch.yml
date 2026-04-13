@@ -1,0 +1,164 @@
+name: claude-dispatch
+
+# Phone → GitHub Actions → self-hosted runner (this PC) → prepare workspace.
+# The runner does NO LLM calls; it arranges the environment so that when
+# Christian arrives at the PC, Antigravity is already focused on the right
+# workflow with the relevant dashboards open in Chrome.  Actual agent work
+# happens interactively in the IDE afterward.
+#
+# Trigger from:
+#   - GitHub mobile app (Actions tab → "Run workflow")
+#   - gh CLI: gh workflow run claude-dispatch.yml -f workflow=check-deploys
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflow:
+        description: "Workflow slug (from .agent/workflows/)"
+        type: choice
+        required: true
+        default: check-deploys
+        options:
+          - check-deploys
+          - ship-patch
+          - verify-before-code
+      task:
+        description: "Plain-text task context (optional, becomes the first prompt)"
+        required: false
+        default: ""
+      open_ide:
+        description: "Open Antigravity IDE on the workflow file"
+        type: boolean
+        required: true
+        default: true
+      open_dashboards:
+        description: "Open deploy dashboards in Chrome (via CDP :9222)"
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  dispatch:
+    runs-on: [self-hosted, windows, claude-dispatch]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Show inputs
+        run: |
+          echo "workflow         : ${{ inputs.workflow }}"
+          echo "task             : ${{ inputs.task }}"
+          echo "open_ide         : ${{ inputs.open_ide }}"
+          echo "open_dashboards  : ${{ inputs.open_dashboards }}"
+
+      - name: Pull latest master in the repo on this PC
+        env:
+          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
+        run: |
+          cd "$REPO_PATH"
+          git fetch origin master
+          git checkout master
+          git pull --ff-only origin master
+
+      - name: Verify the selected workflow file exists
+        env:
+          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
+          WORKFLOW_SLUG: ${{ inputs.workflow }}
+        run: |
+          WF="$REPO_PATH/.agent/workflows/$WORKFLOW_SLUG.md"
+          test -f "$WF" || { echo "workflow file missing: $WF"; exit 1; }
+          echo "--- $WF ---"
+          head -40 "$WF"
+
+      - name: Verify CDP (:9222) is available
+        if: ${{ inputs.open_dashboards == true }}
+        run: |
+          curl -sf http://localhost:9222/json/version > /dev/null || {
+            echo "Chrome DevTools Protocol on :9222 is not available."
+            echo "Is Antigravity running?  Dashboards step will be skipped."
+            exit 78  # neutral; GitHub treats as skipped
+          }
+          echo "CDP OK."
+
+      - name: Open deploy dashboards via CDP
+        if: ${{ inputs.open_dashboards == true }}
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          tabs = [
+              "https://github.com/christianescamilla15-cell/spacetime-lab/actions",
+              "https://github.com/christianescamilla15-cell/spacetime-lab/releases",
+              "https://spacetime-lab.vercel.app",
+          ]
+          opened = []
+          for url in tabs:
+              req = urllib.request.Request(
+                  f"http://localhost:9222/json/new?{url}", method="PUT"
+              )
+              try:
+                  r = urllib.request.urlopen(req, timeout=5)
+                  data = json.loads(r.read())
+                  opened.append((url, data.get("id", "?")))
+              except Exception as exc:
+                  print(f"  failed to open {url}: {exc}")
+          print(f"Opened {len(opened)} dashboards in Chrome:")
+          for url, tid in opened:
+              print(f"  {tid}  {url}")
+          PY
+
+      - name: Open Antigravity IDE on the workflow file
+        if: ${{ inputs.open_ide == true }}
+        shell: cmd
+        env:
+          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
+          WORKFLOW_SLUG: ${{ inputs.workflow }}
+        run: |
+          start "" "C:\Users\DANNY\AppData\Local\Programs\Antigravity\bin\antigravity.cmd" ^
+            "%REPO_PATH%" ^
+            --goto ".agent\workflows\%WORKFLOW_SLUG%.md:1" ^
+            --reuse-window
+
+      - name: Record dispatch event to .agent/runs/_summary.jsonl
+        env:
+          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
+          WORKFLOW_SLUG: ${{ inputs.workflow }}
+          TASK: ${{ inputs.task }}
+          OPEN_IDE: ${{ inputs.open_ide }}
+          OPEN_DASH: ${{ inputs.open_dashboards }}
+        run: |
+          cd "$REPO_PATH"
+          python - <<'PY'
+          import datetime as dt, json, os
+          from pathlib import Path
+          now = dt.datetime.now(dt.timezone.utc)
+          iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+          entry = {
+              "run_id": now.strftime("%Y%m%dT%H%M%SZ") + "_dispatch",
+              "workflow": os.environ["WORKFLOW_SLUG"],
+              "task": os.environ.get("TASK", ""),
+              "kind": "dispatch-prepare",
+              "start": iso,
+              "end":   iso,
+              "duration_s": 0,
+              "exit_code": 0,
+              "inputs": {
+                  "open_ide":        os.environ.get("OPEN_IDE")  == "true",
+                  "open_dashboards": os.environ.get("OPEN_DASH") == "true",
+              },
+              "usage": {},  # LLM usage is measured separately by Antigravity session
+          }
+          out = Path(".agent/runs/_summary.jsonl")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          with out.open("a", encoding="utf-8") as f:
+              f.write(json.dumps(entry) + "\n")
+          print(f"logged {entry['run_id']}")
+          PY
+
+      - name: Summary
+        run: |
+          echo "=== dispatch complete ==="
+          echo "When you arrive at the PC:"
+          echo "  - Antigravity should be focused on .agent/workflows/${{ inputs.workflow }}.md"
+          echo "  - ${{ inputs.open_dashboards && 'Chrome has deploy dashboards open.' || 'Dashboards skipped.' }}"
+          echo "  - Run summary appended to .agent/runs/_summary.jsonl"
