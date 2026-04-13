@@ -6,6 +6,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-04-12 — v1.2 patch: Kerr QNM wrapper
+
+Second v1.x patch.  Extends the Phase 5 QNM wrapper from
+Schwarzschild-only to full Kerr: the 2D spheroidal-harmonic +
+5-term radial recurrence that Stein's `qnm` package solves is now
+exposed through Spacetime Lab's `waves` subpackage.  Breaks the
+Schwarzschild `m`-degeneracy into `2l + 1` distinct frequencies
+and enables the canonical BH spectroscopy test of the no-hair
+theorem.
+
+### Added
+
+- `spacetime_lab.waves.kerr_qnm(l, m, n, a_over_M, s)` — Kerr QNM
+  front-end at dimensionless spin `a/M ∈ [0, 1)`.  Thin wrapper
+  around `qnm.modes_cache` (Stein 2019, JOSS 4 1683).
+- `QNMResult` extended with optional `m: int | None` and
+  `a_over_M: float | None` fields (backward-compatible — existing
+  Schwarzschild code paths continue to set them to `None`).  For
+  Kerr modes the cache-based `qnm` API does not expose
+  `cf_truncation_error` / `n_cf_terms`, which are reported as
+  `nan` / `-1` respectively.
+- `notebooks/11_kerr_qnm_spectroscopy.ipynb` — the full Kerr QNM
+  concept + Berti-Cardoso-Starinets Figure 2 reproduction (Re and
+  Im of `Mω` vs `a/M` for `(l, m, n) = (2, ±2, 0)` and `(2, 0, 0)`)
+  + BH spectroscopy no-hair-test demonstration + closing gate cell.
+- `tests/test_phase_v1_2.py` — 26 new tests pinned to closed-form
+  invariants.  Total project suite grows from **509 to 535 passing
+  tests**.
+
+### Verified
+
+| Invariant | Tolerance |
+|---|---|
+| `qnm` docs anchor: `kerr_qnm(l=m=2, n=0, a=0.68)` = `0.52397510429 − 0.08151262363 i` | `abs_tol = 1e-10` |
+| Schwarzschild limit: Kerr path at `a=0` ≡ Schwarzschild path, for all `m ∈ {-l,...,l}` | `~1e-16` (bit-exact) |
+| `m`-degeneracy at `a = 0` (all `m` give the same ω) | `< 1e-10` |
+| Prograde less damped than retrograde: `|Im ω(m=2)| < |Im ω(m=-2)|` for `a > 0` | exact |
+| Prograde `Re(ω)` monotone increasing in `a` | exact |
+| Prograde damping decreases monotonically with `a` | exact |
+| All modes decay (`Im(ω) < 0`) | exact |
+
+### Physics highlights
+
+- The **Schwarzschild `m`-degeneracy** is broken at any non-zero
+  spin.  At `a = 0.9`, the `(l=2, m=+2, n=0)` prograde mode is
+  `0.6716 − 0.0649 i`, while the retrograde `(l=2, m=-2, n=0)` mode
+  is `0.2972 − 0.0883 i`.  Prograde is both *higher frequency* and
+  *longer-lived*.
+- **BH spectroscopy** (notebook §3): a true Kerr BH remnant with
+  `(M, a/M) = (1, 0.7)` produces `(2, 2, 0)` and `(3, 3, 0)` mode
+  frequencies that, when interpreted as observational data,
+  uniquely pin `(M, a)` at the intersection of two contours in
+  parameter space.  Any inconsistency would be a violation of the
+  no-hair theorem.
+
+### Honest scope deferred
+
+- **Kerr-Newman** (charged rotating BH) QNMs — different solver,
+  out of scope for Spacetime Lab v1.x
+- **Time-domain Kerr ringdown** — trivially composable from
+  `kerr_qnm` + existing `RingdownWaveform`; not scoped as a
+  separate deliverable
+- **Teukolsky angular eigenvalue** `A` — exposed by `qnm` but not
+  currently stored in `QNMResult`
+- **Superradiant bound states** — `kerr_qnm` returns decaying modes
+  only
+
+### Methodology
+
+Same verify-before-code → bit-exact gate → honest-scope-keeping
+discipline.  The qnm package's own docs provided the numerical
+anchor value `kerr_qnm(l=m=2, n=0, a=0.68) = 0.5239751042900845 −
+0.08151262363119974 i`, which was pinned at `abs_tol=1e-10` before
+writing any of the v1.2 implementation.  The Schwarzschild limit
+gate is the *cross-check*: the Kerr path at `a=0` goes through
+`qnm.modes_cache`, a completely different code path in `qnm` than
+`SchwOvertoneSeq`, and the two paths agree to machine precision
+(`~6e-16`).
+
 ## [1.1.0] — 2026-04-11 — v1.1 patch: the evaporating Page curve
 
 First post-v1.0 patch.  Extends the Phase 9 island formula module

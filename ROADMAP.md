@@ -300,6 +300,33 @@ returns to zero at `t_evap` (toy-model unitarity).
 
 ---
 
+## v1.2 patch — Kerr QNM wrapper
+
+**Status:** ✅ Done — shipped as v1.2.0 on 2026-04-12.
+
+Second v1.x patch.  Exposes Kerr QNMs through the Spacetime Lab
+`waves` subpackage by wrapping Stein's `qnm` package's cache-based
+Kerr front-end.
+
+**Physics concepts added:**
+- Kerr `m`-splitting: each `(l, n)` slot gives `2l + 1` frequencies
+- Prograde (`m > 0`) modes are less damped than retrograde (`m < 0`)
+- BH spectroscopy as a test of the no-hair theorem
+- Schwarzschild `m`-degeneracy recovered at `a = 0`
+
+**Deliverables:**
+- [x] `kerr_qnm(l, m, n, a_over_M, s)` front-end in `spacetime_lab.waves`
+- [x] `QNMResult` extended with optional `m` and `a_over_M` fields (backward-compatible)
+- [x] Notebook `11_kerr_qnm_spectroscopy.ipynb` with Berti-Cardoso-Starinets Fig 2 reproduction + BH spectroscopy demo
+- [x] 26 new tests (suite: 509 → **535 passing**)
+- [x] **Bit-exact verification**: qnm-docs anchor pinned at 1e-10, Schwarzschild limit cross-check at ~6e-16 (bit-exact between two independent qnm code paths)
+
+**Honest scope deferred:** Kerr-Newman (different solver), time-domain Kerr ringdown (trivially composable), Teukolsky `A` eigenvalue (not stored in `QNMResult`), superradiant bound states.
+
+**Release:** **v1.2.0** 🚀 — tagged 2026-04-12.
+
+---
+
 ## Success Metrics
 
 By v1.0:
