@@ -6,17 +6,17 @@
 
 | Field | Value |
 |---|---|
-| Run ID | `20260413T134712Z_bootstrap` |
-| Workflow | `bootstrap-new-project` |
-| Kind | `bootstrap-new-project` |
-| Start | `2026-04-13T13:47:12Z` |
-| End | `2026-04-13T13:47:12Z` |
-| Model | ollama/qwen2.5-coder:7b |
-| Project | dispatch-smoke-test-1 |
-| Stack | python-fastapi |
-| Visibility | private |
-| Repo URL | <https://github.com/christianescamilla15-cell/dispatch-smoke-test-1> |
+| Run ID | `20260413T135357Z_dispatch` |
+| Workflow | `check-deploys` |
+| Kind | `dispatch-prepare` |
+| Start | `2026-04-13T13:53:57Z` |
+| End | `2026-04-13T13:53:57Z` |
+| Duration | 0s |
+| Exit code | `0` |
+| Task | test LATEST.md briefing flow |
+| input.open_dashboards | false |
+| input.open_ide | false |
 
 ## How to act on this
 
-A new repo was created at https://github.com/christianescamilla15-cell/dispatch-smoke-test-1. If the user wants to iterate on it, treat the new repo as the working target. Files scaffolded by a local model may need a manual review -- small models sometimes emit whole-edit-format glitches. Check `git log` in the new repo and clean up any weird artifacts before layering new work.
+This was a prepare-only dispatch (0-token). The runner opened the IDE / dashboards for you; the agent work happens right here, interactively. Pick up the task described in the referenced workflow file.
