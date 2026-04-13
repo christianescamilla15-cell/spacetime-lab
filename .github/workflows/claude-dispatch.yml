@@ -42,123 +42,115 @@ jobs:
     runs-on: [self-hosted, windows, claude-dispatch]
     defaults:
       run:
-        shell: bash
+        shell: pwsh
+
+    env:
+      REPO_PATH: 'C:\Users\DANNY\Desktop\spacetime-lab'
+      ANTIGRAVITY_CMD: 'C:\Users\DANNY\AppData\Local\Programs\Antigravity\bin\antigravity.cmd'
 
     steps:
       - name: Show inputs
         run: |
-          echo "workflow         : ${{ inputs.workflow }}"
-          echo "task             : ${{ inputs.task }}"
-          echo "open_ide         : ${{ inputs.open_ide }}"
-          echo "open_dashboards  : ${{ inputs.open_dashboards }}"
+          Write-Host "workflow         : ${{ inputs.workflow }}"
+          Write-Host "task             : ${{ inputs.task }}"
+          Write-Host "open_ide         : ${{ inputs.open_ide }}"
+          Write-Host "open_dashboards  : ${{ inputs.open_dashboards }}"
 
       - name: Pull latest master in the repo on this PC
-        env:
-          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
         run: |
-          cd "$REPO_PATH"
+          Set-Location $env:REPO_PATH
           git fetch origin master
           git checkout master
           git pull --ff-only origin master
 
       - name: Verify the selected workflow file exists
-        env:
-          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
-          WORKFLOW_SLUG: ${{ inputs.workflow }}
         run: |
-          WF="$REPO_PATH/.agent/workflows/$WORKFLOW_SLUG.md"
-          test -f "$WF" || { echo "workflow file missing: $WF"; exit 1; }
-          echo "--- $WF ---"
-          head -40 "$WF"
+          $wf = Join-Path $env:REPO_PATH ".agent\workflows\${{ inputs.workflow }}.md"
+          if (-not (Test-Path $wf)) {
+              Write-Error "workflow file missing: $wf"
+              exit 1
+          }
+          Write-Host "--- $wf ---"
+          Get-Content $wf -TotalCount 40
 
       - name: Verify CDP (:9222) is available
         if: ${{ inputs.open_dashboards == true }}
+        continue-on-error: true
         run: |
-          curl -sf http://localhost:9222/json/version > /dev/null || {
-            echo "Chrome DevTools Protocol on :9222 is not available."
-            echo "Is Antigravity running?  Dashboards step will be skipped."
-            exit 78  # neutral; GitHub treats as skipped
+          try {
+              $r = Invoke-WebRequest -Uri 'http://localhost:9222/json/version' -UseBasicParsing -TimeoutSec 3
+              if ($r.StatusCode -ne 200) { throw "status $($r.StatusCode)" }
+              Write-Host "CDP OK: $((ConvertFrom-Json $r.Content).Browser)"
+          } catch {
+              Write-Warning "Chrome DevTools Protocol on :9222 not available. Is Antigravity running?"
+              Write-Warning "Dashboards step will skip."
+              exit 1
           }
-          echo "CDP OK."
 
       - name: Open deploy dashboards via CDP
         if: ${{ inputs.open_dashboards == true }}
+        continue-on-error: true
         run: |
-          python - <<'PY'
-          import json, urllib.request
-          tabs = [
-              "https://github.com/christianescamilla15-cell/spacetime-lab/actions",
-              "https://github.com/christianescamilla15-cell/spacetime-lab/releases",
-              "https://spacetime-lab.vercel.app",
-          ]
-          opened = []
-          for url in tabs:
-              req = urllib.request.Request(
-                  f"http://localhost:9222/json/new?{url}", method="PUT"
-              )
-              try:
-                  r = urllib.request.urlopen(req, timeout=5)
-                  data = json.loads(r.read())
-                  opened.append((url, data.get("id", "?")))
-              except Exception as exc:
-                  print(f"  failed to open {url}: {exc}")
-          print(f"Opened {len(opened)} dashboards in Chrome:")
-          for url, tid in opened:
-              print(f"  {tid}  {url}")
-          PY
+          $tabs = @(
+              'https://github.com/christianescamilla15-cell/spacetime-lab/actions',
+              'https://github.com/christianescamilla15-cell/spacetime-lab/releases',
+              'https://spacetime-lab.vercel.app'
+          )
+          $opened = 0
+          foreach ($url in $tabs) {
+              try {
+                  $enc = [uri]::EscapeDataString($url)
+                  $r = Invoke-WebRequest -Method Put -Uri "http://localhost:9222/json/new?$enc" -UseBasicParsing -TimeoutSec 5
+                  $tab = ConvertFrom-Json $r.Content
+                  Write-Host "  $($tab.id)  $url"
+                  $opened++
+              } catch {
+                  Write-Warning "  failed to open $url : $_"
+              }
+          }
+          Write-Host "Opened $opened / $($tabs.Count) dashboards."
 
       - name: Open Antigravity IDE on the workflow file
         if: ${{ inputs.open_ide == true }}
-        shell: cmd
-        env:
-          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
-          WORKFLOW_SLUG: ${{ inputs.workflow }}
         run: |
-          start "" "C:\Users\DANNY\AppData\Local\Programs\Antigravity\bin\antigravity.cmd" ^
-            "%REPO_PATH%" ^
-            --goto ".agent\workflows\%WORKFLOW_SLUG%.md:1" ^
-            --reuse-window
+          $wf = ".agent\workflows\${{ inputs.workflow }}.md:1"
+          Write-Host "Launching Antigravity focused on $wf"
+          Start-Process -FilePath $env:ANTIGRAVITY_CMD `
+              -ArgumentList @($env:REPO_PATH, '--goto', $wf, '--reuse-window') `
+              -WorkingDirectory $env:REPO_PATH
 
       - name: Record dispatch event to .agent/runs/_summary.jsonl
-        env:
-          REPO_PATH: C:\Users\DANNY\Desktop\spacetime-lab
-          WORKFLOW_SLUG: ${{ inputs.workflow }}
-          TASK: ${{ inputs.task }}
-          OPEN_IDE: ${{ inputs.open_ide }}
-          OPEN_DASH: ${{ inputs.open_dashboards }}
         run: |
-          cd "$REPO_PATH"
-          python - <<'PY'
-          import datetime as dt, json, os
-          from pathlib import Path
-          now = dt.datetime.now(dt.timezone.utc)
-          iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-          entry = {
-              "run_id": now.strftime("%Y%m%dT%H%M%SZ") + "_dispatch",
-              "workflow": os.environ["WORKFLOW_SLUG"],
-              "task": os.environ.get("TASK", ""),
-              "kind": "dispatch-prepare",
-              "start": iso,
-              "end":   iso,
-              "duration_s": 0,
-              "exit_code": 0,
-              "inputs": {
-                  "open_ide":        os.environ.get("OPEN_IDE")  == "true",
-                  "open_dashboards": os.environ.get("OPEN_DASH") == "true",
-              },
-              "usage": {},  # LLM usage is measured separately by Antigravity session
+          Set-Location $env:REPO_PATH
+          $now = (Get-Date).ToUniversalTime()
+          $iso = $now.ToString("yyyy-MM-ddTHH:mm:ssZ")
+          $runId = $now.ToString("yyyyMMddTHHmmssZ") + "_dispatch"
+          $entry = [ordered]@{
+              run_id     = $runId
+              workflow   = '${{ inputs.workflow }}'
+              task       = '${{ inputs.task }}'
+              kind       = 'dispatch-prepare'
+              start      = $iso
+              end        = $iso
+              duration_s = 0
+              exit_code  = 0
+              inputs     = @{
+                  open_ide        = [System.Convert]::ToBoolean('${{ inputs.open_ide }}')
+                  open_dashboards = [System.Convert]::ToBoolean('${{ inputs.open_dashboards }}')
+              }
+              usage      = @{}
           }
-          out = Path(".agent/runs/_summary.jsonl")
-          out.parent.mkdir(parents=True, exist_ok=True)
-          with out.open("a", encoding="utf-8") as f:
-              f.write(json.dumps(entry) + "\n")
-          print(f"logged {entry['run_id']}")
-          PY
+          $json = $entry | ConvertTo-Json -Depth 6 -Compress
+          $out = Join-Path $env:REPO_PATH '.agent\runs\_summary.jsonl'
+          New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
+          Add-Content -Path $out -Value $json -Encoding UTF8
+          Write-Host "logged: $runId"
+          Write-Host $json
 
       - name: Summary
         run: |
-          echo "=== dispatch complete ==="
-          echo "When you arrive at the PC:"
-          echo "  - Antigravity should be focused on .agent/workflows/${{ inputs.workflow }}.md"
-          echo "  - ${{ inputs.open_dashboards && 'Chrome has deploy dashboards open.' || 'Dashboards skipped.' }}"
-          echo "  - Run summary appended to .agent/runs/_summary.jsonl"
+          Write-Host "=== dispatch complete ==="
+          Write-Host "When you arrive at the PC:"
+          Write-Host "  - Antigravity focused on .agent/workflows/${{ inputs.workflow }}.md"
+          Write-Host "  - Dashboards: ${{ inputs.open_dashboards == true && 'opened in Chrome' || 'skipped' }}"
+          Write-Host "  - Run summary appended to .agent/runs/_summary.jsonl"
