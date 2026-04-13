@@ -196,9 +196,15 @@ jobs:
           cmd /c "git status --short 2>&1"
           Write-Host "--- Git log (before runner commit) ---"
           cmd /c "git log --oneline 2>&1"
-          # If aider left changes uncommitted OR the working tree has any
-          # untracked files the LLM created, commit them under the runner
-          # identity so the scaffold is fully persisted.
+          # Exclude aider's conversation artifacts from the scaffold.
+          # (Append; preserve whatever .gitignore aider authored for the
+          # target stack.)
+          $gi = Join-Path $target '.gitignore'
+          $aiderIgn = "`n# Aider conversation artifacts`n.aider*`n"
+          Add-Content -Path $gi -Value $aiderIgn -Encoding UTF8
+          # Also untrack them if git already picked them up.
+          cmd /c "git rm --cached -r --ignore-unmatch .aider.chat.history.md .aider.input.history .aider.tags.cache.v4 2>&1"
+          # Now commit everything aider produced + our .gitignore fix.
           cmd /c "git add -A 2>&1"
           cmd /c "git diff --cached --quiet 2>&1"
           $stagedExit = $LASTEXITCODE
