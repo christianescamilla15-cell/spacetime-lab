@@ -76,7 +76,11 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
-        shell: powershell
+        # $ErrorActionPreference='Continue' globally so native commands
+        # writing to stderr (git, gh, vercel, aider progress) do NOT
+        # trigger PS5.1's NativeCommandError.  Steps still rely on
+        # $LASTEXITCODE explicitly for real error detection.
+        shell: powershell -NoProfile -Command "$ErrorActionPreference='Continue'; . '{0}'"
 
     env:
       SPACETIME_LAB_PATH: 'C:\Users\DANNY\Desktop\spacetime-lab'
