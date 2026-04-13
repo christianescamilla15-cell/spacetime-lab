@@ -355,6 +355,34 @@ the full two-parameter `(M, J)` family.
 
 ---
 
+## v1.5 patch — SVG and TikZ Penrose renderers
+
+**Status:** ✅ Done — shipped as v1.5.0 on 2026-04-12.
+
+Fourth v1.x patch.  Implements the SVG and TikZ backends that
+Phase 2 (v0.2.0) left as `NotImplementedError` stubs.  Pure-string
+output, no runtime deps, shared kind-to-style mapping with the
+already-shipped matplotlib backend.
+
+**Capabilities added:**
+- Standalone `<svg>...</svg>` document with `kind-{kind}` CSS groups
+- TikZ `tikzpicture` snippet with optional `standalone` document preamble for direct `pdflatex` compilation
+- Browser-portable Unicode `ℐ` for `\mathscr{I}` in SVG; full LaTeX math in TikZ
+- `PathStyle.stroke` and `width` override the kind default in both backends; hex colours translated to TikZ `rgb,255:` spec
+- Empty scene tolerated (placeholder canvas, no crash)
+
+**Deliverables:**
+- [x] `render_svg` and `render_tikz` in `spacetime_lab.diagrams.render`
+- [x] Notebook `13_penrose_renderers.ipynb` with Minkowski + Schwarzschild rendered to all three backends + live CSS theming demo
+- [x] 29 new tests pinned to structural invariants (suite: 569 → **598 passing**)
+- [x] **All gates pass exactly**: well-formed XML, kind grouping consistent across backends, infinity counts match, dasharray inheritance, override behaviour, hex → TikZ rgb conversion
+
+**Honest scope deferred:** PNG/PDF rasterisers (downstream tools), interactive SVG (frontend concern), full LaTeX-in-SVG glyph fidelity, embedded Penrose backend.
+
+**Release:** **v1.5.0** 🚀 — tagged 2026-04-12.
+
+---
+
 ## Success Metrics
 
 By v1.0:

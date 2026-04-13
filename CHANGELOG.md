@@ -6,6 +6,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-04-12 — v1.5 patch: SVG and TikZ Penrose renderers
+
+Fourth v1.x patch.  Phase 2 (v0.2.0) shipped the matplotlib backend
+for Penrose diagrams but left `render_svg` and `render_tikz` as
+stubs raising `NotImplementedError`.  v1.5 implements both as pure
+strings with no runtime dependency, sharing a kind-to-style table
+with the matplotlib backend so all three produce visually
+consistent diagrams from the same `Scene`.
+
+### Added
+
+- `spacetime_lab.diagrams.render.render_svg(scene, width, height,
+  padding, show_labels, label_offset)` — pure-string SVG renderer:
+  - Standalone `<svg>...</svg>` document, ready to write to file
+    or embed in HTML
+  - Paths grouped into `<g class="kind-{kind}">` so frontend CSS
+    can re-skin entire categories without parsing `<path>` attrs
+  - Configurable canvas + padding; auto-fitted bounding box with
+    margin
+  - Infinities rendered as `<text>` with Unicode `ℐ` for
+    `\mathscr{I}` (browser-portable, no LaTeX engine required)
+  - Empty scene yields a valid placeholder, not a crash
+- `spacetime_lab.diagrams.render.render_tikz(scene, scale,
+  show_labels, label_offset, standalone)` — pure-string TikZ
+  renderer:
+  - LaTeX `tikzpicture` snippet, ready to paste into a document
+    that loads `\usepackage{tikz}`
+  - `standalone=True` wraps in a `\documentclass{standalone}`
+    preamble for `pdflatex` direct compilation
+  - Infinities mapped to `\mathscr{I}^{\pm}` / `i^{\pm,0}` LaTeX
+    math
+  - Hex colours from `PathStyle` translated to TikZ `rgb,255:`
+    spec; default kind colours use named `xcolor` tokens
+- `notebooks/13_penrose_renderers.ipynb` — concept + Minkowski and
+  Schwarzschild rendered to all three backends + CSS theming demo
+  (paper-white and dark mode skinning the same SVG via stylesheets)
+  + closing structural-invariants gate cell
+- `tests/test_phase_v1_5.py` — 29 new tests pinned to structural
+  invariants (envelope shape, well-formed XML, kind grouping,
+  infinity count, dasharray inheritance, override behaviour,
+  cross-backend consistency).  Suite: **569 → 598 passing**.
+
+### Verified
+
+| Invariant | Tolerance |
+|---|---|
+| SVG output is well-formed XML (parseable by `xml.etree`) | exact |
+| Each `Path.kind` produces one `<g class="kind-{kind}">` group / `% --- {kind} ---` TikZ comment | exact |
+| Each `Infinity` produces exactly one `<text>` / `\node` | exact |
+| Horizons emit `stroke-dasharray` (SVG) and `dashed` (TikZ) | exact |
+| Boundaries emit no dasharray | exact |
+| `PathStyle.stroke` overrides the kind default in both backends | exact |
+| Hex colour `#abcdef` → SVG literal + TikZ `rgb,255:red,171;green,205;blue,239` | exact |
+| `standalone=True` wraps the TikZ in `\documentclass{standalone}` ... `\end{document}` | exact |
+| Empty scene does not crash | exact |
+| Cross-backend: `svg.count('<path ') == tz.count(r'\\draw[') == len(scene.paths)` | exact |
+
+### Implementation notes
+
+The shared kind-to-style table now lives in `render.py` as two
+constants `_KIND_STYLE_SVG` and `_KIND_STYLE_TIKZ`, ensuring all
+three backends agree on stroke colour and dash behaviour per kind.
+The matplotlib backend's `kind_defaults` dict was already aligned
+with these values from Phase 2; the v1.5 patch did not need to
+modify it.
+
+The SVG dasharray uses simple two-number patterns (`6 4` for
+horizons, `3 3` for singularities, `1 3` for guides) so they
+render consistently across browsers without depending on
+`stroke-dashoffset` defaults.
+
+### Honest scope deferred
+
+- **PNG / JPEG / PDF rasterisers** — these belong downstream
+  (browser SVG renderer, `rsvg-convert`, `pdflatex`)
+- **Interactive SVG** — clicks, hovers, animation hooks belong
+  to the frontend, not this Python package
+- **Full LaTeX glyph fidelity in SVG** — SVG cannot embed
+  arbitrary LaTeX; we use Unicode `ℐ` for `\mathscr{I}`, which is
+  browser-portable and visually clean
+- **Embedded Penrose backend** (penrose.cs.cmu.edu) — different
+  ecosystem, different goals; out of scope
+
+### Methodology
+
+This was the most interface-heavy patch of the v1.x sprint, but
+followed the same verify-before-code → bit-exact gate →
+honest-scope-keeping pattern.  The "verify" step here was reading
+the existing `render_matplotlib` for the kind-to-style mapping and
+the `Scene` / `Path` / `Infinity` dataclasses in `penrose.py` to
+pin the wire format before writing any of the new code.
+
 ## [1.3.0] — 2026-04-12 — v1.3 patch: Rotating BTZ + ergoregion + rotating Strominger
 
 Third v1.x patch.  Extends the Phase 8 non-rotating BTZ module to

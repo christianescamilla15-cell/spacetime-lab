@@ -6,8 +6,8 @@ From Schwarzschild geodesics to holographic entanglement entropy — a modern, o
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Version 1.3.0](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/christianescamilla15-cell/spacetime-lab/releases/tag/v1.3.0)
-[![Tests](https://img.shields.io/badge/tests-569%20passing-brightgreen.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
+[![Version 1.5.0](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/christianescamilla15-cell/spacetime-lab/releases/tag/v1.5.0)
+[![Tests](https://img.shields.io/badge/tests-598%20passing-brightgreen.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
 
 ---
 
@@ -100,6 +100,7 @@ spacetime-lab/
 - ✅ **v1.1 patch — Evaporating Schwarzschild Page curve (bell-shaped, returns to zero)** (v1.1.0)
 - ✅ **v1.2 patch — Kerr QNM wrapper (m-splitting, prograde vs retrograde, BH spectroscopy)** (v1.2.0)
 - ✅ **v1.3 patch — Rotating BTZ (ergoregion, first law, rotating Strominger-Cardy)** (v1.3.0)
+- ✅ **v1.5 patch — SVG and TikZ Penrose renderers (pure-string, kind-grouped, CSS-themable)** (v1.5.0)
 
 ## Tutorial notebooks
 
@@ -119,6 +120,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 10 | [`10_evaporating_page_curve.ipynb`](./notebooks/10_evaporating_page_curve.ipynb) | v1.1 | Page 1976 Schwarzschild evaporation law, the cubic shrinking `M(t) = M_0(1-t/t_evap)^(1/3)`, no-island vs QES saddles for an evaporating BH, the **bell-shaped Page curve that returns to zero at t_evap** (toy-model unitarity), closed-form Page time `t_P = (1 - √2/4) t_evap` (not at the midpoint!) |
 | 11 | [`11_kerr_qnm_spectroscopy.ipynb`](./notebooks/11_kerr_qnm_spectroscopy.ipynb) | v1.2 | Kerr QNM wrapper via `qnm.modes_cache`, breaking the Schwarzschild m-degeneracy into 2l+1 frequencies, prograde vs retrograde splitting (Berti-Cardoso-Starinets Fig 2 reproduced numerically), BH spectroscopy as a no-hair test — two measured QNMs must pin a single (M, a) |
 | 12 | [`12_rotating_btz.ipynb`](./notebooks/12_rotating_btz.ipynb) | v1.3 | Rotating BTZ: outer + inner horizons, phase diagram (M, J), approach to extremality (T_H → 0, Ω_H → 1/L), ergoregion between r_+ and r_erg = √(8 G_N L² M), first law + Smarr 2+1D, rotating Strominger-Cardy with asymmetric L_0 ≠ L̄_0 (r_- pieces cancel, total = π r_+/(2 G_N) exactly) |
+| 13 | [`13_penrose_renderers.ipynb`](./notebooks/13_penrose_renderers.ipynb) | v1.5 | Pure-string SVG and TikZ renderers for Penrose diagrams. Same Scene → three visually-consistent backends (SVG/TikZ/matplotlib). Live CSS theming demo (paper-white + dark-mode skinning the same SVG via stylesheet). TikZ standalone document mode for direct pdflatex compilation |
 
 ## Upstream contributions
 
