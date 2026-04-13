@@ -1,0 +1,237 @@
+name: bootstrap-new-project
+
+# Create a brand-new repo from scratch, scaffold it with aider+Ollama,
+# and push the initial commit.  Zero-cloud (local inference), autonomous.
+#
+# Flow:
+#   1. gh repo create <user>/<project>  (shell, deterministic)
+#   2. clone to %TEMP%\<project>         (shell)
+#   3. aider scaffolds the initial files using
+#      .agent/workflows/bootstrap-new-project.md as the prompt, with
+#      PROJECT_NAME / STACK / PROJECT_DESCRIPTION exposed via env
+#   4. git add + commit (runner side; aider runs with --auto-commits)
+#   5. git push
+#   6. optionally: vercel link + first deploy
+#   7. log the dispatch event to spacetime-lab/.agent/runs/_summary.jsonl
+#
+# Trigger from phone via GitHub mobile app, or:
+#   gh workflow run bootstrap-new-project.yml \
+#      -f project_name=mopras-optimizer \
+#      -f stack=python-fastapi \
+#      -f description='API que optimiza mis compras semanales' \
+#      -f deploy_vercel=false \
+#      -f visibility=private
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: "Repo/project name (lowercase, hyphen-separated)"
+        required: true
+      stack:
+        description: "Stack scaffold"
+        type: choice
+        required: true
+        default: python-fastapi
+        options:
+          - python-fastapi
+          - react-vite
+          - python-cli
+          - streamlit
+      description:
+        description: "One-line project description"
+        required: true
+      visibility:
+        description: "Repo visibility"
+        type: choice
+        required: true
+        default: private
+        options:
+          - private
+          - public
+      deploy_vercel:
+        description: "Run vercel link + first deploy after push (react-vite only)"
+        type: boolean
+        required: true
+        default: false
+      model:
+        description: "Ollama model for the scaffold"
+        type: choice
+        required: true
+        default: ollama/qwen2.5-coder:7b
+        options:
+          - ollama/qwen2.5-coder:7b
+          - ollama/deepseek-r1:8b
+          - ollama/llama3.1:8b
+          - ollama/gemma3:4b
+      timeout_minutes:
+        description: "Aider timeout"
+        type: number
+        required: true
+        default: 8
+
+jobs:
+  bootstrap:
+    runs-on: [self-hosted, windows, claude-dispatch]
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: powershell
+
+    env:
+      SPACETIME_LAB_PATH: 'C:\Users\DANNY\Desktop\spacetime-lab'
+      OLLAMA_API_BASE: 'http://localhost:11434'
+      GH_OWNER: christianescamilla15-cell
+      PROJECTS_ROOT: 'C:\Users\DANNY\Desktop\projects'
+
+    steps:
+      - name: Show inputs
+        run: |
+          Write-Host "project_name: ${{ inputs.project_name }}"
+          Write-Host "stack       : ${{ inputs.stack }}"
+          Write-Host "description : ${{ inputs.description }}"
+          Write-Host "visibility  : ${{ inputs.visibility }}"
+          Write-Host "model       : ${{ inputs.model }}"
+
+      - name: Validate project name
+        run: |
+          $name = '${{ inputs.project_name }}'
+          if ($name -notmatch '^[a-z][a-z0-9-]*[a-z0-9]$') {
+              Write-Error "project_name must be lowercase, start with a letter, hyphen-separated.  Got: $name"
+              exit 1
+          }
+          New-Item -ItemType Directory -Force -Path $env:PROJECTS_ROOT | Out-Null
+
+      - name: Pull spacetime-lab master (so we have latest workflow prompt)
+        run: |
+          Set-Location $env:SPACETIME_LAB_PATH
+          git fetch origin master
+          git pull --ff-only origin master
+
+      - name: Verify Ollama is up + model is pulled
+        run: |
+          $modelOnly = '${{ inputs.model }}' -replace '^ollama/', ''
+          try {
+              $r = Invoke-WebRequest -Uri "$env:OLLAMA_API_BASE/api/tags" -UseBasicParsing -TimeoutSec 5
+              $body = ConvertFrom-Json $r.Content
+              $names = $body.models | ForEach-Object { $_.name }
+              if ($names -notcontains $modelOnly) {
+                  Write-Error "Model $modelOnly not pulled.  Available: $($names -join ', ')"
+                  exit 1
+              }
+              Write-Host "Ollama OK.  Model $modelOnly ready."
+          } catch {
+              Write-Error "Ollama unreachable at $env:OLLAMA_API_BASE."
+              exit 1
+          }
+
+      - name: Create new GitHub repo
+        run: |
+          $name = '${{ inputs.project_name }}'
+          $full = "$env:GH_OWNER/$name"
+          Write-Host "Creating $full ..."
+          & gh repo view $full 2>&1 | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+              Write-Error "Repo $full already exists.  Pick a different project_name or delete it first."
+              exit 1
+          }
+          & gh repo create $full --${{ inputs.visibility }} --add-readme `
+              --description '${{ inputs.description }}' 2>&1 | Out-Host
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "gh repo create failed (exit $LASTEXITCODE)"
+              exit 1
+          }
+          Write-Host "Repo created: https://github.com/$full"
+
+      - name: Clone repo locally
+        run: |
+          $name = '${{ inputs.project_name }}'
+          $dest = Join-Path $env:PROJECTS_ROOT $name
+          if (Test-Path $dest) {
+              Write-Host "Removing existing $dest"
+              Remove-Item -Recurse -Force $dest
+          }
+          & git clone "https://github.com/$env:GH_OWNER/$name.git" $dest 2>&1 | Out-Host
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Aider scaffold
+        continue-on-error: true
+        timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          Set-Location $env:SPACETIME_LAB_PATH
+          $target = Join-Path $env:PROJECTS_ROOT '${{ inputs.project_name }}'
+          & python .agent\_wrapper\track_usage.py `
+              --executor aider `
+              --model '${{ inputs.model }}' `
+              --repo-path $target `
+              --context-var "PROJECT_NAME=${{ inputs.project_name }}" `
+              --context-var "STACK=${{ inputs.stack }}" `
+              --context-var "PROJECT_DESCRIPTION=${{ inputs.description }}" `
+              bootstrap-new-project `
+              -- --auto-commits 2>&1 | Out-Host
+          Write-Host "track_usage.py exit: $LASTEXITCODE"
+
+      - name: Summarize files created + push
+        run: |
+          $target = Join-Path $env:PROJECTS_ROOT '${{ inputs.project_name }}'
+          Set-Location $target
+          Write-Host "--- Files in the new repo ---"
+          & git ls-files 2>&1 | Out-Host
+          Write-Host "--- Git log ---"
+          & git log --oneline 2>&1 | Out-Host
+          # Push whatever aider commited.  If aider did NOT commit (e.g.
+          # exit before edits), at least README.md remains from the
+          # gh repo create --add-readme step.
+          & git push origin master 2>&1 | Out-Host
+
+      - name: Optional vercel deploy (react-vite only)
+        if: ${{ inputs.deploy_vercel == true && inputs.stack == 'react-vite' }}
+        continue-on-error: true
+        run: |
+          $target = Join-Path $env:PROJECTS_ROOT '${{ inputs.project_name }}'
+          Set-Location $target
+          Write-Host "Linking with Vercel..."
+          & vercel link --yes --project '${{ inputs.project_name }}' 2>&1 | Out-Host
+          Write-Host "Deploying..."
+          & vercel --prod --yes 2>&1 | Out-Host
+
+      - name: Log dispatch to spacetime-lab/.agent/runs/_summary.jsonl
+        run: |
+          $ErrorActionPreference = 'Continue'
+          Set-Location $env:SPACETIME_LAB_PATH
+          $now = (Get-Date).ToUniversalTime()
+          $entry = [ordered]@{
+              run_id     = $now.ToString("yyyyMMddTHHmmssZ") + "_bootstrap"
+              workflow   = "bootstrap-new-project"
+              executor   = "aider"
+              model      = '${{ inputs.model }}'
+              project    = '${{ inputs.project_name }}'
+              stack      = '${{ inputs.stack }}'
+              visibility = '${{ inputs.visibility }}'
+              start      = $now.ToString("yyyy-MM-ddTHH:mm:ssZ")
+              end        = $now.ToString("yyyy-MM-ddTHH:mm:ssZ")
+              kind       = "bootstrap-new-project"
+              repo_url   = "https://github.com/$env:GH_OWNER/${{ inputs.project_name }}"
+          }
+          $json = $entry | ConvertTo-Json -Depth 6 -Compress
+          $out = Join-Path $env:SPACETIME_LAB_PATH '.agent\runs\_summary.jsonl'
+          Add-Content -Path $out -Value $json -Encoding UTF8
+
+          & git add .agent/runs/_summary.jsonl 2>&1 | Out-Host
+          & git diff --cached --quiet 2>&1 | Out-Host
+          if ($LASTEXITCODE -ne 0) {
+              $msg = "chore(bootstrap): ${{ inputs.project_name }} (${{ inputs.stack }})"
+              & git -c user.email='dispatch-runner@local' `
+                    -c user.name='runner-desktop' `
+                    commit -m "$msg" --no-verify 2>&1 | Out-Host
+              & git push origin master 2>&1 | Out-Host
+          }
+          exit 0
+
+      - name: Summary
+        run: |
+          Write-Host "=== bootstrap-new-project complete ==="
+          Write-Host "  project: https://github.com/$env:GH_OWNER/${{ inputs.project_name }}"
+          Write-Host "  local:   $env:PROJECTS_ROOT\${{ inputs.project_name }}"
+          Write-Host "  stack:   ${{ inputs.stack }}"

@@ -129,14 +129,25 @@ def run_claude(prompt_text: str, run_dir: Path, extra_args: list[str]) -> int:
 # ---------------------------------------------------------------------------
 
 
+# Aider prints token counts in two styles:
+#   Tokens: 1,234 sent, 56 received
+#   Tokens: 1.9k sent, 107 received
+# We accept both, treating the 'k' suffix as * 1000.
 _AIDER_TOKEN_RE = re.compile(
-    r"Tokens:\s*([\d,]+)\s*sent,\s*([\d,]+)\s*received",
+    r"Tokens:\s*([\d.,]+)(k?)\s*sent,\s*([\d.,]+)(k?)\s*received",
     re.IGNORECASE,
 )
 
 
-def _parse_count(s: str) -> int:
-    return int(s.replace(",", ""))
+def _parse_count(s: str, suffix: str) -> int:
+    s = s.replace(",", "")
+    try:
+        v = float(s)
+    except ValueError:
+        return 0
+    if suffix and suffix.lower() == "k":
+        v *= 1000
+    return int(round(v))
 
 
 def extract_aider_usage(output_path: Path, model: str) -> dict[str, Any]:
@@ -154,8 +165,8 @@ def extract_aider_usage(output_path: Path, model: str) -> dict[str, Any]:
 
     total_in, total_out, turns = 0, 0, 0
     for m in _AIDER_TOKEN_RE.finditer(text):
-        total_in += _parse_count(m.group(1))
-        total_out += _parse_count(m.group(2))
+        total_in += _parse_count(m.group(1), m.group(2))
+        total_out += _parse_count(m.group(3), m.group(4))
         turns += 1
 
     return {
@@ -281,6 +292,16 @@ def main() -> int:
         "(default: spacetime-lab itself)",
     )
     parser.add_argument(
+        "--context-var",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help=(
+            "Substitute {{KEY}} placeholders in the workflow prompt with "
+            "VALUE before sending to the agent.  Repeatable."
+        ),
+    )
+    parser.add_argument(
         "extra",
         nargs=argparse.REMAINDER,
         help="extra args passed through to the executor",
@@ -301,6 +322,19 @@ def main() -> int:
     shutil.copy2(wf_file, run_dir / "workflow.md")
 
     prompt_text = wf_file.read_text(encoding="utf-8")
+
+    # Apply --context-var substitutions: {{KEY}} -> VALUE.
+    for pair in args.context_var:
+        if "=" not in pair:
+            print(f"--context-var expects KEY=VALUE, got: {pair!r}",
+                  file=sys.stderr)
+            return 2
+        key, _, value = pair.partition("=")
+        prompt_text = prompt_text.replace("{{" + key + "}}", value)
+
+    # Snapshot the (substituted) prompt the agent actually saw
+    (run_dir / "effective-prompt.md").write_text(prompt_text, encoding="utf-8")
+
     start = now
 
     # Dispatch to the chosen executor
