@@ -70,3 +70,8 @@ site/
 docs/_build/
 
 .vercel
+
+# Agent runs: per-run logs may contain full prompt outputs; keep only the
+# aggregated summary jsonl under version control.
+.agent/runs/*/
+!.agent/runs/_summary.jsonl
