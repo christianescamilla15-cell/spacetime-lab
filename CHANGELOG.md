@@ -6,6 +6,114 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-04-12 — v1.3 patch: Rotating BTZ + ergoregion + rotating Strominger
+
+Third v1.x patch.  Extends the Phase 8 non-rotating BTZ module to
+the full two-parameter `(M, J)` family: both horizons, Hawking
+temperature and angular velocity, ergoregion between the outer
+horizon and the static limit, first law and Smarr in 2+1D, and
+the **rotating** Strominger 1998 derivation with asymmetric
+left/right Virasoro weights.
+
+### Added
+
+- `spacetime_lab.holography.btz_rotating` — new module:
+  - `rotating_btz_horizons(M, J, L, G_N)` — outer + inner
+    radii `r_± = L√(4 G_N M (1 ± √(1-(J/ML)²)))`
+  - `rotating_btz_mass_from_horizons(r_+, r_-, L, G_N)` and
+    `rotating_btz_angular_momentum_from_horizons(...)` — the
+    inverse mappings
+  - `rotating_btz_hawking_temperature(M, J, L, G_N)` —
+    `T_H = (r_+²−r_-²)/(2π r_+ L²)`.  Vanishes at extremality.
+  - `rotating_btz_angular_velocity(M, J, L, G_N)` —
+    `Ω_H = sign(J)·r_-/(r_+ L)`
+  - `rotating_btz_entropy(M, J, L, G_N)` — `S_BH = π r_+/(2 G_N)`
+  - `rotating_btz_ergoregion_bounds(M, J, L, G_N)` — inner
+    bound `r_+`, outer bound `√(r_+² + r_-²) = √(8 G_N L² M)`
+  - `extremal_bound_J(M, L)` → `ML`
+  - `is_extremal(M, J, L, tol)` → bool
+  - `strominger_rotating_btz_cardy(M, J, L, G_N)` — asymmetric
+    chiral match, `L_0 = (LM+|J|)/2`, `L̄_0 = (LM-|J|)/2`,
+    `c = 3L/(2 G_N)`, sum equals `S_BH` bit-exactly
+  - `verify_first_law(M, J, L, G_N, h)` — finite-difference
+    `(∂M/∂S)_J` vs `T_H` and `(∂M/∂J)_S` vs `Ω_H`
+  - `verify_smarr_2plus1(M, J, L, G_N)` — `M = ½ T_H S + Ω_H J`
+  - `verify_rotating_btz_thermodynamics(M, J, L, G_N, h)` —
+    end-to-end gate bundling all of the above
+- `notebooks/12_rotating_btz.ipynb` — concept + phase diagram `(M, J)`
+  + approach-to-extremality curves for `T_H`, `Ω_H`, `S_BH` + ergoregion
+  cartoon + first-law / Smarr verification + rotating Strominger
+  bar plot + closing gate cell
+- `tests/test_phase_v1_3.py` — 34 new tests.  Suite: **535 → 569
+  passing**.
+
+### Verified
+
+| Invariant | Residual |
+|---|---|
+| `r_+² + r_-² = 8 G_N L² M` across `(M, J)` grid | `~1e-15` |
+| `r_+ r_- = 4 G_N L \|J\|` across grid | `~1e-15` |
+| Horizon ↔ `(M, J)` round-trip | `0.0` / `~1e-16` |
+| `T_H = 0` at extremal `J = ML` | exact |
+| `\|J\| > ML` raises `ValueError` | exact |
+| `r_erg = √(8 G_N L² M)` (static limit) | exact |
+| **First law** `dM = T_H dS + Ω_H dJ` (centered finite diff) | `~1e-11` rel |
+| **Smarr 2+1D** `M = ½ T_H S + Ω_H J` | `0.0` |
+| **Rotating Strominger-Cardy** `S_BH = S_L + S_R` across `(M, J)` grid | `0.0` |
+| `J=0` limit matches Phase 8 non-rotating `verify_strominger_btz_cardy` | `0.0` |
+
+### Physics highlights
+
+- **Ergoregion exists only when `J ≠ 0`**: the static limit
+  `r_erg = √(r_+² + r_-²)` is outside the outer horizon iff
+  `r_- > 0`.  Non-rotating BTZ has no ergoregion.
+- **`Ω_H → 1/L` at extremality**: the horizon angular velocity
+  saturates at the AdS scale as `J → ML`.
+- **Smarr identity in 2+1D has `1/2` coefficient** on the `T S`
+  term (different from the 4D Smarr-Bardeen with `2`).  Derivable
+  from Euler scaling; we check it bit-exactly.
+- **The `r_-` cancellation in rotating Strominger** is the most
+  physically satisfying part: `S_Cardy^L = π(r_+ + r_-)/(4 G_N)`
+  and `S_Cardy^R = π(r_+ - r_-)/(4 G_N)`.  The sum is
+  `π r_+/(2 G_N) = S_BH`; the `r_-` contributions cancel between
+  the two chiralities to leave the area of the *outer* horizon
+  alone as the total entropy.
+
+### Honest scope deferred
+
+- **Geodesics and RT surfaces in rotating BTZ** — the existing
+  `btz.py` Phase 8 RT machinery only handles the non-rotating
+  limit; rotating RT requires treating the inner horizon and
+  handling complex geodesics
+- **Superradiance** — we do not study scalar / gravitational
+  perturbations in rotating BTZ
+- **Chiral CFT with `c_L ≠ c_R`** — Einstein gravity keeps them
+  equal; gravitational Chern-Simons would split them
+- **Exact extremal limit `J = ML`** — handled as "near-extremal"
+  with the bound check; the exact `r_+ = r_-` state is analytically
+  subtle and can give `0/0` forms
+
+### Methodology
+
+Same verify-before-code → bit-exact gate → honest-scope-keeping
+discipline.  Strominger 1998 was pinned via WebFetch to arXiv
+hep-th/9712251: confirmed `M = (L_0 + L̄_0)/L`, `J = L_0 - L̄_0`,
+single central charge `c = 3L/(2 G_N)` applies to both chiralities,
+and the closed-form Cardy sum `π√[L(LM+J)/(2G_N)] + π√[L(LM-J)/(2G_N)]`
+algebraically equals `π r_+/(2 G_N)` under the convention
+`M = (r_+² + r_-²)/(8 G_N L²)`, `J = r_+ r_-/(4 G_N L)` (the same
+convention as the existing Phase 8 `btz.py`).
+
+**Bug caught during smoke test**: first cut of
+`rotating_btz_horizons` divided by 2 incorrectly, giving
+`r_+² = 4 G_N L² M` instead of `8 G_N L² M` in the non-rotating
+limit.  Caught immediately by the simple J=0 check against
+`√(8 G_N L² M)`.  Second-cut `verify_first_law` sent negative
+`r_-` into `mass_from_horizons` at finite-difference points
+straddling `J = 0`; fix was to use the closed-form
+`M(S, J) = r_+²/(8 G_N L²) + 2 G_N J²/r_+²` directly (even in
+`J`), avoiding the round-trip sign handling entirely.
+
 ## [1.2.0] — 2026-04-12 — v1.2 patch: Kerr QNM wrapper
 
 Second v1.x patch.  Extends the Phase 5 QNM wrapper from

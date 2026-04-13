@@ -327,6 +327,34 @@ Kerr front-end.
 
 ---
 
+## v1.3 patch — Rotating BTZ + ergoregion + rotating Strominger
+
+**Status:** ✅ Done — shipped as v1.3.0 on 2026-04-12.
+
+Third v1.x patch.  Extends the Phase 8 non-rotating BTZ module to
+the full two-parameter `(M, J)` family.
+
+**Physics concepts added:**
+- Two horizons `r_±`, extremal limit `|J| ≤ ML`
+- Hawking temperature `T_H` vanishing at extremality
+- Horizon angular velocity `Ω_H` approaching `1/L` at extremal
+- Ergoregion `r_+ < r < √(8 G_N L² M)` (frame-dragging forces observers to co-rotate)
+- First law `dM = T_H dS + Ω_H dJ` and Smarr 2+1D `M = ½ T_H S + Ω_H J`
+- Asymmetric chiral Virasoro towers `L_0 = (LM + |J|)/2 ≠ L̄_0 = (LM - |J|)/2`
+- Rotating Strominger-Cardy match: `S_Cardy^L + S_Cardy^R = S_BH` with the `r_-` contributions cancelling bit-exactly
+
+**Deliverables:**
+- [x] `spacetime_lab.holography.btz_rotating` subpackage (13 new public functions)
+- [x] Notebook `12_rotating_btz.ipynb` with `(M, J)` phase diagram, approach-to-extremality sweeps, ergoregion cartoon, rotating Strominger bar plot
+- [x] 34 new tests (suite: 535 → **569 passing**)
+- [x] **Bit-exact verification**: Smarr residual `0.0`, rotating Strominger-Cardy residual `0.0`, horizon round-trip `~1e-16`, first-law centered finite-difference `~1e-11`
+
+**Honest scope deferred:** RT surfaces in rotating BTZ (v1.0 `btz.py` RT machinery is non-rotating only), superradiance, chiral CFT with `c_L ≠ c_R` (would need gravitational Chern-Simons), exact extremal limit (singular).
+
+**Release:** **v1.3.0** 🚀 — tagged 2026-04-12.
+
+---
+
 ## Success Metrics
 
 By v1.0:
