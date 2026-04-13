@@ -42,7 +42,7 @@ jobs:
     runs-on: [self-hosted, windows, claude-dispatch]
     defaults:
       run:
-        shell: pwsh
+        shell: powershell
 
     env:
       REPO_PATH: 'C:\Users\DANNY\Desktop\spacetime-lab'
