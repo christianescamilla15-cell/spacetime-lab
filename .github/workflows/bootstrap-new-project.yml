@@ -127,18 +127,24 @@ jobs:
 
       - name: Create new GitHub repo
         run: |
+          $ErrorActionPreference = 'Continue'
           $name = '${{ inputs.project_name }}'
           $full = "$env:GH_OWNER/$name"
           Write-Host "Creating $full ..."
-          & gh repo view $full 2>&1 | Out-Null
+          # gh repo view writes to stderr when the repo does not exist;
+          # PS5.1 treats native stderr as error unless we relax above.
+          # We rely on $LASTEXITCODE (0 = exists, non-0 = doesn't), and
+          # swallow stderr via 2>$null since the not-found message is
+          # informational noise in that path.
+          & gh repo view $full 2>$null 1>$null
           if ($LASTEXITCODE -eq 0) {
-              Write-Error "Repo $full already exists.  Pick a different project_name or delete it first."
+              Write-Host "ERROR: Repo $full already exists.  Pick a different project_name or delete it first."
               exit 1
           }
           & gh repo create $full --${{ inputs.visibility }} --add-readme `
               --description '${{ inputs.description }}' 2>&1 | Out-Host
           if ($LASTEXITCODE -ne 0) {
-              Write-Error "gh repo create failed (exit $LASTEXITCODE)"
+              Write-Host "ERROR: gh repo create failed (exit $LASTEXITCODE)"
               exit 1
           }
           Write-Host "Repo created: https://github.com/$full"
