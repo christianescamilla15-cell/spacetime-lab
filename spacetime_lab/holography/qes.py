@@ -531,6 +531,227 @@ def island_formula_min(
 # ─────────────────────────────────────────────────────────────────────
 
 
+# ─────────────────────────────────────────────────────────────────────
+# Time-dependent generalized entropy (v2.1)
+# ─────────────────────────────────────────────────────────────────────
+
+
+def time_dependent_generalized_entropy_no_island(
+    t: float,
+    *,
+    beta: float,
+    central_charge: float,
+    epsilon: float,
+) -> float:
+    r"""No-island saddle with time-dependent Hawking accumulation.
+
+    In the dynamical JT+bath setup, the matter entropy of the
+    radiation region grows linearly in time as Hawking quanta
+    accumulate (Hartman-Maldacena 2013):
+
+    .. math::
+
+        S_\text{no-island}(t) = S_\text{no-island}(0) +
+        \frac{2\pi c}{3\beta}\, t.
+
+    The initial-value piece is the :func:`no_island_saddle_entropy`
+    reference state.  The linear-in-:math:`t` piece matches the
+    Phase 9 :func:`hartman_maldacena_growth_rate` bit-exactly — the
+    same dynamical input that the replica picture uses.
+
+    This is the **v2.1 upgrade** that makes the island saddle
+    actually win at late times in the QES picture (v2.0 alone had
+    a static setup in which the no-island saddle always won).
+    """
+    if t < 0:
+        raise ValueError(f"t must be non-negative, got {t}")
+    s0 = no_island_saddle_entropy(
+        beta=beta, central_charge=central_charge, epsilon=epsilon
+    )
+    return s0 + 2.0 * math.pi * central_charge * t / (3.0 * beta)
+
+
+def page_curve_from_qes(
+    t: float,
+    *,
+    phi_0: float,
+    phi_r: float,
+    beta: float,
+    central_charge: float,
+    b: float,
+    epsilon: float,
+    G_N: float = 1.0,
+) -> dict:
+    r"""Dynamical Page curve: island vs growing no-island saddle at time t.
+
+    Computes both saddles at the given time and takes the outer
+    ``min``:
+
+    - **No-island saddle** grows linearly with :math:`t`.
+    - **Island saddle** is the static :math:`S_{\text{gen}}(a_{QES})`
+      from :func:`find_qes` (time-independent in this toy model).
+
+    The min switches from no-island (early, linear Hawking is small)
+    to island (late, linear Hawking exceeds the area bound) at the
+    Page time.  This is the v2.1 upgrade: the QES picture now
+    produces the Page curve directly, matching the replica picture
+    and Phase 9 at the same bit-exact level.
+
+    Returns
+    -------
+    dict
+        ``{t, s_no_island, s_island, a_qes, winner, s_rad}``.
+    """
+    s_no_island = time_dependent_generalized_entropy_no_island(
+        t,
+        beta=beta,
+        central_charge=central_charge,
+        epsilon=epsilon,
+    )
+    qes = find_qes(
+        phi_0=phi_0,
+        phi_r=phi_r,
+        beta=beta,
+        central_charge=central_charge,
+        b=b,
+        epsilon=epsilon,
+        G_N=G_N,
+    )
+    if s_no_island < qes.s_gen_at_qes:
+        winner, s_rad = "no-island", s_no_island
+    else:
+        winner, s_rad = "island", qes.s_gen_at_qes
+    return {
+        "t": t,
+        "s_no_island": s_no_island,
+        "s_island": qes.s_gen_at_qes,
+        "a_qes": qes.a_qes,
+        "winner": winner,
+        "s_rad": s_rad,
+    }
+
+
+def page_time_from_qes(
+    *,
+    phi_0: float,
+    phi_r: float,
+    beta: float,
+    central_charge: float,
+    b: float,
+    epsilon: float,
+    G_N: float = 1.0,
+) -> float:
+    r"""Closed-form Page time from QES: when :math:`S_\text{no-island}(t) = S_\text{gen}(a_{QES})`.
+
+    Since the no-island saddle is linear in :math:`t` with slope
+    :math:`2\pi c/(3\beta)` and the island saddle is constant at
+    :math:`S_{\text{gen}}(a_{QES})`, the crossing is closed form:
+
+    .. math::
+
+        t_P = \frac{3\beta}{2\pi c}\,[S_\text{gen}(a_{QES}) -
+              S_\text{no-island}(0)].
+    """
+    s_initial_no_island = no_island_saddle_entropy(
+        beta=beta, central_charge=central_charge, epsilon=epsilon
+    )
+    qes = find_qes(
+        phi_0=phi_0,
+        phi_r=phi_r,
+        beta=beta,
+        central_charge=central_charge,
+        b=b,
+        epsilon=epsilon,
+        G_N=G_N,
+    )
+    delta = qes.s_gen_at_qes - s_initial_no_island
+    slope = 2.0 * math.pi * central_charge / (3.0 * beta)
+    return delta / slope
+
+
+def verify_page_curve_from_qes(
+    *,
+    phi_0: float = 1.0,
+    phi_r: float = 10.0,
+    beta: float = 1.0,
+    central_charge: float = 1.0,
+    b: float = 2.0,
+    epsilon: float = 0.01,
+    G_N: float = 1.0,
+) -> dict:
+    r"""End-to-end v2.1 gate: dynamic QES Page curve behaves correctly.
+
+    Verifies:
+    1. At :math:`t = 0`, no-island wins (or is very close).
+    2. At :math:`t \gg t_P`, island wins.
+    3. At :math:`t = t_P`, the two saddles are equal to
+       :math:`\mathcal{O}(10^{-10})`.
+    4. The island ``a_QES`` is independent of time (static toy;
+       v2.2 would add backreaction).
+    """
+    t_P = page_time_from_qes(
+        phi_0=phi_0,
+        phi_r=phi_r,
+        beta=beta,
+        central_charge=central_charge,
+        b=b,
+        epsilon=epsilon,
+        G_N=G_N,
+    )
+    early = page_curve_from_qes(
+        0.0,
+        phi_0=phi_0,
+        phi_r=phi_r,
+        beta=beta,
+        central_charge=central_charge,
+        b=b,
+        epsilon=epsilon,
+        G_N=G_N,
+    )
+    late = page_curve_from_qes(
+        10.0 * t_P,
+        phi_0=phi_0,
+        phi_r=phi_r,
+        beta=beta,
+        central_charge=central_charge,
+        b=b,
+        epsilon=epsilon,
+        G_N=G_N,
+    )
+    at_page = page_curve_from_qes(
+        t_P,
+        phi_0=phi_0,
+        phi_r=phi_r,
+        beta=beta,
+        central_charge=central_charge,
+        b=b,
+        epsilon=epsilon,
+        G_N=G_N,
+    )
+    a_static = early["a_qes"]
+    a_at_page = at_page["a_qes"]
+    a_late = late["a_qes"]
+    return {
+        "t_page": t_P,
+        "early_winner": early["winner"],
+        "late_winner": late["winner"],
+        "saddle_crossing_residual": abs(
+            at_page["s_no_island"] - at_page["s_island"]
+        ),
+        "a_qes_static_early": a_static,
+        "a_qes_at_page": a_at_page,
+        "a_qes_late": a_late,
+        "a_qes_time_independence_residual": max(
+            abs(a_at_page - a_static), abs(a_late - a_static)
+        ),
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Original v2.0 static gate (kept for backward compatibility)
+# ─────────────────────────────────────────────────────────────────────
+
+
 def verify_qes_formalism(
     *,
     phi_0: float = 1.0,

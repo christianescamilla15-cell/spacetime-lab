@@ -6,8 +6,8 @@ From Schwarzschild geodesics to holographic entanglement entropy — a modern, o
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![Version 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/christianescamilla15-cell/spacetime-lab/releases/tag/v2.0.0)
-[![Tests](https://img.shields.io/badge/tests-634%20passing-brightgreen.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
+[![Version 2.1.0](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/christianescamilla15-cell/spacetime-lab/releases/tag/v2.1.0)
+[![Tests](https://img.shields.io/badge/tests-655%20passing-brightgreen.svg)](https://github.com/christianescamilla15-cell/spacetime-lab)
 
 ---
 
@@ -102,6 +102,7 @@ spacetime-lab/
 - ✅ **v1.3 patch — Rotating BTZ (ergoregion, first law, rotating Strominger-Cardy)** (v1.3.0)
 - ✅ **v1.5 patch — SVG and TikZ Penrose renderers (pure-string, kind-grouped, CSS-themable)** (v1.5.0)
 - ✅ **v2.0 MAJOR — Real QES finder + replica wormholes + higher-d RT surfaces** (v2.0.0) ★ **SPRINT CLOSURE** ★
+- ✅ **v2.1 patch — Dynamical QES Page curve + Schwarzschild-AdS RT** (v2.1.0)
 
 ## Tutorial notebooks
 
@@ -123,6 +124,7 @@ Concept notebooks live under [`notebooks/`](./notebooks) and pair the physics na
 | 12 | [`12_rotating_btz.ipynb`](./notebooks/12_rotating_btz.ipynb) | v1.3 | Rotating BTZ: outer + inner horizons, phase diagram (M, J), approach to extremality (T_H → 0, Ω_H → 1/L), ergoregion between r_+ and r_erg = √(8 G_N L² M), first law + Smarr 2+1D, rotating Strominger-Cardy with asymmetric L_0 ≠ L̄_0 (r_- pieces cancel, total = π r_+/(2 G_N) exactly) |
 | 13 | [`13_penrose_renderers.ipynb`](./notebooks/13_penrose_renderers.ipynb) | v1.5 | Pure-string SVG and TikZ renderers for Penrose diagrams. Same Scene → three visually-consistent backends (SVG/TikZ/matplotlib). Live CSS theming demo (paper-white + dark-mode skinning the same SVG via stylesheet). TikZ standalone document mode for direct pdflatex compilation |
 | 14 | [`14_quantum_extremal_surfaces.ipynb`](./notebooks/14_quantum_extremal_surfaces.ipynb) | v2.0 | Real QES finder (generic API + JT+bath toy), replica-wormhole Page curve (disconnected Hawking vs connected island saddles, cross-over at closed-form t_P), higher-d RT strip area across AdS_3 to AdS_7 (closed form vs adaptive numerical quadrature, residuals ~1e-11). Sprint-closing retrospective |
+| 15 | [`15_v2_1_dynamics.ipynb`](./notebooks/15_v2_1_dynamics.ipynb) | v2.1 | Dynamical Page curve from QES finder (time-dependent no-island saddle via HM linear growth), three-independent-path cross-check with v2.0 replica, Schwarzschild-AdS_{d+1} RT minimal-surface finder for BH backgrounds with monotonicity in horizon radius verified |
 
 ## Upstream contributions
 

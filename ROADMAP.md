@@ -419,6 +419,18 @@ integral derivation, black-hole RT backgrounds in higher d.
 
 ---
 
+## v2.1 patch — Dynamical QES + Schwarzschild-AdS RT
+
+**Status:** ✅ Done — shipped as v2.1.0 on 2026-04-12.
+
+First post-sprint patch.  Finishes two most-requested deferred
+items from v2.0.  21 new tests.  Suite 634 → **655 passing**.
+See CHANGELOG for full detail.
+
+**Release:** **v2.1.0** 🚀 — tagged 2026-04-12.
+
+---
+
 ## Post-v1.0 sprint summary
 
 | Patch | Date | Tests | Highlight |

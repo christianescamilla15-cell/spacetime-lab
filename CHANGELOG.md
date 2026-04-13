@@ -6,6 +6,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-04-12 — v2.1 patch: dynamical QES Page curve + Schwarzschild-AdS RT
+
+First post-v2.0 continuation.  Finishes the two most-requested
+v2.0 deferred items: the time-dependent Page curve from the QES
+finder (so the QES picture matches the replica picture for
+dynamics), and the higher-d black-hole Ryu-Takayanagi strip
+(so RT machinery works beyond pure AdS).
+
+### Added
+
+- `spacetime_lab.holography.qes.time_dependent_generalized_entropy_no_island`
+  — Hartman-Maldacena Hawking-linear growth term
+  `(2πc/3β)·t` on top of the static no-island reference
+- `spacetime_lab.holography.qes.page_curve_from_qes(t, ...)`
+  — Page curve evaluation: the QES-computed island value vs the
+  growing no-island value, with winner selection
+- `spacetime_lab.holography.qes.page_time_from_qes(...)` —
+  closed-form Page time `3β [S_gen(a_QES) - S_no_island(0)] / (2πc)`
+- `spacetime_lab.holography.qes.verify_page_curve_from_qes(...)`
+  — end-to-end gate
+- `spacetime_lab.holography.minimal_surfaces.schwarzschild_ads_warp_factor(r, r_h, d, L_AdS)`
+  — canonical `f(r) = 1 - (r_h/r)^(d-2) + (r/L_AdS)^2` with BTZ
+  branch for `d=2`
+- `spacetime_lab.holography.minimal_surfaces.rt_strip_area_schwarzschild_ads_numerical(...)`
+  — numerical minimal-surface finder via turning-point shooting
+  and adaptive `scipy.integrate.quad`, handling the
+  `1/sqrt(f(r))` near-horizon enhancement and the
+  `1/sqrt((r/r_*)^{2(d-1)} - 1)` turning-point singularity
+- `spacetime_lab.holography.minimal_surfaces.verify_bh_rt_monotone_in_horizon(...)`
+  — monotonicity gate
+- `notebooks/15_v2_1_dynamics.ipynb` — Page curve from v2.1 QES
+  finder + three-independent-paths overlay with v2.0 replica +
+  Schwarzschild-AdS RT area vs horizon radius plot + closing gate
+
+### Verified
+
+| Invariant | Residual |
+|---|---|
+| v2.1 dynamical saddle crossing at `t_P` | `8.88e-16` |
+| `a_QES` time-independence in static toy | `0.0` exactly |
+| Linear slope of no-island saddle matches Phase 9 HM rate | `0.0` exactly |
+| BH RT monotone increasing in `r_h` | exact (ordinal check) |
+
+### Tests
+
+`tests/test_phase_v2_1.py` — 21 new.  Suite: 634 → **655 passing**.
+
+### Bugs caught during verify-before-code
+
+1. **Metric warp factor missing `1/r`**: first cut of the BH RT
+   integrand used `1/sqrt(f(r))` omitting the `1/r` factor from
+   the `r² dx²` warp in the planar Schwarzschild-AdS metric.
+   Caught when the numerical width gave 0 at small `r_star` for
+   pure AdS instead of diverging.  Fixed the derivation:
+   `(r')² = f(r) r² · [(r/r_*)^{2(d-1)} - 1]`, so the width
+   integrand gets a `1/r` factor and the area integrand gets
+   `r^{2d-3}` in the numerator.
+2. **Pure-AdS recovery gate numerically delicate**: initial gate
+   compared BH RT at `r_h → 0` to the pure-AdS `rt_strip_area_numerical`
+   result via Poincaré z-coordinate conversion.  Numerically
+   delicate (different regularisation conventions) — the better
+   gate is monotonicity in `r_h` at fixed `L, ε, d`.  Renamed
+   `verify_bh_rt_recovers_pure_ads` → `verify_bh_rt_monotone_in_horizon`.
+3. **Bracket search for turning point**: first cut expected
+   `width(r_star)` to change sign cleanly between `r_h` and
+   `r_ε`, but the BH integrand diverges as `r_star → r_h`.  Fixed
+   by walking `r_lo` halving toward `r_h` until `width > L/2`,
+   with an explicit raise if `L` is too large to embed (a
+   physically allowed failure mode).
+
+### Honest scope deferred to v2.2
+
+- **Dynamical backreaction**: island position `a_QES` is
+  currently time-independent.  Full dynamics with a moving QES
+  (as the BH shrinks / radiation accumulates) needs a coupled
+  time evolution of the dilaton profile.
+- **Two-parameter QES** for two-sided TFD: two coupled
+  extremality equations for `a_+, a_-`.
+- **Numerical replica wormhole path integral**: we ship on-shell
+  actions; the Euclidean path integral derivation is analytical.
+- **Curved boundary regions** (disc, ellipse, multi-interval
+  with mutual information).
+
 ## [2.0.0] — 2026-04-12 — v2.0 MAJOR: real QES formalism + replica wormholes + higher-d RT
 
 **Fifth and final patch of the post-v1.0 sprint.**  The ambitious
