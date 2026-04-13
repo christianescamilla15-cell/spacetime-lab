@@ -14,17 +14,53 @@ accounting.
 └── runs/               per-dispatch output logs + aggregated _summary.jsonl
 ```
 
-## One-time setup (Windows, elevated PowerShell)
+## One-time setup
+
+### Option A — non-elevated (Startup-folder auto-start)
+
+Works without admin.  Runner starts at user login via a `.cmd` in the
+Windows Startup folder.  Recommended for a personal desktop.
+
+```bash
+# bash / git-bash — non-interactive
+# 1. download + extract runner
+mkdir -p /c/actions-runner && cd /c/actions-runner
+curl -L -o actions-runner.zip https://github.com/actions/runner/releases/download/v2.319.1/actions-runner-win-x64-2.319.1.zip
+powershell.exe -Command "Expand-Archive actions-runner.zip . -Force"
+
+# 2. register with your registration token from:
+#    https://github.com/christianescamilla15-cell/spacetime-lab/settings/actions/runners/new
+cmd //c "C:\\actions-runner\\config.cmd --unattended --url https://github.com/christianescamilla15-cell/spacetime-lab --token <TOKEN> --name runner-desktop --labels self-hosted,windows,claude-dispatch --work _work --replace"
+
+# 3. autostart at login
+cp "$(dirname $0)/_wrapper/startup/github-actions-runner.cmd" \
+   "$APPDATA/Microsoft/Windows/Start Menu/Programs/Startup/"
+```
+
+### Option B — elevated (Windows Service)
+
+Slightly more robust (runs before login, proper SCM entry).  Requires
+admin.
 
 ```powershell
+# From an ELEVATED PowerShell prompt
 cd C:\Users\DANNY\Desktop\spacetime-lab
 .\.agent\_wrapper\setup-runner.ps1 -RegistrationToken <token>
 ```
 
-Get the token at
-<https://github.com/christianescamilla15-cell/spacetime-lab/settings/actions/runners/new>
-(valid ~1 h).  The runner is installed as a Windows service that
-auto-starts with the PC.
+### Migrate A → B
+
+If you started with Option A and want to promote to Service:
+
+```powershell
+# From an ELEVATED PowerShell prompt
+cd C:\Users\DANNY\Desktop\spacetime-lab
+.\.agent\_wrapper\migrate-to-service.ps1
+```
+
+The migration script reuses the existing registration, so no new token
+is needed.  It stops the Startup-folder runner, installs the Windows
+Service, and starts it.
 
 ## Daily use
 

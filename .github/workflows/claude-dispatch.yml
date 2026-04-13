@@ -147,6 +147,43 @@ jobs:
           Write-Host "logged: $runId"
           Write-Host $json
 
+      - name: Persist dispatch log to origin
+        # Auto-commits the appended _summary.jsonl line so dispatch history
+        # is durable across machines / runner reinstalls.  Uses a local
+        # identity scoped to this run only; no credentials leak into the
+        # commit metadata.  If there's nothing to commit (edge case:
+        # previous step failed before Add-Content) we skip silently.
+        run: |
+          Set-Location $env:REPO_PATH
+          git add .agent/runs/_summary.jsonl
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+              Write-Host "Nothing to commit (summary.jsonl unchanged)."
+              exit 0
+          }
+          $runMsg = "chore(dispatch): log run ${{ github.run_id }} workflow=${{ inputs.workflow }}"
+          git -c user.email='dispatch-runner@local' `
+              -c user.name='runner-desktop' `
+              commit -m "$runMsg" --no-verify
+          # Push with retry-on-race: if another dispatch pushed first,
+          # rebase the log-only commit on top and try again.  Up to 3
+          # attempts before giving up (the log entry stays committed
+          # locally in any case).
+          $pushed = $false
+          for ($i = 1; $i -le 3; $i++) {
+              git push origin master 2>&1 | Tee-Object -Variable pushOut
+              if ($LASTEXITCODE -eq 0) {
+                  $pushed = $true
+                  break
+              }
+              Write-Warning "push attempt $i failed — pulling and retrying"
+              git fetch origin master
+              git rebase origin/master
+          }
+          if (-not $pushed) {
+              Write-Warning "could not push dispatch log after 3 tries; entry is still recorded locally."
+          }
+
       - name: Summary
         run: |
           Write-Host "=== dispatch complete ==="
