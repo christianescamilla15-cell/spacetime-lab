@@ -186,19 +186,35 @@ jobs:
               -- --auto-commits 2>&1 | Out-Host
           Write-Host "track_usage.py exit: $LASTEXITCODE"
 
-      - name: Summarize files created + push
+      - name: Summarize files created + commit + push
         run: |
           $target = Join-Path $env:PROJECTS_ROOT '${{ inputs.project_name }}'
           Set-Location $target
           Write-Host "--- Files in the new repo ---"
           cmd /c "git ls-files 2>&1"
-          Write-Host "--- Git log ---"
+          Write-Host "--- Git status ---"
+          cmd /c "git status --short 2>&1"
+          Write-Host "--- Git log (before runner commit) ---"
           cmd /c "git log --oneline 2>&1"
-          # Push whatever aider committed.  If aider did NOT commit (e.g.
-          # exit before edits), at least README.md remains from the
-          # gh repo create --add-readme step.
-          cmd /c "git push origin master 2>&1"
-          Write-Host "push exit code: $LASTEXITCODE"
+          # If aider left changes uncommitted OR the working tree has any
+          # untracked files the LLM created, commit them under the runner
+          # identity so the scaffold is fully persisted.
+          cmd /c "git add -A 2>&1"
+          cmd /c "git diff --cached --quiet 2>&1"
+          $stagedExit = $LASTEXITCODE
+          if ($stagedExit -ne 0) {
+              $msg = "feat: initial scaffold for ${{ inputs.project_name }} (${{ inputs.stack }})"
+              cmd /c "git -c user.email=dispatch-runner@local -c user.name=runner-desktop commit -m `"$msg`" --no-verify 2>&1"
+          } else {
+              Write-Host "(aider left no uncommitted changes to pick up)"
+          }
+          # Detect default branch; gh repo create --add-readme uses 'main'
+          # but older repos may still have 'master'.
+          $branch = (cmd /c "git rev-parse --abbrev-ref HEAD 2>&1").Trim()
+          Write-Host "Pushing branch: $branch"
+          cmd /c "git push origin $branch 2>&1"
+          Write-Host "push exit: $LASTEXITCODE"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - name: Optional vercel deploy (react-vite only)
         if: ${{ inputs.deploy_vercel == true && inputs.stack == 'react-vite' }}
