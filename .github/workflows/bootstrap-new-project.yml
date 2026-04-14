@@ -1,15 +1,25 @@
 name: bootstrap-new-project
 
-# Create a brand-new repo from scratch, scaffold it with aider+Ollama,
-# and push the initial commit.  Zero-cloud (local inference), autonomous.
+# Create a brand-new repo from scratch, scaffold it with a chosen
+# engine (Claude Code headless OR aider+Ollama), and push the initial
+# commit.  Autonomous.
+#
+# Engines:
+#   - claude-code   : uses the locally-installed Claude Code CLI in
+#                     headless mode (`claude -p`).  Best quality; runs
+#                     under Christian's subscription (zero incremental
+#                     $$).  Requires the Claude desktop app installed
+#                     and logged in on this PC.
+#   - ollama-local  : original path, aider + Ollama model.  Zero-cloud
+#                     but lower quality.
 #
 # Flow:
 #   1. gh repo create <user>/<project>  (shell, deterministic)
 #   2. clone to %TEMP%\<project>         (shell)
-#   3. aider scaffolds the initial files using
+#   3. chosen engine scaffolds the initial files using
 #      .agent/workflows/bootstrap-new-project.md as the prompt, with
-#      PROJECT_NAME / STACK / PROJECT_DESCRIPTION exposed via env
-#   4. git add + commit (runner side; aider runs with --auto-commits)
+#      PROJECT_NAME / STACK / PROJECT_DESCRIPTION substituted in
+#   4. git add + commit (runner side)
 #   5. git push
 #   6. optionally: vercel link + first deploy
 #   7. log the dispatch event to spacetime-lab/.agent/runs/_summary.jsonl
@@ -54,8 +64,16 @@ on:
         type: boolean
         required: true
         default: false
+      engine:
+        description: "Scaffold engine"
+        type: choice
+        required: true
+        default: claude-code
+        options:
+          - claude-code
+          - ollama-local
       model:
-        description: "Ollama model for the scaffold"
+        description: "Ollama model (only used when engine=ollama-local)"
         type: choice
         required: true
         default: ollama/qwen2.5-coder:7b
@@ -65,10 +83,10 @@ on:
           - ollama/llama3.1:8b
           - ollama/gemma3:4b
       timeout_minutes:
-        description: "Aider timeout"
+        description: "Scaffold timeout"
         type: number
         required: true
-        default: 8
+        default: 10
 
 jobs:
   bootstrap:
@@ -95,6 +113,7 @@ jobs:
           Write-Host "stack       : ${{ inputs.stack }}"
           Write-Host "description : ${{ inputs.description }}"
           Write-Host "visibility  : ${{ inputs.visibility }}"
+          Write-Host "engine      : ${{ inputs.engine }}"
           Write-Host "model       : ${{ inputs.model }}"
 
       - name: Validate project name
@@ -115,6 +134,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { Write-Host "git pull failed"; exit 1 }
 
       - name: Verify Ollama is up + model is pulled
+        if: ${{ inputs.engine == 'ollama-local' }}
         run: |
           $modelOnly = '${{ inputs.model }}' -replace '^ollama/', ''
           try {
@@ -168,7 +188,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { Write-Host "clone failed"; exit 1 }
           Write-Host "Cloned to $dest"
 
-      - name: Aider scaffold
+      - name: Aider scaffold (ollama-local engine)
+        if: ${{ inputs.engine == 'ollama-local' }}
         continue-on-error: true
         timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) }}
         run: |
@@ -186,6 +207,47 @@ jobs:
               -- --auto-commits 2>&1 | Out-Host
           Write-Host "track_usage.py exit: $LASTEXITCODE"
 
+      - name: Claude Code scaffold (claude-code engine)
+        if: ${{ inputs.engine == 'claude-code' }}
+        continue-on-error: true
+        timeout-minutes: ${{ fromJSON(inputs.timeout_minutes) }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $target = Join-Path $env:PROJECTS_ROOT '${{ inputs.project_name }}'
+
+          # Resolve claude.exe from the Appx install (version-agnostic).
+          $claudeRoot = 'C:\Users\DANNY\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude-code'
+          $claudeExe = Get-ChildItem -Path $claudeRoot -Filter 'claude.exe' -Recurse -ErrorAction SilentlyContinue |
+                       Sort-Object FullName -Descending |
+                       Select-Object -First 1 -ExpandProperty FullName
+          if (-not $claudeExe) {
+              Write-Error "claude.exe not found under $claudeRoot -- is Claude Code installed?"
+              exit 1
+          }
+          Write-Host "Using: $claudeExe"
+
+          # Render the scaffold prompt with input substitutions.
+          $promptTpl = Join-Path $env:SPACETIME_LAB_PATH '.agent\workflows\bootstrap-new-project.md'
+          $prompt = Get-Content -Raw -Path $promptTpl
+          $prompt = $prompt.Replace('{{PROJECT_NAME}}',        '${{ inputs.project_name }}')
+          $prompt = $prompt.Replace('{{STACK}}',               '${{ inputs.stack }}')
+          $prompt = $prompt.Replace('{{PROJECT_DESCRIPTION}}', '${{ inputs.description }}')
+
+          # Write to a temp file so we can pipe it via stdin deterministically.
+          $promptFile = Join-Path $env:TEMP ("scaffold-prompt-{0}.md" -f [guid]::NewGuid())
+          Set-Content -Path $promptFile -Value $prompt -Encoding UTF8
+          Write-Host "--- rendered prompt ($promptFile) ---"
+          Get-Content $promptFile -TotalCount 15
+          Write-Host "--- end preview ---"
+
+          Set-Location $target
+          # Headless: claude -p reads prompt from stdin, auto-accepts file edits.
+          Get-Content -Raw $promptFile | & $claudeExe -p `
+              --permission-mode acceptEdits `
+              --output-format text 2>&1 | Out-Host
+          Write-Host "claude exit: $LASTEXITCODE"
+          Remove-Item -Path $promptFile -ErrorAction SilentlyContinue
+
       - name: Summarize files created + commit + push
         run: |
           $target = Join-Path $env:PROJECTS_ROOT '${{ inputs.project_name }}'
@@ -196,14 +258,13 @@ jobs:
           cmd /c "git status --short 2>&1"
           Write-Host "--- Git log (before runner commit) ---"
           cmd /c "git log --oneline 2>&1"
-          # Exclude aider's conversation artifacts from the scaffold.
-          # (Append; preserve whatever .gitignore aider authored for the
-          # target stack.)
-          $gi = Join-Path $target '.gitignore'
-          $aiderIgn = "`n# Aider conversation artifacts`n.aider*`n"
-          Add-Content -Path $gi -Value $aiderIgn -Encoding UTF8
-          # Also untrack them if git already picked them up.
-          cmd /c "git rm --cached -r --ignore-unmatch .aider.chat.history.md .aider.input.history .aider.tags.cache.v4 2>&1"
+          # If aider ran, exclude its conversation artifacts from the scaffold.
+          if ('${{ inputs.engine }}' -eq 'ollama-local') {
+              $gi = Join-Path $target '.gitignore'
+              $aiderIgn = "`n# Aider conversation artifacts`n.aider*`n"
+              Add-Content -Path $gi -Value $aiderIgn -Encoding UTF8
+              cmd /c "git rm --cached -r --ignore-unmatch .aider.chat.history.md .aider.input.history .aider.tags.cache.v4 2>&1"
+          }
           # Now commit everything aider produced + our .gitignore fix.
           cmd /c "git add -A 2>&1"
           cmd /c "git diff --cached --quiet 2>&1"
@@ -238,11 +299,20 @@ jobs:
           $ErrorActionPreference = 'Continue'
           Set-Location $env:SPACETIME_LAB_PATH
           $now = (Get-Date).ToUniversalTime()
+          $engine = '${{ inputs.engine }}'
+          if ($engine -eq 'claude-code') {
+              $executor = 'claude-code'
+              $modelField = 'claude-code-default'
+          } else {
+              $executor = 'aider'
+              $modelField = '${{ inputs.model }}'
+          }
           $entry = [ordered]@{
               run_id     = $now.ToString("yyyyMMddTHHmmssZ") + "_bootstrap"
               workflow   = "bootstrap-new-project"
-              executor   = "aider"
-              model      = '${{ inputs.model }}'
+              executor   = $executor
+              engine     = $engine
+              model      = $modelField
               project    = '${{ inputs.project_name }}'
               stack      = '${{ inputs.stack }}'
               visibility = '${{ inputs.visibility }}'
