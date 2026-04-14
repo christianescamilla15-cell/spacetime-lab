@@ -6,17 +6,17 @@
 
 | Field | Value |
 |---|---|
-| Run ID | `20260413T135357Z_dispatch` |
-| Workflow | `check-deploys` |
-| Kind | `dispatch-prepare` |
-| Start | `2026-04-13T13:53:57Z` |
-| End | `2026-04-13T13:53:57Z` |
-| Duration | 0s |
-| Exit code | `0` |
-| Task | test LATEST.md briefing flow |
-| input.open_dashboards | false |
-| input.open_ide | false |
+| Run ID | `20260414T003132Z_bootstrap` |
+| Workflow | `bootstrap-new-project` |
+| Kind | `bootstrap-new-project` |
+| Start | `2026-04-14T00:31:32Z` |
+| End | `2026-04-14T00:31:32Z` |
+| Model | claude-code-default |
+| Project | smoke-test-claude-1 |
+| Stack | python-cli |
+| Visibility | private |
+| Repo URL | <https://github.com/christianescamilla15-cell/smoke-test-claude-1> |
 
 ## How to act on this
 
-This was a prepare-only dispatch (0-token). The runner opened the IDE / dashboards for you; the agent work happens right here, interactively. Pick up the task described in the referenced workflow file.
+A new repo was created at https://github.com/christianescamilla15-cell/smoke-test-claude-1. If the user wants to iterate on it, treat the new repo as the working target. Files scaffolded by a local model may need a manual review -- small models sometimes emit whole-edit-format glitches. Check `git log` in the new repo and clean up any weird artifacts before layering new work.
