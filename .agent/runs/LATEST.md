@@ -6,17 +6,17 @@
 
 | Field | Value |
 |---|---|
-| Run ID | `20260414T003132Z_bootstrap` |
+| Run ID | `20260414T003521Z_bootstrap` |
 | Workflow | `bootstrap-new-project` |
 | Kind | `bootstrap-new-project` |
-| Start | `2026-04-14T00:31:32Z` |
-| End | `2026-04-14T00:31:32Z` |
+| Start | `2026-04-14T00:35:21Z` |
+| End | `2026-04-14T00:35:21Z` |
 | Model | claude-code-default |
-| Project | smoke-test-claude-1 |
+| Project | smoke-test-claude-2 |
 | Stack | python-cli |
 | Visibility | private |
-| Repo URL | <https://github.com/christianescamilla15-cell/smoke-test-claude-1> |
+| Repo URL | <https://github.com/christianescamilla15-cell/smoke-test-claude-2> |
 
 ## How to act on this
 
-A new repo was created at https://github.com/christianescamilla15-cell/smoke-test-claude-1. If the user wants to iterate on it, treat the new repo as the working target. Files scaffolded by a local model may need a manual review -- small models sometimes emit whole-edit-format glitches. Check `git log` in the new repo and clean up any weird artifacts before layering new work.
+A new repo was created at https://github.com/christianescamilla15-cell/smoke-test-claude-2. If the user wants to iterate on it, treat the new repo as the working target. Files scaffolded by a local model may need a manual review -- small models sometimes emit whole-edit-format glitches. Check `git log` in the new repo and clean up any weird artifacts before layering new work.
