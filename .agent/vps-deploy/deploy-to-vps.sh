@@ -40,9 +40,9 @@ set -euo pipefail
 # Input validation
 # ---------------------------------------------------------------------------
 
-: "${DOMAIN:?set DOMAIN env var (e.g., mcp.chernandez.dev)}"
-: "${PC_CLIENT_PUBKEY:?set PC_CLIENT_PUBKEY env var (wg-pc-client-public.key)}"
-: "${ADMIN_EMAIL:?set ADMIN_EMAIL env var (Let's Encrypt contact)}"
+: "${DOMAIN:?set DOMAIN env var, for example mcp.chernandez.dev}"
+: "${PC_CLIENT_PUBKEY:?set PC_CLIENT_PUBKEY env var from wg-pc-client-public.key}"
+: "${ADMIN_EMAIL:?set ADMIN_EMAIL env var for ACME contact}"
 WG_PORT="${WG_PORT:-51820}"
 WG_NET="10.8.0.0/24"
 WG_SERVER_IP="10.8.0.1"
