@@ -57,9 +57,18 @@ Create:
 ## Stack = `python-cli`
 
 Create:
-- `pyproject.toml` — PEP 621 style, project name from `{{PROJECT_NAME}}`,
-  Python >=3.10, declare a single console-script entry point
-  `<{{PROJECT_NAME}}> = <{{PROJECT_NAME}}>.__main__:main`.
+- `pyproject.toml` — PEP 621 style.  Required sections and exact values:
+  - `[build-system]` — `requires = ["setuptools>=68.0", "wheel"]` and
+    `build-backend = "setuptools.build_meta"` (verbatim; do NOT invent
+    any other backend string).
+  - `[project]` — `name` from `{{PROJECT_NAME}}`,
+    `version = "0.1.0"`, `description` from `{{PROJECT_DESCRIPTION}}`,
+    `requires-python = ">=3.10"`.
+  - `[project.scripts]` — single console-script entry point
+    `<{{PROJECT_NAME}}> = "<snake_case_package>.__main__:main"` where
+    `<snake_case_package>` is `{{PROJECT_NAME}}` with hyphens replaced
+    by underscores.
+  - `[tool.setuptools.packages.find]` — `where = ["src"]`.
 - `src/<{{PROJECT_NAME}}>/__init__.py` — empty.
 - `src/<{{PROJECT_NAME}}>/__main__.py` — a `main()` function parsing argv,
   printing `<{{PROJECT_NAME}}>: hello, {arg}` where `arg` is the first CLI
