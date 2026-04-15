@@ -6,17 +6,17 @@
 
 | Field | Value |
 |---|---|
-| Run ID | `20260414T003521Z_bootstrap` |
-| Workflow | `bootstrap-new-project` |
-| Kind | `bootstrap-new-project` |
-| Start | `2026-04-14T00:35:21Z` |
-| End | `2026-04-14T00:35:21Z` |
-| Model | claude-code-default |
-| Project | smoke-test-claude-2 |
-| Stack | python-cli |
-| Visibility | private |
-| Repo URL | <https://github.com/christianescamilla15-cell/smoke-test-claude-2> |
+| Run ID | `20260415T143316Z_dispatch` |
+| Workflow | `check-deploys` |
+| Kind | `dispatch-prepare` |
+| Start | `2026-04-15T14:33:16Z` |
+| End | `2026-04-15T14:33:16Z` |
+| Duration | 0s |
+| Exit code | `0` |
+| Task | Status check of spacetime-lab project |
+| input.open_dashboards | false |
+| input.open_ide | false |
 
 ## How to act on this
 
-A new repo was created at https://github.com/christianescamilla15-cell/smoke-test-claude-2. If the user wants to iterate on it, treat the new repo as the working target. Files scaffolded by a local model may need a manual review -- small models sometimes emit whole-edit-format glitches. Check `git log` in the new repo and clean up any weird artifacts before layering new work.
+This was a prepare-only dispatch (0-token). The runner opened the IDE / dashboards for you; the agent work happens right here, interactively. Pick up the task described in the referenced workflow file.
