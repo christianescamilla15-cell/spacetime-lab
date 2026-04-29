@@ -7,12 +7,12 @@ physical observables of black hole spacetimes.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import metrics
+from app.routes import ads, holography, kerr, metrics
 
 app = FastAPI(
     title="Spacetime Lab API",
     description="Interactive platform for exploring black hole physics.",
-    version="0.0.1",
+    version="0.2.5",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
@@ -29,6 +29,9 @@ app.add_middleware(
 
 # Register routes
 app.include_router(metrics.router, prefix="/api", tags=["metrics"])
+app.include_router(kerr.router, prefix="/api", tags=["kerr"])
+app.include_router(ads.router, prefix="/api", tags=["ads"])
+app.include_router(holography.router, prefix="/api", tags=["holography"])
 
 
 @app.get("/api/health")
@@ -37,11 +40,11 @@ async def health() -> dict:
     return {
         "status": "healthy",
         "service": "Spacetime Lab API",
-        "version": "0.0.1",
+        "version": app.version,
     }
 
 
 @app.get("/api/version")
 async def version() -> dict:
     """Return current API version."""
-    return {"version": "0.0.1"}
+    return {"version": app.version}

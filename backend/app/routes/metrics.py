@@ -151,7 +151,13 @@ async def effective_potential(
 
 @router.get("/available")
 async def list_available_metrics() -> dict:
-    """List metrics currently available in the platform."""
+    """List metrics currently available in the platform.
+
+    "shipped_in_python" reflects what the spacetime_lab Python package
+    actually exposes; "rest_endpoint" tracks whether the FastAPI layer
+    has wrapped it yet.  v2.5 closes the Kerr gap; v2.6 will close BTZ
+    and AdS, v2.6+ Reissner-Nordström.
+    """
     return {
         "metrics": [
             {
@@ -159,34 +165,44 @@ async def list_available_metrics() -> dict:
                 "description": "Static, spherically symmetric vacuum BH",
                 "parameters": ["mass"],
                 "phase": 1,
+                "shipped_in_python": "v0.1.0",
+                "rest_endpoint": "/api/metrics/schwarzschild",
                 "available": True,
             },
             {
                 "name": "Kerr",
-                "description": "Rotating vacuum BH",
+                "description": "Rotating vacuum BH (Boyer-Lindquist)",
                 "parameters": ["mass", "spin"],
                 "phase": 3,
+                "shipped_in_python": "v0.3.0",
+                "rest_endpoint": "/api/metrics/kerr",
+                "available": True,
+            },
+            {
+                "name": "AdS (Anti-de Sitter)",
+                "description": "Negative cosmological constant background (Poincaré)",
+                "parameters": ["dim", "L_AdS"],
+                "phase": 7,
+                "shipped_in_python": "v0.7.0",
+                "rest_endpoint": "/api/metrics/ads",
+                "available": True,
+            },
+            {
+                "name": "BTZ",
+                "description": "3D AdS black hole (rotating since v1.3)",
+                "parameters": ["mass", "spin", "L_AdS"],
+                "phase": 8,
+                "shipped_in_python": "v0.8.0 (static), v1.3.0 (rotating)",
+                "rest_endpoint": None,
                 "available": False,
             },
             {
                 "name": "Reissner-Nordström",
                 "description": "Charged static BH",
                 "parameters": ["mass", "charge"],
-                "phase": 4,
-                "available": False,
-            },
-            {
-                "name": "BTZ",
-                "description": "3D AdS black hole",
-                "parameters": ["mass", "spin", "cosmological_constant"],
-                "phase": 7,
-                "available": False,
-            },
-            {
-                "name": "AdS (Anti-de Sitter)",
-                "description": "Negative cosmological constant background",
-                "parameters": ["radius"],
-                "phase": 7,
+                "phase": "deferred",
+                "shipped_in_python": None,
+                "rest_endpoint": None,
                 "available": False,
             },
         ]
