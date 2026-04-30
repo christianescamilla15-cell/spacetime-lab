@@ -7,6 +7,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import EmbedLayout from './components/EmbedLayout'
 import Home from './pages/Home'
 import Schwarzschild from './pages/Schwarzschild'
 import Kerr from './pages/Kerr'
@@ -28,6 +29,14 @@ export default function App() {
           <Route path="penrose" element={<Penrose />} />
           <Route path="holography" element={<Holography />} />
           <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+        <Route path="/embed" element={<EmbedLayout />}>
+          <Route path="schwarzschild" element={<Schwarzschild />} />
+          <Route path="kerr" element={<Kerr />} />
+          <Route path="btz" element={<BTZ />} />
+          <Route path="geodesics" element={<Geodesics />} />
+          <Route path="penrose" element={<Penrose />} />
+          <Route path="holography" element={<Holography />} />
         </Route>
       </Routes>
     </BrowserRouter>
