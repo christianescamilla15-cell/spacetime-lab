@@ -1,22 +1,26 @@
 /**
  * App-wide layout: top nav + outlet for the routed page + footer.
  *
- * Nav structure mirrors the four "physics surfaces" of v3.0:
- *   Home  ·  Schwarzschild  ·  Kerr  ·  Penrose  ·  Holography
+ * v2.7: stacks vertically on narrow viewports (≤720px) — the 6 nav
+ * items would wrap to 2-3 lines and steal too much above-the-fold
+ * space on phone, so we collapse to brand-on-top + nav-below.
  */
 
 import { NavLink, Outlet } from 'react-router-dom'
+import useMediaQuery from '../lib/useMediaQuery'
 
 export default function Layout() {
+  const isMobile = useMediaQuery('(max-width: 720px)')
+
   return (
     <div style={styles.app}>
-      <header style={styles.header}>
+      <header style={{ ...styles.header, ...(isMobile && styles.headerMobile) }}>
         <NavLink to="/" style={styles.brandLink}>
-          <h1 style={styles.brand}>
+          <h1 style={{ ...styles.brand, ...(isMobile && styles.brandMobile) }}>
             <span style={styles.logo}>⚫</span> Spacetime Lab
           </h1>
         </NavLink>
-        <nav style={styles.nav}>
+        <nav style={{ ...styles.nav, ...(isMobile && styles.navMobile) }}>
           <NavItem to="/schwarzschild">Schwarzschild</NavItem>
           <NavItem to="/kerr">Kerr</NavItem>
           <NavItem to="/btz">BTZ</NavItem>
@@ -33,18 +37,13 @@ export default function Layout() {
       <footer style={styles.footer}>
         <p>
           Built by{' '}
-          <a
-            href="https://github.com/christianescamilla15-cell"
-            style={styles.footerLink}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href="https://github.com/christianescamilla15-cell"
+            style={styles.footerLink} target="_blank" rel="noopener noreferrer">
             Christian Hernández
-          </a>{' '}
-          — an AI engineer learning GR by building tools for it.
+          </a>{' '}— an AI engineer learning GR by building tools for it.
         </p>
         <p style={styles.footerSmall}>
-          v2.5 (frontend sprint) · 655+ tests · 15 notebooks · MIT License · © 2026
+          v2.7 · 700+ tests · 15 notebooks · MIT License · © 2026
         </p>
       </footer>
     </div>
@@ -53,13 +52,11 @@ export default function Layout() {
 
 function NavItem({ to, children }) {
   return (
-    <NavLink
-      to={to}
+    <NavLink to={to}
       style={({ isActive }) => ({
         ...styles.navLink,
         ...(isActive && styles.navLinkActive),
-      })}
-    >
+      })}>
       {children}
     </NavLink>
   )
@@ -82,31 +79,36 @@ const styles = {
     flexWrap: 'wrap',
     gap: 16,
   },
+  headerMobile: {
+    flexDirection: 'column',
+    padding: '14px 12px',
+    gap: 10,
+  },
   brandLink: { textDecoration: 'none' },
   brand: {
-    fontSize: 28,
-    margin: 0,
-    fontWeight: 700,
+    fontSize: 28, margin: 0, fontWeight: 700,
     background: 'linear-gradient(135deg, #ff6b9d, #00dfff)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 12,
+    display: 'inline-flex', alignItems: 'center', gap: 12,
   },
+  brandMobile: { fontSize: 22 },
   logo: { fontSize: 24, WebkitTextFillColor: 'initial' },
-  nav: {
-    display: 'flex',
-    gap: 4,
-    flexWrap: 'wrap',
+  nav: { display: 'flex', gap: 4, flexWrap: 'wrap' },
+  navMobile: {
+    width: '100%',
+    justifyContent: 'center',
+    overflowX: 'auto',
+    flexWrap: 'nowrap',
   },
   navLink: {
-    padding: '8px 16px',
+    padding: '8px 14px',
     borderRadius: 20,
     fontSize: 13,
     color: '#9ca3af',
     textDecoration: 'none',
     transition: 'all 0.15s',
+    whiteSpace: 'nowrap',
   },
   navLinkActive: {
     background: 'rgba(255,107,157,0.12)',
@@ -128,12 +130,6 @@ const styles = {
     color: '#6b7280',
     fontSize: 13,
   },
-  footerLink: {
-    color: '#ff6b9d',
-    textDecoration: 'none',
-  },
-  footerSmall: {
-    fontSize: 11,
-    marginTop: 8,
-  },
+  footerLink: { color: '#ff6b9d', textDecoration: 'none' },
+  footerSmall: { fontSize: 11, marginTop: 8 },
 }
