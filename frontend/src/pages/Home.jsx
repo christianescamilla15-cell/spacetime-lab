@@ -64,6 +64,13 @@ export default function Home() {
           status="ready"
         />
         <PageCard
+          to="/kerr-newman"
+          title="Kerr-Newman"
+          subtitle="v3.2 in UI"
+          desc="Rotating + charged BH. Newman et al. 1965 — combines Kerr and RN. All three limits cross-checked bit-exactly."
+          status="ready"
+        />
+        <PageCard
           to="/geodesics"
           title="Geodesics"
           subtitle="Phase 3 · v0.3 (v2.6 in UI)"

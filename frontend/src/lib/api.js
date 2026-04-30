@@ -45,6 +45,10 @@ export const api = {
     properties: (mass, charge) =>
       get('/api/metrics/reissner-nordstrom', { mass, charge }),
   },
+  kerrNewman: {
+    properties: (mass, spin, charge) =>
+      get('/api/metrics/kerr-newman', { mass, spin, charge }),
+  },
   diagrams: {
     penroseSvgUrl: (kind, opts = {}) => {
       const qs = new URLSearchParams({
