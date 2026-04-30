@@ -206,3 +206,57 @@ def test_ergosphere_at_equator_independent_of_spin() -> None:
     assert bh.ergosphere(math.pi / 2) == pytest.approx(
         1.0 + math.sqrt(0.84), rel=1e-12,
     )
+
+
+# ──────────────────────────────────────────────────────────────────
+# v3.2.1: ISCO — limits + general numerical case
+# ──────────────────────────────────────────────────────────────────
+
+def test_isco_schwarzschild_limit_equals_6M() -> None:
+    """At a=0, Q=0 → both branches collapse to 6M (Schwarzschild)."""
+    bh = KerrNewman(mass=1.0, spin=0.0, charge=0.0)
+    assert bh.isco(prograde=True) == pytest.approx(6.0, rel=1e-9)
+    assert bh.isco(prograde=False) == pytest.approx(6.0, rel=1e-9)
+
+
+def test_isco_kerr_limit_matches_kerr_class() -> None:
+    """At Q=0, KN ISCO must bit-exactly match Kerr's BPT 1972 closed form."""
+    from spacetime_lab.metrics import Kerr
+    for a in [0.3, 0.5, 0.9]:
+        kn = KerrNewman(mass=1.0, spin=a, charge=0.0)
+        kerr = Kerr(mass=1.0, spin=a)
+        assert kn.isco(prograde=True) == pytest.approx(
+            kerr.isco(prograde=True), rel=1e-12,
+        ), f"prograde mismatch at a={a}"
+        assert kn.isco(prograde=False) == pytest.approx(
+            kerr.isco(prograde=False), rel=1e-12,
+        ), f"retrograde mismatch at a={a}"
+
+
+def test_isco_rn_limit_matches_rn_class() -> None:
+    """At a=0, KN ISCO must match the RN class numerical ISCO."""
+    from spacetime_lab.metrics import ReissnerNordstrom
+    for Q in [0.3, 0.5, 0.9]:
+        kn = KerrNewman(mass=1.0, spin=0.0, charge=Q)
+        rn = ReissnerNordstrom(mass=1.0, charge=Q)
+        # RN doesn't distinguish prograde/retrograde; both KN branches
+        # should give the same value as RN.isco
+        assert kn.isco() == pytest.approx(rn.isco(), rel=1e-9), \
+            f"RN-limit ISCO mismatch at Q={Q}"
+
+
+def test_isco_general_case_between_kerr_and_rn() -> None:
+    """For a=0.5, Q=0.3: ISCO should sit between Kerr ISCO at a=0.5
+    (~ 4.23) and RN ISCO at Q=0.3 (~ 5.88).  Charge tightens the orbit
+    on top of the rotational effect; expect the general-case ISCO to
+    be < both individual limits — but at the very least, between the
+    Kerr-limit retrograde (larger) and the prograde (smaller) values."""
+    from spacetime_lab.metrics import Kerr
+    kn_pro = KerrNewman(mass=1.0, spin=0.5, charge=0.3).isco(prograde=True)
+    kerr_pro = Kerr(mass=1.0, spin=0.5).isco(prograde=True)
+    # Adding charge should shrink the ISCO further (closer to the BH);
+    # this is the consistency check: KN ISCO < Kerr ISCO at same a.
+    assert kn_pro < kerr_pro
+    # And it should be a finite, sensible radius outside the horizon
+    rp = KerrNewman(mass=1.0, spin=0.5, charge=0.3).outer_horizon()
+    assert rp < kn_pro < 6.0  # 6M is the Schwarzschild reference

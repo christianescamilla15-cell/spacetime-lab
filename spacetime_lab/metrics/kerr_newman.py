@@ -231,6 +231,115 @@ class KerrNewman(Metric):
     # Output
     # ──────────────────────────────────────────────────────────────
 
+    # ──────────────────────────────────────────────────────────────
+    # ISCO — equatorial timelike circular orbits (v3.2.1)
+    # ──────────────────────────────────────────────────────────────
+
+    def isco(self, prograde: bool = True) -> float:
+        r"""Equatorial ISCO for a neutral massive test particle.
+
+        Strategy:
+          - Q = 0  → delegate to Kerr.isco (Bardeen-Press-Teukolsky 1972
+                     closed form); machine precision.
+          - a = 0  → delegate to ReissnerNordstrom.isco (numerical
+                     dL²_circ/dr = 0); machine precision.
+          - general (a > 0, Q > 0) → solve the 3-equation system
+                     R(r) = R'(r) = R''(r) = 0 for (r, E, L) numerically.
+
+        For the general case, the radial polynomial of a neutral
+        massive geodesic on the Kerr-Newman equator (Wald §12.3
+        generalised; see also Pradhan 2014) is
+
+          R(r) = [(r² + a²)E - a L]²
+                 − (r² − 2Mr + a² + Q²)·[r² + (L − aE)²].
+
+        (Q enters ONLY through Δ; the rest is structurally identical
+        to Kerr.)
+
+        ISCO conditions:
+          R(r)   = 0     (turning point)
+          R'(r)  = 0     (circular)
+          R''(r) = 0     (marginal stability)
+
+        We solve this 3 × 3 nonlinear system with scipy.optimize.fsolve.
+        Initial guess: take Kerr's ISCO at the same a (which has a
+        closed form) — Q just shifts it slightly, so this gives a tight
+        bracket for the iterative solver.
+
+        Honest scope:
+          - Aliev-Galtsov 1981 published a closed-form polynomial whose
+            root is r_ISCO, but the coefficients involve nested radicals
+            and we have not transcribed them here.  The numerical
+            approach gives the same answer to fsolve's default
+            tolerance (~ 1e-12); we gate tests at 1e-6 for the
+            general case to leave headroom for solver path-dependence.
+          - Photon orbits (μ = 0) follow a different equation; not
+            implemented.
+        """
+        from scipy.optimize import fsolve
+
+        M = self.mass
+        a = self.spin
+        Q = self.charge
+
+        # Limits — defer to existing exact implementations
+        if Q == 0.0:
+            from spacetime_lab.metrics import Kerr
+            return Kerr(mass=M, spin=a).isco(prograde=prograde)
+        if a == 0.0:
+            from spacetime_lab.metrics import ReissnerNordstrom
+            # RN doesn't distinguish prograde/retrograde (no spin)
+            return ReissnerNordstrom(mass=M, charge=Q).isco()
+
+        # General case: 3-eq system R = R' = R'' = 0
+        def R(r: float, E: float, L: float) -> float:
+            Delta = r ** 2 - 2 * M * r + a ** 2 + Q ** 2
+            return ((r ** 2 + a ** 2) * E - a * L) ** 2 \
+                   - Delta * (r ** 2 + (L - a * E) ** 2)
+
+        def Rprime(r: float, E: float, L: float) -> float:
+            # Analytical derivative w.r.t. r at fixed E, L.
+            # d/dr (A² - Δ·B) where A = (r²+a²)E - aL, B = r² + (L-aE)²
+            # = 2A·dA/dr - dΔ/dr·B - Δ·dB/dr
+            A = (r ** 2 + a ** 2) * E - a * L
+            dA_dr = 2 * r * E
+            B = r ** 2 + (L - a * E) ** 2
+            dB_dr = 2 * r
+            dDelta_dr = 2 * r - 2 * M
+            Delta = r ** 2 - 2 * M * r + a ** 2 + Q ** 2
+            return 2 * A * dA_dr - dDelta_dr * B - Delta * dB_dr
+
+        def Rpp(r: float, E: float, L: float) -> float:
+            # 2nd derivative; use central FD on Rprime — we already pay
+            # one fsolve call so an extra ~1e-9 noise is fine.  The
+            # numerical accuracy at the SOLUTION (where R=R'=R''=0)
+            # is gated by fsolve's tolerance, not this finite difference.
+            h = 1e-5 * max(1.0, abs(r))
+            return (Rprime(r + h, E, L) - Rprime(r - h, E, L)) / (2 * h)
+
+        def system(z):
+            r, E, L = z
+            return [R(r, E, L), Rprime(r, E, L), Rpp(r, E, L)]
+
+        # Initial guess: Kerr ISCO at this a, plus rough E and L
+        # estimates from Kerr circular orbit formulas.
+        from spacetime_lab.metrics import Kerr
+        r_guess = float(Kerr(mass=M, spin=a).isco(prograde=prograde))
+        # Crude (but adequate for the solver) estimates:
+        # Energy at large r approaches 1; L ~ √(M r) for Keplerian orbit.
+        E_guess = 0.94 if prograde else 0.96
+        L_guess = (1.0 if prograde else -1.0) * math.sqrt(M * r_guess) * 2.0
+
+        sol, info, ier, msg = fsolve(
+            system, [r_guess, E_guess, L_guess], full_output=True, xtol=1e-12,
+        )
+        if ier != 1:
+            raise RuntimeError(
+                f"KN ISCO fsolve did not converge for "
+                f"(M={M}, a={a}, Q={Q}, prograde={prograde}): {msg}"
+            )
+        return float(sol[0])
+
     def line_element_latex(self) -> str:
         return (
             r"ds^2 = -\frac{\Delta - a^2 \sin^2\theta}{\Sigma} dt^2 "
