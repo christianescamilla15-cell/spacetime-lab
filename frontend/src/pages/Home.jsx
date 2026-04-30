@@ -57,6 +57,13 @@ export default function Home() {
           status="ready"
         />
         <PageCard
+          to="/geodesics"
+          title="Geodesics"
+          subtitle="Phase 3 · v0.3 (v2.6 in UI)"
+          desc="Integrate timelike geodesics in Kerr or Schwarzschild via the symplectic implicit-midpoint integrator. 3D scene with horizons, ergosphere, animated trail."
+          status="ready"
+        />
+        <PageCard
           to="/penrose"
           title="Penrose Diagrams"
           subtitle="Phase 2 · v0.2 → v1.5"

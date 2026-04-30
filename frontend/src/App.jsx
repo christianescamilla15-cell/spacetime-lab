@@ -11,6 +11,7 @@ import Home from './pages/Home'
 import Schwarzschild from './pages/Schwarzschild'
 import Kerr from './pages/Kerr'
 import BTZ from './pages/BTZ'
+import Geodesics from './pages/Geodesics'
 import Penrose from './pages/Penrose'
 import Holography from './pages/Holography'
 
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="schwarzschild" element={<Schwarzschild />} />
           <Route path="kerr" element={<Kerr />} />
           <Route path="btz" element={<BTZ />} />
+          <Route path="geodesics" element={<Geodesics />} />
           <Route path="penrose" element={<Penrose />} />
           <Route path="holography" element={<Holography />} />
           <Route path="*" element={<Navigate to="/" replace />} />
