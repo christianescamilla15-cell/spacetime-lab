@@ -189,12 +189,12 @@ async def list_available_metrics() -> dict:
             },
             {
                 "name": "BTZ",
-                "description": "3D AdS black hole (rotating since v1.3)",
-                "parameters": ["mass", "spin", "L_AdS"],
+                "description": "3D AdS black hole (static; rotating in v1.3 Python only)",
+                "parameters": ["horizon_radius", "ads_radius"],
                 "phase": 8,
                 "shipped_in_python": "v0.8.0 (static), v1.3.0 (rotating)",
-                "rest_endpoint": None,
-                "available": False,
+                "rest_endpoint": "/api/metrics/btz",
+                "available": True,
             },
             {
                 "name": "Reissner-Nordström",
