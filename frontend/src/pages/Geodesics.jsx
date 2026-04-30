@@ -73,6 +73,28 @@ const PRESETS = [
       decimation: 5,
     },
   },
+  {
+    // Null geodesic (photon) deflection in Schwarzschild.  Initial
+    // state satisfies the null condition g^{αβ} p_α p_β = 0 by
+    // construction at r = 15M, equator:
+    //   f = 1 − 2M/r = 13/15
+    //   −p_t²/f + f·p_r² + p_φ²/r² = 0
+    //   with p_t = −1, p_φ = 4.5  ⇒  p_r² ≈ 1.228  ⇒  p_r = −1.108 (incoming)
+    // Impact parameter b = L/E = 4.5 < b_c = 3√3 M ≈ 5.196, so the
+    // photon is deflected but escapes (does NOT plunge).  μ² ≈ 0
+    // throughout — verify in the Conservation panel.
+    name: 'Photon deflection (null)',
+    desc: 'Schwarzschild M=1, b≈4.5 < b_c=3√3 ≈ 5.20 — photon swings past BH',
+    request: {
+      metric: 'schwarzschild',
+      params: { mass: 1.0 },
+      initial_position: [0.0, 15.0, 1.5708, 0.0],
+      initial_momentum: [-1.0, -1.108, 0.0, 4.5],
+      step_size: 0.3,
+      n_steps: 1000,
+      decimation: 4,
+    },
+  },
 ]
 
 let nextId = 1

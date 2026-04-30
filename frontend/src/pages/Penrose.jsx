@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { TexBlock, Tex } from '../components/Math'
+import { api } from '../lib/api'
 
 const API = import.meta.env.VITE_API_URL || ''
 
@@ -20,26 +21,61 @@ const KINDS = [
   { id: 'schwarzschild', label: 'Schwarzschild', desc: 'Maximally extended four-region BH' },
 ]
 
+// Default Schwarzschild bound orbit used by the geodesic overlay (v2.7.1).
+// Same physics as the "Schwarzschild bound orbit" preset in /geodesics.
+const DEFAULT_OVERLAY_BODY = {
+  mass: 1.0,
+  initial_position: [0.0, 8.0, 1.5708, 0.0],
+  initial_momentum: [-0.96, 0.0, 0.0, 3.7],
+  step_size: 0.5,
+  n_steps: 600,
+  width: 620,
+  height: 620,
+  overlay_color: '#fbbf24',
+}
+
 export default function Penrose() {
   const [kind, setKind] = useState('schwarzschild')
   const [mass, setMass] = useState(1.0)
   const [svg, setSvg] = useState(null)
   const [manifest, setManifest] = useState(null)
   const [error, setError] = useState(null)
+  const [overlayOn, setOverlayOn] = useState(false)
+  const [overlayMeta, setOverlayMeta] = useState(null)
 
   useEffect(() => {
     let cancelled = false
     setError(null)
     setSvg(null)
+    setOverlayMeta(null)
 
-    const url = `${API}/api/diagrams/penrose/${kind}/svg?mass=${mass}&width=600&height=600`
-    fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.text()
+    if (overlayOn && kind === 'schwarzschild') {
+      // POST endpoint with overlay
+      api.diagrams.penroseSchwarzschildWithGeodesic({
+        ...DEFAULT_OVERLAY_BODY,
+        mass,
       })
-      .then((text) => !cancelled && setSvg(text))
-      .catch((e) => !cancelled && setError(e.message))
+        .then((res) => {
+          if (cancelled) return
+          setSvg(res.svg)
+          setOverlayMeta({
+            samples: res.samples,
+            skipped: res.skipped,
+            finalR: res.finalR,
+          })
+        })
+        .catch((e) => !cancelled && setError(e.message))
+    } else {
+      // Plain GET endpoint (no overlay)
+      const url = `${API}/api/diagrams/penrose/${kind}/svg?mass=${mass}&width=600&height=600`
+      fetch(url)
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`)
+          return r.text()
+        })
+        .then((text) => !cancelled && setSvg(text))
+        .catch((e) => !cancelled && setError(e.message))
+    }
 
     fetch(`${API}/api/diagrams/penrose/${kind}/manifest?mass=${mass}`)
       .then((r) => r.ok ? r.json() : null)
@@ -47,7 +83,7 @@ export default function Penrose() {
       .catch(() => {})
 
     return () => { cancelled = true }
-  }, [kind, mass])
+  }, [kind, mass, overlayOn])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -95,6 +131,25 @@ export default function Penrose() {
               Mass affects the labelled horizon position; the conformal
               shape itself is mass-independent.
             </small>
+
+            {/* v2.7.1: optional geodesic overlay */}
+            <label style={{ ...styles.controlLabel, marginTop: 16, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={overlayOn}
+                onChange={(e) => setOverlayOn(e.target.checked)}
+                style={{ marginRight: 8, accentColor: '#fbbf24' }}
+              />
+              Overlay a Schwarzschild bound geodesic (region I) — projected via{' '}
+              <Tex>{'(t,r) \\to (U,V)'}</Tex>
+            </label>
+            {overlayMeta && (
+              <div style={styles.overlayMeta}>
+                <code>{overlayMeta.samples}</code> region-I samples projected ·{' '}
+                <code>{overlayMeta.skipped}</code> skipped (r ≤ 2M) ·{' '}
+                final r = <code>{overlayMeta.finalR.toFixed(2)}M</code>
+              </div>
+            )}
           </div>
         )}
 
@@ -220,6 +275,12 @@ const styles = {
   controlLabel: { display: 'block', fontSize: 13, color: '#c4b5fd', marginBottom: 6 },
   slider: { width: '100%', accentColor: '#ff6b9d' },
   hint: { display: 'block', fontSize: 11, color: '#6b7280', marginTop: 4 },
+  overlayMeta: {
+    fontSize: 11,
+    color: '#fbbf24',
+    marginTop: 8,
+    fontFamily: 'monospace',
+  },
   viewport: {
     position: 'relative',
     background: '#0a0a0f',

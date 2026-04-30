@@ -41,6 +41,10 @@ export const api = {
     properties: (horizon_radius, ads_radius, G_N = 1) =>
       get('/api/metrics/btz', { horizon_radius, ads_radius, G_N }),
   },
+  reissnerNordstrom: {
+    properties: (mass, charge) =>
+      get('/api/metrics/reissner-nordstrom', { mass, charge }),
+  },
   diagrams: {
     penroseSvgUrl: (kind, opts = {}) => {
       const qs = new URLSearchParams({
@@ -50,5 +54,23 @@ export const api = {
     },
     penroseManifest: (kind, mass = 1.0) =>
       get(`/api/diagrams/penrose/${kind}/manifest`, { mass }),
+    /** Returns { svg, samples, skipped, finalR }.  POST endpoint. */
+    penroseSchwarzschildWithGeodesic: async (body) => {
+      const r = await fetch(
+        `${API_URL}/api/diagrams/penrose/schwarzschild/with_geodesic`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+      )
+      if (!r.ok) throw new Error(`API ${r.status}: ${await r.text()}`)
+      return {
+        svg: await r.text(),
+        samples: parseInt(r.headers.get('X-Overlay-Samples') || '0', 10),
+        skipped: parseInt(r.headers.get('X-Overlay-Skipped') || '0', 10),
+        finalR: parseFloat(r.headers.get('X-Geodesic-Final-R') || '0'),
+      }
+    },
   },
 }
