@@ -205,5 +205,14 @@ async def list_available_metrics() -> dict:
                 "rest_endpoint": "/api/metrics/reissner-nordstrom",
                 "available": True,
             },
+            {
+                "name": "Kerr-Newman",
+                "description": "Rotating + electrically charged BH (combines Kerr + RN)",
+                "parameters": ["mass", "spin", "charge"],
+                "phase": "v3.2",
+                "shipped_in_python": "v3.2.0",
+                "rest_endpoint": "/api/metrics/kerr-newman",
+                "available": True,
+            },
         ]
     }
