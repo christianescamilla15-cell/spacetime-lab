@@ -57,6 +57,13 @@ export default function Home() {
           status="ready"
         />
         <PageCard
+          to="/reissner-nordstrom"
+          title="Reissner-Nordström"
+          subtitle="Phase 4 deferred · v3.1 in UI"
+          desc="Charged static BH. Cosmic censorship enforced; closed-form horizons + photon sphere; ISCO numerical from dL²/dr=0."
+          status="ready"
+        />
+        <PageCard
           to="/geodesics"
           title="Geodesics"
           subtitle="Phase 3 · v0.3 (v2.6 in UI)"
