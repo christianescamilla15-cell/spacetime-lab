@@ -1,25 +1,35 @@
-"""Penrose diagram SVG endpoint — fourth new surface of v2.5.
+"""Penrose diagram SVG endpoints.
 
-Reuses spacetime_lab.diagrams.render.render_svg (v1.5.0) which
-renders to a pure standalone <svg>...</svg> string with no runtime
-deps.  Frontend embeds the returned SVG directly.
+v2.5: GET endpoints for the two supported chart kinds.
+v2.7.1: POST endpoint that overlays a Schwarzschild geodesic onto the
+maximally-extended diagram by injecting a new Path into the Scene
+before rendering.
 
-Two diagram kinds for now:
-    minkowski       - causal structure of flat spacetime
-    schwarzschild   - the four-region maximally extended Schwarzschild
+Why server-side overlay (not frontend SVG injection):
+The render_svg bounding box is auto-computed from the Scene contents.
+If the frontend tried to draw an overlay using its own coords, those
+would not align with the existing diagram's pixel mapping.  The only
+clean way is to add the geodesic-as-a-Path to the Scene and let the
+existing renderer place everything in a single coordinate system.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Path, Query
+import numpy as np
+from fastapi import APIRouter, HTTPException, Path as FastApiPath, Query
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from spacetime_lab.diagrams.penrose import (
     MinkowskiPenrose,
+    Path as DiagramPath,
+    PathStyle,
     SchwarzschildPenrose,
+    Vec2,
 )
 from spacetime_lab.diagrams.render import render_svg
+from spacetime_lab.geodesics import GeodesicIntegrator, GeodesicState
+from spacetime_lab.metrics import Schwarzschild
 
 router = APIRouter(prefix="/diagrams")
 
@@ -50,7 +60,7 @@ def _build_chart(kind: str, mass: float = 1.0):
 
 @router.get("/penrose/{kind}/svg", response_class=Response)
 async def get_penrose_svg(
-    kind: str = Path(..., description="Diagram kind: minkowski or schwarzschild"),
+    kind: str = FastApiPath(..., description="Diagram kind: minkowski or schwarzschild"),
     mass: float = Query(1.0, gt=0, description="(Schwarzschild only) mass M"),
     width: int = Query(520, ge=200, le=1200),
     height: int = Query(520, ge=200, le=1200),
@@ -73,7 +83,7 @@ async def get_penrose_svg(
 
 @router.get("/penrose/{kind}/manifest", response_model=PenroseManifest)
 async def get_penrose_manifest(
-    kind: str = Path(..., description="Diagram kind"),
+    kind: str = FastApiPath(..., description="Diagram kind"),
     mass: float = Query(1.0, gt=0),
 ) -> PenroseManifest:
     """Return metadata about the diagram (regions, infinities, coord names).
@@ -100,3 +110,127 @@ async def list_available_penrose() -> dict:
         "kinds": sorted(SUPPORTED_KINDS),
         "deferred": ["reissner_nordstrom", "de_sitter", "flrw"],
     }
+
+
+# ──────────────────────────────────────────────────────────────────
+# v2.7.1: Schwarzschild Penrose + geodesic overlay
+# ──────────────────────────────────────────────────────────────────
+
+class GeodesicOverlayRequest(BaseModel):
+    """Body for POST /api/diagrams/penrose/schwarzschild/with_geodesic."""
+
+    mass: float = Field(1.0, gt=0, description="BH mass M")
+    initial_position: list[float] = Field(
+        ...,
+        description="x = (t, r, theta, phi); r must be > 2M for region I overlay",
+        min_length=4, max_length=4,
+    )
+    initial_momentum: list[float] = Field(
+        ...,
+        description="p_mu (covariant)",
+        min_length=4, max_length=4,
+    )
+    step_size: float = Field(0.5, gt=0, le=10)
+    n_steps: int = Field(1000, ge=10, le=10_000)
+    width: int = Field(620, ge=200, le=1200)
+    height: int = Field(620, ge=200, le=1200)
+    overlay_color: str = Field(
+        "#fbbf24", pattern=r"^#[0-9a-fA-F]{6}$",
+        description="Stroke color of the overlaid trajectory (#RRGGBB)",
+    )
+
+
+@router.post("/penrose/schwarzschild/with_geodesic", response_class=Response)
+async def schwarzschild_penrose_with_geodesic(
+    req: GeodesicOverlayRequest,
+) -> Response:
+    """Render the maximally-extended Schwarzschild Penrose diagram with
+    a region-I geodesic projected onto it.
+
+    The trajectory comes from spacetime_lab.geodesics on a fresh
+    Schwarzschild(M).  Each (t, r) sample with r > 2M is mapped to the
+    chart's compact (U, V) via SchwarzschildPenrose.physical_to_compact;
+    samples with r ≤ 2M (interior — region II) are skipped, since the
+    chart's region-I projection is undefined there.  A note about
+    skipped samples is added as an SVG <title> attribute on the path.
+
+    The overlay is added to the Scene as a new DiagramPath BEFORE
+    rendering, so the existing render_svg bounding-box computation
+    naturally accommodates it (no separate coordinate-system risk).
+    """
+    M = req.mass
+    chart = SchwarzschildPenrose(mass=M)
+    bh = Schwarzschild(mass=M)
+    integrator = GeodesicIntegrator(bh)
+
+    try:
+        state0 = GeodesicState(
+            x=np.array(req.initial_position, dtype=float),
+            p=np.array(req.initial_momentum, dtype=float),
+        )
+    except Exception as exc:
+        raise HTTPException(400, f"initial state error: {exc}") from exc
+
+    if state0.x[1] <= 2.0 * M:
+        raise HTTPException(
+            400,
+            f"r must be > 2M for the region-I overlay "
+            f"(got r={state0.x[1]}, 2M={2*M})",
+        )
+
+    try:
+        states = integrator.integrate(
+            state0, h=req.step_size, n_steps=req.n_steps,
+        )
+    except Exception as exc:
+        raise HTTPException(500, f"integration failed: {exc}") from exc
+
+    # Project (t, r) → (U, V) in compact coords; skip samples with r ≤ 2M
+    pts: list[Vec2] = []
+    skipped = 0
+    for s in states:
+        t_val = float(s.x[0])
+        r_val = float(s.x[1])
+        if r_val <= 2.0 * M + 1e-9:
+            skipped += 1
+            continue
+        try:
+            uv = chart.physical_to_compact(1, t=t_val, r=r_val)
+            pts.append(uv)
+        except (ValueError, ZeroDivisionError, OverflowError):
+            skipped += 1
+
+    if len(pts) < 2:
+        raise HTTPException(
+            400,
+            "no valid region-I samples to overlay "
+            "(geodesic may have plunged immediately or projection failed)",
+        )
+
+    # Build the scene + add the overlay path
+    scene = chart.to_scene()
+    # Use kind="world_line" — the renderer's _DRAW_ORDER includes it,
+    # and PathStyle.stroke overrides the default colour at render time
+    # (render_svg line 314).  Drawn AFTER boundaries/horizons/singularity
+    # so the trajectory sits on top of them.
+    overlay_path = DiagramPath(
+        kind="world_line",
+        points=pts,
+        style=PathStyle(stroke=req.overlay_color, width=2.0),
+    )
+    scene.add(overlay_path)
+
+    svg = render_svg(
+        scene=scene,
+        width=req.width,
+        height=req.height,
+        show_labels=True,
+    )
+
+    # Optional metadata for the frontend (skipped count) goes in a header
+    headers = {
+        "X-Overlay-Samples": str(len(pts)),
+        "X-Overlay-Skipped": str(skipped),
+        "X-Geodesic-Final-R": f"{float(states[-1].x[1]):.4f}",
+    }
+    return Response(content=svg, media_type="image/svg+xml", headers=headers)

@@ -146,3 +146,73 @@ def test_penrose_svg_width_height_constraints() -> None:
     too_big = client.get("/api/diagrams/penrose/minkowski/svg",
                           params={"width": 5000})
     assert too_big.status_code == 422
+
+
+# ──────────────────────────────────────────────────────────────────
+# v2.7.1: Penrose with geodesic overlay
+# ──────────────────────────────────────────────────────────────────
+
+OVERLAY_REQUEST = {
+    "mass": 1.0,
+    "initial_position": [0.0, 8.0, 1.5708, 0.0],
+    "initial_momentum": [-0.96, 0.0, 0.0, 3.7],
+    "step_size": 0.5,
+    "n_steps": 200,
+    "width": 400,
+    "height": 400,
+    "overlay_color": "#fbbf24",
+}
+
+
+def test_penrose_with_geodesic_returns_svg() -> None:
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesic",
+        json=OVERLAY_REQUEST,
+    )
+    assert r.status_code == 200, r.text
+    assert r.headers["content-type"].startswith("image/svg+xml")
+    assert "</svg>" in r.text
+
+
+def test_penrose_with_geodesic_includes_world_line_path() -> None:
+    """The overlaid trajectory must be rendered as a world_line path
+    (the renderer's _DRAW_ORDER doesn't include arbitrary kinds)."""
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesic",
+        json=OVERLAY_REQUEST,
+    )
+    body = r.text
+    assert 'class="kind-world_line"' in body
+    assert 'stroke="#fbbf24"' in body
+
+
+def test_penrose_with_geodesic_metadata_headers() -> None:
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesic",
+        json=OVERLAY_REQUEST,
+    )
+    assert "X-Overlay-Samples" in r.headers
+    samples = int(r.headers["X-Overlay-Samples"])
+    assert samples > 100  # ~n_steps + 1 samples for a region-I orbit
+    skipped = int(r.headers["X-Overlay-Skipped"])
+    assert skipped == 0   # bound orbit at r=8M never crosses 2M
+    final_r = float(r.headers["X-Geodesic-Final-R"])
+    assert final_r > 2.0  # still in region I
+
+
+def test_penrose_with_geodesic_rejects_r_below_2M() -> None:
+    """Initial r must be > 2M for region I overlay."""
+    bad = dict(OVERLAY_REQUEST, initial_position=[0.0, 1.5, 1.5708, 0.0])
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesic", json=bad,
+    )
+    assert r.status_code == 400
+    assert "2M" in r.json()["detail"]
+
+
+def test_penrose_with_geodesic_rejects_invalid_color() -> None:
+    bad = dict(OVERLAY_REQUEST, overlay_color="red")
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesic", json=bad,
+    )
+    assert r.status_code == 422  # pydantic regex constraint
