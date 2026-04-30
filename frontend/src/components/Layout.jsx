@@ -19,6 +19,7 @@ export default function Layout() {
         <nav style={styles.nav}>
           <NavItem to="/schwarzschild">Schwarzschild</NavItem>
           <NavItem to="/kerr">Kerr</NavItem>
+          <NavItem to="/btz">BTZ</NavItem>
           <NavItem to="/penrose">Penrose</NavItem>
           <NavItem to="/holography">Holography</NavItem>
         </nav>

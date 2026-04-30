@@ -50,11 +50,18 @@ export default function Home() {
           status="ready"
         />
         <PageCard
+          to="/btz"
+          title="BTZ"
+          subtitle="Phase 8 · v0.8 → v1.3"
+          desc="The 3D AdS black hole — bulk dual of the BTZ Page curve. Strominger-Cardy match verified to machine precision."
+          status="ready"
+        />
+        <PageCard
           to="/penrose"
           title="Penrose Diagrams"
           subtitle="Phase 2 · v0.2 → v1.5"
           desc="Maximally extended causal structure. Pan & zoom over Minkowski and Schwarzschild conformal diagrams."
-          status="building"
+          status="ready"
         />
         <PageCard
           to="/holography"

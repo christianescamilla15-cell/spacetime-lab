@@ -33,4 +33,22 @@ export const api = {
     properties: (mass, spin) =>
       get('/api/metrics/kerr', { mass, spin }),
   },
+  ads: {
+    properties: (dimension, radius, G_N = 1) =>
+      get('/api/metrics/ads', { dimension, radius, G_N }),
+  },
+  btz: {
+    properties: (horizon_radius, ads_radius, G_N = 1) =>
+      get('/api/metrics/btz', { horizon_radius, ads_radius, G_N }),
+  },
+  diagrams: {
+    penroseSvgUrl: (kind, opts = {}) => {
+      const qs = new URLSearchParams({
+        mass: 1.0, width: 600, height: 600, show_labels: true, ...opts,
+      }).toString()
+      return `${API_URL}/api/diagrams/penrose/${kind}/svg?${qs}`
+    },
+    penroseManifest: (kind, mass = 1.0) =>
+      get(`/api/diagrams/penrose/${kind}/manifest`, { mass }),
+  },
 }
