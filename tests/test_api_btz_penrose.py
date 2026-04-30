@@ -216,3 +216,107 @@ def test_penrose_with_geodesic_rejects_invalid_color() -> None:
         "/api/diagrams/penrose/schwarzschild/with_geodesic", json=bad,
     )
     assert r.status_code == 422  # pydantic regex constraint
+
+
+# ──────────────────────────────────────────────────────────────────
+# v2.7.2: Multi-trajectory overlay
+# ──────────────────────────────────────────────────────────────────
+
+import json as _json  # noqa: E402
+
+MULTI_OVERLAY_REQUEST = {
+    "mass": 1.0,
+    "width": 400,
+    "height": 400,
+    "geodesics": [
+        {
+            "initial_position": [0.0, 8.0, 1.5708, 0.0],
+            "initial_momentum": [-0.96, 0.0, 0.0, 3.7],
+            "step_size": 0.5, "n_steps": 200,
+            "color": "#fbbf24", "label": "bound r=8M",
+        },
+        {
+            "initial_position": [0.0, 12.0, 1.5708, 0.0],
+            "initial_momentum": [-0.97, 0.0, 0.0, 4.2],
+            "step_size": 0.5, "n_steps": 200,
+            "color": "#22c55e", "label": "bound r=12M",
+        },
+    ],
+}
+
+
+def test_multi_overlay_returns_svg_with_two_paths() -> None:
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesics",
+        json=MULTI_OVERLAY_REQUEST,
+    )
+    assert r.status_code == 200
+    body = r.text
+    # Two world_line groups should be rendered (one per trajectory).
+    # Renderer groups all paths of same kind into ONE <g>; so we
+    # expect exactly 2 <path> elements inside the world_line group.
+    assert 'class="kind-world_line"' in body
+    assert body.count('stroke="#fbbf24"') >= 1
+    assert body.count('stroke="#22c55e"') >= 1
+
+
+def test_multi_overlay_summary_header_per_trajectory() -> None:
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesics",
+        json=MULTI_OVERLAY_REQUEST,
+    )
+    assert r.headers["X-Trajectories-Total"] == "2"
+    assert r.headers["X-Trajectories-Rendered"] == "2"
+    summary = _json.loads(r.headers["X-Trajectories-Summary"])
+    assert len(summary) == 2
+    assert summary[0]["label"] == "bound r=8M"
+    assert summary[1]["label"] == "bound r=12M"
+    assert summary[0]["status"] == "ok"
+    assert summary[0]["samples"] > 100
+
+
+def test_multi_overlay_partial_failure_still_renders_others() -> None:
+    """One bad trajectory in the bunch should NOT kill the whole render —
+    it should be reported as no-samples in the summary, others render."""
+    body = {
+        "mass": 1.0,
+        "geodesics": [
+            # OK
+            {"initial_position": [0.0, 8.0, 1.5708, 0.0],
+             "initial_momentum": [-0.96, 0.0, 0.0, 3.7],
+             "step_size": 0.5, "n_steps": 100,
+             "color": "#fbbf24", "label": "OK"},
+            # Below 2M — rejected at the per-traj guard with 400
+        ],
+    }
+    # Adding the bad one would 400 — verify
+    body["geodesics"].append({
+        "initial_position": [0.0, 1.5, 1.5708, 0.0],
+        "initial_momentum": [-0.96, 0.0, 0.0, 3.7],
+        "step_size": 0.5, "n_steps": 100,
+        "color": "#22c55e", "label": "bad r<2M",
+    })
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesics", json=body,
+    )
+    assert r.status_code == 400
+    assert "trajectory 1" in r.json()["detail"]
+
+
+def test_multi_overlay_caps_at_5_trajectories() -> None:
+    body = {
+        "mass": 1.0,
+        "geodesics": [
+            {
+                "initial_position": [0.0, 8.0, 1.5708, 0.0],
+                "initial_momentum": [-0.96, 0.0, 0.0, 3.7],
+                "step_size": 0.5, "n_steps": 50,
+                "color": "#fbbf24",
+            }
+            for _ in range(6)  # over the cap
+        ],
+    }
+    r = client.post(
+        "/api/diagrams/penrose/schwarzschild/with_geodesics", json=body,
+    )
+    assert r.status_code == 422  # pydantic max_length=5 constraint

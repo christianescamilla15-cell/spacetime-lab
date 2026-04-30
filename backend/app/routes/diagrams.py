@@ -117,7 +117,12 @@ async def list_available_penrose() -> dict:
 # ──────────────────────────────────────────────────────────────────
 
 class GeodesicOverlayRequest(BaseModel):
-    """Body for POST /api/diagrams/penrose/schwarzschild/with_geodesic."""
+    """Body for POST /api/diagrams/penrose/schwarzschild/with_geodesic.
+
+    Single-geodesic legacy form (kept for backward compatibility with
+    v2.7.1).  For multiple overlays at once use the new
+    `/with_geodesics` (plural) endpoint.
+    """
 
     mass: float = Field(1.0, gt=0, description="BH mass M")
     initial_position: list[float] = Field(
@@ -138,6 +143,29 @@ class GeodesicOverlayRequest(BaseModel):
         "#fbbf24", pattern=r"^#[0-9a-fA-F]{6}$",
         description="Stroke color of the overlaid trajectory (#RRGGBB)",
     )
+
+
+class GeodesicSpec(BaseModel):
+    """One trajectory in a multi-overlay request."""
+    initial_position: list[float] = Field(..., min_length=4, max_length=4)
+    initial_momentum: list[float] = Field(..., min_length=4, max_length=4)
+    step_size: float = Field(0.5, gt=0, le=10)
+    n_steps: int = Field(1000, ge=10, le=10_000)
+    color: str = Field("#fbbf24", pattern=r"^#[0-9a-fA-F]{6}$")
+    label: str | None = Field(None, max_length=80)
+
+
+class MultiGeodesicOverlayRequest(BaseModel):
+    """Body for POST /api/diagrams/penrose/schwarzschild/with_geodesics.
+
+    All trajectories are rendered on the same Schwarzschild Penrose
+    diagram, each with its own colour.  Hard cap of 5 trajectories
+    per request to bound payload + render time.
+    """
+    mass: float = Field(1.0, gt=0)
+    width: int = Field(620, ge=200, le=1200)
+    height: int = Field(620, ge=200, le=1200)
+    geodesics: list[GeodesicSpec] = Field(..., min_length=1, max_length=5)
 
 
 @router.post("/penrose/schwarzschild/with_geodesic", response_class=Response)
@@ -233,4 +261,122 @@ async def schwarzschild_penrose_with_geodesic(
         "X-Overlay-Skipped": str(skipped),
         "X-Geodesic-Final-R": f"{float(states[-1].x[1]):.4f}",
     }
+    return Response(content=svg, media_type="image/svg+xml", headers=headers)
+
+
+# ──────────────────────────────────────────────────────────────────
+# v2.7.2: Multiple-geodesic overlay (closes 1 of 2 v2.7.2 items)
+# ──────────────────────────────────────────────────────────────────
+
+@router.post(
+    "/penrose/schwarzschild/with_geodesics",
+    response_class=Response,
+)
+async def schwarzschild_penrose_with_multiple_geodesics(
+    req: MultiGeodesicOverlayRequest,
+) -> Response:
+    """Render the Schwarzschild Penrose diagram with up to 5 region-I
+    geodesics overlaid, each with its own colour.
+
+    Implementation pattern matches the singular endpoint but loops over
+    the request list and adds one DiagramPath per trajectory.
+
+    Region tracking — honest scope deferral
+    ----------------------------------------
+    All overlays here use ``region=1`` (the exterior, r > 2M).  A
+    plunging geodesic crosses the horizon at r = 2M, but in
+    Schwarzschild coordinates t → ∞ at the horizon, so the integrator
+    asymptotes there and never produces samples with r < 2M.  Real
+    region-II overlays would require switching the integrator to
+    Kruskal-Szekeres coordinates (a substantial new module — the
+    integrator currently lambdifies the metric_tensor returned by
+    Schwarzschild, which is in Schwarzschild coords).  Tracked as a
+    separate v2.7.3 task.
+    """
+    M = req.mass
+    chart = SchwarzschildPenrose(mass=M)
+    bh = Schwarzschild(mass=M)
+    integrator = GeodesicIntegrator(bh)
+
+    scene = chart.to_scene()
+    per_traj_summary: list[dict] = []
+
+    for idx, g in enumerate(req.geodesics):
+        try:
+            state0 = GeodesicState(
+                x=np.array(g.initial_position, dtype=float),
+                p=np.array(g.initial_momentum, dtype=float),
+            )
+        except Exception as exc:
+            raise HTTPException(
+                400,
+                f"trajectory {idx}: initial state error: {exc}",
+            ) from exc
+
+        if state0.x[1] <= 2.0 * M:
+            raise HTTPException(
+                400,
+                f"trajectory {idx}: r must be > 2M (got r={state0.x[1]})",
+            )
+
+        try:
+            states = integrator.integrate(state0, h=g.step_size, n_steps=g.n_steps)
+        except Exception as exc:
+            raise HTTPException(
+                500, f"trajectory {idx}: integration failed: {exc}",
+            ) from exc
+
+        pts: list[Vec2] = []
+        skipped = 0
+        for s in states:
+            r_val = float(s.x[1])
+            if r_val <= 2.0 * M + 1e-9:
+                skipped += 1
+                continue
+            try:
+                uv = chart.physical_to_compact(1, t=float(s.x[0]), r=r_val)
+                pts.append(uv)
+            except (ValueError, ZeroDivisionError, OverflowError):
+                skipped += 1
+
+        if len(pts) < 2:
+            # One bad trajectory in the bunch shouldn't kill the whole
+            # render — record it in the summary but skip rendering.
+            per_traj_summary.append({
+                "index": idx,
+                "label": g.label,
+                "samples": 0,
+                "skipped": skipped,
+                "status": "no valid region-I samples",
+            })
+            continue
+
+        scene.add(DiagramPath(
+            kind="world_line",
+            points=pts,
+            style=PathStyle(stroke=g.color, width=2.0),
+        ))
+        per_traj_summary.append({
+            "index": idx,
+            "label": g.label,
+            "samples": len(pts),
+            "skipped": skipped,
+            "final_r": round(float(states[-1].x[1]), 4),
+            "color": g.color,
+            "status": "ok",
+        })
+
+    svg = render_svg(
+        scene=scene, width=req.width, height=req.height, show_labels=True,
+    )
+
+    headers = {
+        "X-Trajectories-Total": str(len(req.geodesics)),
+        "X-Trajectories-Rendered": str(
+            sum(1 for t in per_traj_summary if t["status"] == "ok")
+        ),
+    }
+    # Encode per-trajectory summary as JSON in another header
+    import json as _json
+    headers["X-Trajectories-Summary"] = _json.dumps(per_traj_summary)
     return Response(content=svg, media_type="image/svg+xml", headers=headers)
