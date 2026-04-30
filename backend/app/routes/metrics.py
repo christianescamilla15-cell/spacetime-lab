@@ -198,12 +198,12 @@ async def list_available_metrics() -> dict:
             },
             {
                 "name": "Reissner-Nordström",
-                "description": "Charged static BH",
+                "description": "Static, spherically symmetric, electrically charged BH",
                 "parameters": ["mass", "charge"],
-                "phase": "deferred",
-                "shipped_in_python": None,
-                "rest_endpoint": None,
-                "available": False,
+                "phase": 4,
+                "shipped_in_python": "v3.1.0",
+                "rest_endpoint": "/api/metrics/reissner-nordstrom",
+                "available": True,
             },
         ]
     }
