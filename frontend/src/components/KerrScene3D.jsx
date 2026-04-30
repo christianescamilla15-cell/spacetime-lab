@@ -1,15 +1,22 @@
 /**
  * KerrScene3D — Three.js scene of a Kerr black hole's relevant surfaces.
  *
- * Renders three concentric meshes around the origin:
- *   - inner horizon r_- (purple, semi-transparent)
- *   - outer horizon r_+ (pink, more opaque, blocks light visually)
- *   - ergosphere r_E(θ) at the equatorial plane (cyan, very transparent)
+ * Renders concentric meshes around the origin:
+ *   - inner horizon r_- (purple wireframe)
+ *   - outer horizon r_+ (pink solid — the BH surface)
+ *   - ergosphere r_E    (cyan wireframe)
  *
- * Plus a `<GeodesicTrail>` line for the integrated trajectory and an
- * orbit-control camera so the user can spin around.
+ * Plus optional list of `<GeodesicTrail>` lines for multiple integrated
+ * trajectories (each with its own colour), an orbit-control camera, and
+ * an invisible equatorial pick-plane that fires `onPickInitialState`
+ * when the user clicks on it.
  *
  * The scene uses geometric units G=c=1; one Three.js unit == one M.
+ *
+ * v2.7 changes vs v2.6:
+ *   - `trajectories` (array) replaces `trajectory` (single object)
+ *   - `trailFractions` (array) replaces `trailFraction` (single)
+ *   - new `onPickInitialState({r, theta, phi})` callback for click-pick
  */
 
 import { Canvas } from '@react-three/fiber'
@@ -19,9 +26,10 @@ import { useMemo } from 'react'
 export default function KerrScene3D({
   mass = 1.0,
   spin = 0.5,
-  trajectory = null,
-  trailFraction = 1.0,
+  trajectories = [],
+  trailFractions = [],
   height = 520,
+  onPickInitialState = null,
 }) {
   const M = mass
   const a = spin
@@ -29,18 +37,20 @@ export default function KerrScene3D({
   const r_minus = M - Math.sqrt(Math.max(M * M - a * a, 0))
   const r_ergo_eq = 2 * M
 
-  // Auto camera distance: large enough to fit the trajectory, otherwise
-  // sized by the ergosphere
+  // Auto camera distance: large enough to fit the largest trajectory
   const cameraDistance = useMemo(() => {
-    if (trajectory && trajectory.length) {
-      const maxR = Math.max(
-        ...trajectory.map((s) => Math.abs(s.x[1])),
-        2 * r_ergo_eq,
-      )
-      return Math.max(maxR * 1.6, 8)
+    let maxR = 2 * r_ergo_eq
+    for (const t of trajectories) {
+      if (!t?.response?.trajectory) continue
+      for (const s of t.response.trajectory) {
+        if (Math.abs(s.x[1]) > maxR) maxR = Math.abs(s.x[1])
+      }
     }
-    return Math.max(r_ergo_eq * 4, 8)
-  }, [trajectory, r_ergo_eq])
+    return Math.max(maxR * 1.6, 8)
+  }, [trajectories, r_ergo_eq])
+
+  // Equatorial pick-plane radius (out to where the camera is comfortable)
+  const pickRadius = cameraDistance * 0.45
 
   return (
     <Canvas
@@ -51,7 +61,7 @@ export default function KerrScene3D({
       <pointLight position={[20, 20, 20]} intensity={0.8} />
       <Stars radius={120} depth={40} count={1500} factor={3} fade speed={0.3} />
 
-      {/* Outer horizon r_+ — pink, mostly opaque (the BH "surface") */}
+      {/* Outer horizon r_+ */}
       <mesh>
         <sphereGeometry args={[r_plus, 48, 48]} />
         <meshStandardMaterial
@@ -60,7 +70,7 @@ export default function KerrScene3D({
         />
       </mesh>
 
-      {/* Inner horizon r_- (Cauchy) — purple, more transparent */}
+      {/* Inner horizon r_- */}
       {r_minus > 0.05 && (
         <mesh>
           <sphereGeometry args={[r_minus, 32, 32]} />
@@ -70,9 +80,7 @@ export default function KerrScene3D({
         </mesh>
       )}
 
-      {/* Ergosphere — at θ=π/2 it sits at 2M; we draw a sphere of radius
-          2M as a visual approximation. The true shape is oblate; we
-          mark it as wireframe so it reads as "boundary layer". */}
+      {/* Ergosphere */}
       <mesh>
         <sphereGeometry args={[r_ergo_eq, 48, 48]} />
         <meshStandardMaterial
@@ -80,15 +88,45 @@ export default function KerrScene3D({
         />
       </mesh>
 
-      {/* Equatorial reference disk (annulus from r_+ outward) */}
+      {/* Equatorial reference disk (visual only, not pickable) */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[r_plus * 1.02, cameraDistance * 0.45, 64]} />
+        <ringGeometry args={[r_plus * 1.02, pickRadius, 64]} />
         <meshBasicMaterial color="#1a1a2a" side={2} transparent opacity={0.35} />
       </mesh>
 
-      {/* Geodesic trail */}
-      {trajectory && trajectory.length > 1 && (
-        <GeodesicTrail trajectory={trajectory} fraction={trailFraction} />
+      {/* Pick-plane: invisible disk that fires onClick → (r, theta, phi).
+          Sits 0.001 above the visible disk to win the raycast tie. */}
+      {onPickInitialState && (
+        <mesh
+          rotation={[Math.PI / 2, 0, 0]}
+          position={[0, 0.001, 0]}
+          onClick={(event) => {
+            event.stopPropagation()
+            const p = event.point  // world coords (x, y, z)
+            const r = Math.sqrt(p.x * p.x + p.z * p.z)
+            // Equatorial click → theta = π/2; phi from xz plane
+            const theta = Math.PI / 2
+            const phi = Math.atan2(p.z, p.x)
+            // Clamp r to the meaningful exterior
+            const rClamped = Math.max(r_plus * 1.05, Math.min(r, pickRadius * 0.95))
+            onPickInitialState({ r: rClamped, theta, phi })
+          }}
+        >
+          <ringGeometry args={[r_plus * 1.02, pickRadius, 64]} />
+          <meshBasicMaterial side={2} transparent opacity={0.0} />
+        </mesh>
+      )}
+
+      {/* Geodesic trails (multiple) */}
+      {trajectories.map((t, i) =>
+        t?.response?.trajectory && t.response.trajectory.length > 1 ? (
+          <GeodesicTrail
+            key={t.id ?? i}
+            trajectory={t.response.trajectory}
+            color={t.color || '#fbbf24'}
+            fraction={trailFractions[i] ?? 1.0}
+          />
+        ) : null
       )}
 
       {/* Spin axis indicator (z) */}
@@ -108,60 +146,50 @@ export default function KerrScene3D({
 }
 
 /**
- * GeodesicTrail — renders a Boyer-Lindquist trajectory as a Three.js line.
+ * GeodesicTrail — Boyer-Lindquist (t, r, theta, phi) → Cartesian line.
  *
- * Converts (t, r, theta, phi) → (x, y, z) for visualisation only:
+ * Embedding (visual aid, NOT a geometric statement):
  *   x = r sin(theta) cos(phi)
  *   y = r cos(theta)
  *   z = r sin(theta) sin(phi)
- *
- * (Note: this is a Newtonian-ish embedding and is NOT the curved-space
- * geodesic in any geometric sense — it's a visual aid, not a metric
- * embedding diagram.)
  */
-function GeodesicTrail({ trajectory, fraction = 1.0 }) {
-  const points = useMemo(() => {
+function GeodesicTrail({ trajectory, color = '#fbbf24', fraction = 1.0 }) {
+  const positions = useMemo(() => {
     const cut = Math.max(2, Math.floor(trajectory.length * fraction))
     const head = trajectory.slice(0, cut)
-    return head.map((s) => {
+    const arr = new Float32Array(head.length * 3)
+    head.forEach((s, i) => {
       const [, r, theta, phi] = s.x
-      return [
-        r * Math.sin(theta) * Math.cos(phi),
-        r * Math.cos(theta),
-        r * Math.sin(theta) * Math.sin(phi),
-      ]
-    })
-  }, [trajectory, fraction])
-
-  // Build BufferGeometry positions
-  const positions = useMemo(() => {
-    const arr = new Float32Array(points.length * 3)
-    points.forEach((p, i) => {
-      arr[i * 3] = p[0]; arr[i * 3 + 1] = p[1]; arr[i * 3 + 2] = p[2]
+      arr[i * 3]     = r * Math.sin(theta) * Math.cos(phi)
+      arr[i * 3 + 1] = r * Math.cos(theta)
+      arr[i * 3 + 2] = r * Math.sin(theta) * Math.sin(phi)
     })
     return arr
-  }, [points])
+  }, [trajectory, fraction])
 
-  const lastPoint = points[points.length - 1]
+  const lastPoint = useMemo(() => {
+    if (positions.length < 3) return null
+    const i = positions.length - 3
+    return [positions[i], positions[i + 1], positions[i + 2]]
+  }, [positions])
 
   return (
     <group>
-      <line>
+      <line key={positions.length /* force rebuild on length change */}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
-            count={points.length}
+            count={positions.length / 3}
             array={positions}
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color="#fbbf24" linewidth={2} />
+        <lineBasicMaterial color={color} linewidth={2} />
       </line>
-      {/* "Current position" marker at the trail head */}
       {lastPoint && (
         <mesh position={lastPoint}>
           <sphereGeometry args={[0.18, 16, 16]} />
-          <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={0.8} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.8} />
         </mesh>
       )}
     </group>
