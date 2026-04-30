@@ -1,5 +1,18 @@
 # Spacetime Lab — Claude Code Project Context
 
+## Extended thinking — REQUIRED first action
+
+Before doing ANY task in this repo, invoke `/thinking on` to enable
+extended thinking for the session.  This is a hard requirement set by
+Christian (2026-04-29) because spacetime-lab has bit-exact verification
+gates against canonical references (Wald, MTW, Brown-Henneaux,
+Strominger, Bardeen-Press-Teukolsky 1972, Page 1976) and single-pass
+responses miss subtle errors (sign conventions, coordinate-chart
+degeneracies, removable indeterminacies).
+
+The cost in tokens is accepted as the trade-off for physics correctness.
+Override only if Christian explicitly says "skip thinking" or "quick".
+
 ## Session bootstrap (read first)
 
 When you open a new session in this repo, **immediately read
