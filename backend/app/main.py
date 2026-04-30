@@ -7,7 +7,7 @@ physical observables of black hole spacetimes.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import ads, btz, diagrams, holography, kerr, metrics
+from app.routes import ads, btz, diagrams, geodesics, holography, kerr, metrics
 
 app = FastAPI(
     title="Spacetime Lab API",
@@ -34,6 +34,7 @@ app.include_router(ads.router, prefix="/api", tags=["ads"])
 app.include_router(btz.router, prefix="/api", tags=["btz"])
 app.include_router(holography.router, prefix="/api", tags=["holography"])
 app.include_router(diagrams.router, prefix="/api", tags=["diagrams"])
+app.include_router(geodesics.router, prefix="/api", tags=["geodesics"])
 
 
 @app.get("/api/health")
