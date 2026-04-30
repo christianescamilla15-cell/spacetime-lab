@@ -10,8 +10,10 @@
  */
 
 import { Outlet, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function EmbedLayout() {
+  const { t } = useTranslation()
   return (
     <div style={styles.app}>
       <main style={styles.main}>
@@ -23,7 +25,7 @@ export default function EmbedLayout() {
         rel="noopener noreferrer"
         style={styles.poweredBy}
       >
-        powered by ⚫ Spacetime Lab
+        {t('embed.powered_by')}
       </a>
     </div>
   )

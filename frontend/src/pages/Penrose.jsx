@@ -10,16 +10,15 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { TexBlock, Tex } from '../components/Math'
 import { api } from '../lib/api'
 
 const API = import.meta.env.VITE_API_URL || ''
 
-const KINDS = [
-  { id: 'minkowski', label: 'Minkowski', desc: 'Flat spacetime causal structure' },
-  { id: 'schwarzschild', label: 'Schwarzschild', desc: 'Maximally extended four-region BH' },
-]
+// id-only list; labels + descriptions come from i18n at render time.
+const KIND_IDS = ['minkowski', 'schwarzschild']
 
 // Default Schwarzschild bound orbit used by the geodesic overlay (v2.7.1).
 // Same physics as the "Schwarzschild bound orbit" preset in /geodesics.
@@ -35,7 +34,13 @@ const DEFAULT_OVERLAY_BODY = {
 }
 
 export default function Penrose() {
+  const { t } = useTranslation()
   const [kind, setKind] = useState('schwarzschild')
+
+  const kindMeta = (id) => ({
+    minkowski: { label: t('penrose.kind_minkowski'), desc: t('penrose.kind_minkowski_desc') },
+    schwarzschild: { label: t('penrose.kind_schwarzschild'), desc: t('penrose.kind_schwarzschild_desc') },
+  }[id])
   const [mass, setMass] = useState(1.0)
   const [svg, setSvg] = useState(null)
   const [manifest, setManifest] = useState(null)
@@ -88,39 +93,34 @@ export default function Penrose() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <section style={styles.card}>
-        <h2 style={styles.title}>Penrose Diagrams</h2>
+        <h2 style={styles.title}>{t('penrose.title')}</h2>
         <p style={styles.lede}>
-          Conformal compactifications that bring the entire causal
-          structure of an infinite spacetime onto a finite diagram.  Light
-          rays are exactly 45° lines; future and past timelike infinity
-          (<Tex>{'i^\\pm'}</Tex>), spacelike infinity (<Tex>{'i^0'}</Tex>),
-          and null infinity (<Tex>{'\\mathscr{I}^\\pm'}</Tex>) sit on the
-          boundary.
+          {t('penrose.lede_pre')}<Tex>{'i^\\pm'}</Tex>{t('penrose.lede_mid1')}<Tex>{'i^0'}</Tex>{t('penrose.lede_mid2')}<Tex>{'\\mathscr{I}^\\pm'}</Tex>{t('penrose.lede_post')}
         </p>
 
         <div style={styles.tabRow}>
-          {KINDS.map((k) => (
+          {KIND_IDS.map((id) => (
             <button
-              key={k.id}
-              onClick={() => setKind(k.id)}
+              key={id}
+              onClick={() => setKind(id)}
               style={{
                 ...styles.tab,
-                ...(kind === k.id ? styles.tabActive : {}),
+                ...(kind === id ? styles.tabActive : {}),
               }}
             >
-              {k.label}
+              {kindMeta(id).label}
             </button>
           ))}
         </div>
 
         <div style={styles.activeDesc}>
-          {KINDS.find((k) => k.id === kind)?.desc}
+          {kindMeta(kind)?.desc}
         </div>
 
         {kind === 'schwarzschild' && (
           <div style={styles.controlGroup}>
             <label style={styles.controlLabel}>
-              Mass M: <strong style={{ color: '#ff6b9d' }}>{mass.toFixed(2)}</strong>
+              {t('penrose.mass_label')}: <strong style={{ color: '#ff6b9d' }}>{mass.toFixed(2)}</strong>
             </label>
             <input
               type="range" min="0.5" max="3" step="0.1" value={mass}
@@ -128,8 +128,7 @@ export default function Penrose() {
               style={styles.slider}
             />
             <small style={styles.hint}>
-              Mass affects the labelled horizon position; the conformal
-              shape itself is mass-independent.
+              {t('penrose.mass_hint')}
             </small>
 
             {/* v2.7.1: optional geodesic overlay */}
@@ -140,14 +139,13 @@ export default function Penrose() {
                 onChange={(e) => setOverlayOn(e.target.checked)}
                 style={{ marginRight: 8, accentColor: '#fbbf24' }}
               />
-              Overlay a Schwarzschild bound geodesic (region I) — projected via{' '}
-              <Tex>{'(t,r) \\to (U,V)'}</Tex>
+              {t('penrose.overlay_label_pre')}<Tex>{'(t,r) \\to (U,V)'}</Tex>
             </label>
             {overlayMeta && (
               <div style={styles.overlayMeta}>
-                <code>{overlayMeta.samples}</code> region-I samples projected ·{' '}
-                <code>{overlayMeta.skipped}</code> skipped (r ≤ 2M) ·{' '}
-                final r = <code>{overlayMeta.finalR.toFixed(2)}M</code>
+                <code>{overlayMeta.samples}</code>{t('penrose.overlay_meta_mid1')}
+                <code>{overlayMeta.skipped}</code>{t('penrose.overlay_meta_mid2')}
+                <code>{overlayMeta.finalR.toFixed(2)}M</code>
               </div>
             )}
           </div>
@@ -155,10 +153,10 @@ export default function Penrose() {
 
         <div style={styles.viewport}>
           {error && (
-            <div style={styles.errorBanner}>⚠️ API: {error}</div>
+            <div style={styles.errorBanner}>⚠️ {t('common.api_error')}: {error}</div>
           )}
           {!svg && !error && (
-            <div style={styles.loading}>Loading diagram…</div>
+            <div style={styles.loading}>{t('common.loading_diagram')}</div>
           )}
           {svg && (
             <TransformWrapper
@@ -191,41 +189,23 @@ export default function Penrose() {
 
         {manifest && (
           <div style={styles.manifestRow}>
-            <Meta label="Regions" value={manifest.regions.join(', ') || '–'} />
-            <Meta label="Coords" value={manifest.physical_coordinates.join(', ') || '–'} />
-            <Meta label="Infinities" value={manifest.infinities.join('  ') || '–'} />
+            <Meta label={t('penrose.manifest.regions')} value={manifest.regions.join(', ') || '–'} />
+            <Meta label={t('penrose.manifest.coords')} value={manifest.physical_coordinates.join(', ') || '–'} />
+            <Meta label={t('penrose.manifest.infinities')} value={manifest.infinities.join('  ') || '–'} />
           </div>
         )}
       </section>
 
       <section style={styles.card}>
-        <h3 style={{ margin: 0, color: '#fff' }}>How to read it</h3>
+        <h3 style={{ margin: 0, color: '#fff' }}>{t('penrose.how_to_read')}</h3>
         <ul style={styles.bulletList}>
-          <li>
-            <strong>Light rays travel at 45°</strong> — that's the whole
-            point of the conformal compactification: it preserves angles.
-          </li>
-          <li>
-            Move <em>up</em> in the diagram = move forward in time. Past
-            infinity at the bottom, future at the top.
-          </li>
-          <li>
-            For Schwarzschild: regions <strong>I</strong> (our universe),{' '}
-            <strong>II</strong> (BH interior), <strong>III</strong> (other
-            universe), <strong>IV</strong> (white hole).  No causal contact
-            between I and III.
-          </li>
-          <li>
-            The two diagonal lines inside region II are the future event
-            horizons.  Once crossed, you can only end at the singularity
-            (the horizontal jagged line).
-          </li>
+          <li>{t('penrose.bullet_a')}</li>
+          <li>{t('penrose.bullet_b')}</li>
+          <li>{t('penrose.bullet_c')}</li>
+          <li>{t('penrose.bullet_d')}</li>
         </ul>
         <p style={styles.cite}>
-          Reference: Penrose 1964 (causal structure); Kruskal 1960,
-          Szekeres 1960 (Schwarzschild maximal extension); Hawking & Ellis,{' '}
-          <em>The Large Scale Structure of Space-Time</em>, ch. 5.  SVG
-          renderer shipped in v1.5.0.
+          {t('penrose.cite')}
         </p>
       </section>
     </div>

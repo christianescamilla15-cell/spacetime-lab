@@ -6,11 +6,13 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import EffectivePotential from '../EffectivePotential'
 import { TexBlock } from '../components/Math'
 import { api } from '../lib/api'
 
 export default function Schwarzschild() {
+  const { t } = useTranslation()
   const [mass, setMass] = useState(1.0)
   const [properties, setProperties] = useState(null)
   const [error, setError] = useState(null)
@@ -44,10 +46,9 @@ export default function Schwarzschild() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
       <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Schwarzschild Black Hole</h2>
+        <h2 style={styles.sectionTitle}>{t('schwarzschild.title')}</h2>
         <p style={styles.sectionDesc}>
-          The simplest exact black hole solution — a non-rotating, uncharged,
-          spherically symmetric vacuum spacetime.
+          {t('schwarzschild.desc')}
         </p>
 
         <div style={styles.formula}>
@@ -58,7 +59,7 @@ export default function Schwarzschild() {
 
         <div style={styles.controlGroup}>
           <label style={styles.label}>
-            Mass parameter M: <strong>{mass.toFixed(2)}</strong>
+            {t('schwarzschild.mass_label')}: <strong>{mass.toFixed(2)}</strong>
           </label>
           <input
             type="range"
@@ -69,46 +70,46 @@ export default function Schwarzschild() {
             onChange={(e) => setMass(parseFloat(e.target.value))}
             style={styles.slider}
           />
-          <small style={styles.hint}>(geometric units G = c = 1)</small>
+          <small style={styles.hint}>{t('schwarzschild.mass_hint')}</small>
         </div>
 
         {properties && (
           <div style={styles.propertiesGrid}>
             <PropertyCard
-              label="Event Horizon"
+              label={t('schwarzschild.props.horizon')}
               value={properties.event_horizon.toFixed(3)}
               formulaTex="r_s = 2M"
-              description="Point of no return"
+              description={t('schwarzschild.props.horizon_desc')}
             />
             <PropertyCard
-              label="ISCO"
+              label={t('schwarzschild.props.isco')}
               value={properties.isco.toFixed(3)}
               formulaTex="r = 6M"
-              description="Innermost stable circular orbit"
+              description={t('schwarzschild.props.isco_desc')}
             />
             <PropertyCard
-              label="Photon Sphere"
+              label={t('schwarzschild.props.photon')}
               value={properties.photon_sphere.toFixed(3)}
               formulaTex="r = 3M"
-              description="Unstable light orbit"
+              description={t('schwarzschild.props.photon_desc')}
             />
             <PropertyCard
-              label="Hawking Temperature"
+              label={t('schwarzschild.props.hawking_t')}
               value={properties.hawking_temperature.toExponential(3)}
               formulaTex="T = \\frac{1}{8\\pi M}"
-              description="Quantum radiation temperature"
+              description={t('schwarzschild.props.hawking_t_desc')}
             />
             <PropertyCard
-              label="Surface Gravity"
+              label={t('schwarzschild.props.kappa')}
               value={properties.surface_gravity.toFixed(4)}
               formulaTex="\\kappa = \\frac{1}{4M}"
-              description="Gravity at horizon"
+              description={t('schwarzschild.props.kappa_desc')}
             />
             <PropertyCard
-              label="BH Entropy"
+              label={t('schwarzschild.props.entropy')}
               value={properties.bekenstein_hawking_entropy.toFixed(3)}
               formulaTex="S = 4\\pi M^2"
-              description="Bekenstein-Hawking entropy"
+              description={t('schwarzschild.props.entropy_desc')}
             />
           </div>
         )}
@@ -119,7 +120,7 @@ export default function Schwarzschild() {
 
         {error && (
           <div style={styles.errorBanner}>
-            ⚠️ Using client-side fallback (API: {error})
+            ⚠️ {t('common.client_fallback', { message: error })}
           </div>
         )}
       </section>
@@ -143,6 +144,7 @@ function PropertyCard({ label, value, formulaTex, description }) {
 }
 
 function BlackHoleVisual({ mass, properties }) {
+  const { t } = useTranslation()
   if (!properties) return null
   const size = 400
   const cx = size / 2
@@ -187,7 +189,7 @@ function BlackHoleVisual({ mass, properties }) {
         opacity="0.7"
       />
       <text x={cx + photon + 8} y={cy + 15} fill="#00dfff" fontSize="11">
-        Photon sphere
+        {t('schwarzschild.label_photon_sphere')}
       </text>
 
       <circle
@@ -199,7 +201,7 @@ function BlackHoleVisual({ mass, properties }) {
         strokeWidth="2"
       />
       <text x={cx + horizon + 8} y={cy + 30} fill="#ff6b9d" fontSize="11">
-        Event horizon
+        {t('schwarzschild.label_event_horizon')}
       </text>
 
       <circle cx={cx} cy={cy} r="2" fill="#fff" />

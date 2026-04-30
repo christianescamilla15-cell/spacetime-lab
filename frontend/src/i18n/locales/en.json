@@ -1,0 +1,385 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "loading_diagram": "Loading diagram…",
+    "api_error": "API error",
+    "client_fallback": "Using client-side fallback (API: {{message}})",
+    "reference": "Reference",
+    "language": "Language",
+    "english": "English",
+    "spanish": "Spanish"
+  },
+  "nav": {
+    "schwarzschild": "Schwarzschild",
+    "kerr": "Kerr",
+    "btz": "BTZ",
+    "reissner_nordstrom": "RN",
+    "kerr_newman": "KN",
+    "de_sitter": "dS",
+    "geodesics": "Geodesics",
+    "penrose": "Penrose",
+    "holography": "Holography"
+  },
+  "footer": {
+    "built_by_pre": "Built by ",
+    "built_by_post": " — an AI engineer learning GR by building tools for it.",
+    "stats": "v2.7 · 700+ tests · 15 notebooks · MIT License · © 2026"
+  },
+  "embed": {
+    "powered_by": "powered by ⚫ Spacetime Lab"
+  },
+  "home": {
+    "hero_title": "Interactive black-hole physics, in your browser.",
+    "hero_lede": "Spacetime Lab is a Python + web platform for exploring exact solutions of General Relativity — from the Schwarzschild horizon to the Page curve of an evaporating black hole.",
+    "cta_start": "Start with Schwarzschild →",
+    "cta_github": "GitHub ↗",
+    "status_ready": "✓ Live",
+    "status_building": "🏗 Building",
+    "cards": {
+      "schwarzschild": {
+        "subtitle": "Phase 1 · v0.1 → v0.4",
+        "desc": "The simplest exact black hole. Sliders for mass; live readouts of horizon, ISCO, photon sphere, Hawking T."
+      },
+      "kerr": {
+        "subtitle": "Phase 3 · v0.3 → v1.2",
+        "desc": "Rotating black hole. Tune (M, a/M); see the ergosphere deform, ISCO split into prograde / retrograde."
+      },
+      "btz": {
+        "subtitle": "Phase 8 · v0.8 → v1.3",
+        "desc": "The 3D AdS black hole — bulk dual of the BTZ Page curve. Strominger-Cardy match verified to machine precision."
+      },
+      "rn": {
+        "subtitle": "Phase 4 deferred · v3.1 in UI",
+        "desc": "Charged static BH. Cosmic censorship enforced; closed-form horizons + photon sphere; ISCO numerical from dL²/dr=0."
+      },
+      "kn": {
+        "subtitle": "v3.2 in UI",
+        "desc": "Rotating + charged BH. Newman et al. 1965 — combines Kerr and RN. All three limits cross-checked bit-exactly."
+      },
+      "ds": {
+        "subtitle": "v3.2 partial · cosmology",
+        "desc": "Λ>0 vacuum, static patch. Cosmological horizon, Gibbons-Hawking radiation. The Λ-only 'easy half' of the FLRW family."
+      },
+      "geo": {
+        "subtitle": "Phase 3 · v0.3 (v2.6 in UI)",
+        "desc": "Integrate timelike geodesics in Kerr or Schwarzschild via the symplectic implicit-midpoint integrator. 3D scene with horizons, ergosphere, animated trail."
+      },
+      "penrose": {
+        "title": "Penrose Diagrams",
+        "subtitle": "Phase 2 · v0.2 → v1.5",
+        "desc": "Maximally extended causal structure. Pan & zoom over Minkowski and Schwarzschild conformal diagrams."
+      },
+      "holo": {
+        "subtitle": "Phase 7-9 · v0.7 → v2.1",
+        "desc": "Page curves for both eternal BTZ and evaporating Schwarzschild — the resolution of the information paradox in two interactive plots."
+      }
+    },
+    "stats_title": "Where the project stands",
+    "stats_tests": "Tests passing",
+    "stats_modules": "Modules",
+    "stats_notebooks": "Notebooks",
+    "stats_release": "Latest release",
+    "stats_caption": "Built sequentially through Phase 1 (Schwarzschild) → Phase 9 (Page curve, v1.0) → v2.x post-release sprint (real QES + replica wormholes + higher-d RT)."
+  },
+  "schwarzschild": {
+    "title": "Schwarzschild Black Hole",
+    "desc": "The simplest exact black hole solution — a non-rotating, uncharged, spherically symmetric vacuum spacetime.",
+    "mass_label": "Mass parameter M",
+    "mass_hint": "(geometric units G = c = 1)",
+    "props": {
+      "horizon": "Event Horizon",
+      "horizon_desc": "Point of no return",
+      "isco": "ISCO",
+      "isco_desc": "Innermost stable circular orbit",
+      "photon": "Photon Sphere",
+      "photon_desc": "Unstable light orbit",
+      "hawking_t": "Hawking Temperature",
+      "hawking_t_desc": "Quantum radiation temperature",
+      "kappa": "Surface Gravity",
+      "kappa_desc": "Gravity at horizon",
+      "entropy": "BH Entropy",
+      "entropy_desc": "Bekenstein-Hawking entropy"
+    },
+    "label_event_horizon": "Event horizon",
+    "label_photon_sphere": "Photon sphere"
+  },
+  "kerr": {
+    "title": "Kerr Black Hole",
+    "desc_pre": "The two-parameter rotating vacuum solution. As ",
+    "desc_post": " grows from 0 (Schwarzschild) toward 1 (extremal), the inner and outer horizons approach, the ergosphere bulges, and the ISCO splits into prograde and retrograde branches.",
+    "formula_caption_post": " · Boyer-Lindquist coordinates.",
+    "mass_label": "Mass M",
+    "spin_label_pre": "Spin ",
+    "spin_label_post": "",
+    "spin_hint_pre": "Cosmic censorship requires ",
+    "spin_hint_mid": " · extremal at ",
+    "props": {
+      "outer_horizon": "Outer horizon r₊",
+      "inner_horizon": "Inner horizon r₋",
+      "ergo_equator": "Ergosphere (equator)",
+      "isco_prograde": "ISCO prograde",
+      "isco_retrograde": "ISCO retrograde",
+      "photon_prograde": "Photon sphere (+)",
+      "ang_velocity": "Horizon ang. velocity",
+      "hawking_t": "Hawking T",
+      "entropy": "BH Entropy"
+    },
+    "what_changes_title": "What changes as you spin it up?",
+    "bullet_a_pre": "At ",
+    "bullet_a_mid1": ": Schwarzschild — both horizons meet at ",
+    "bullet_a_mid2": ", ISCO = ",
+    "bullet_a_post": ", ergosphere collapses onto the horizon.",
+    "bullet_b_pre": "For ",
+    "bullet_b_mid1": ": ",
+    "bullet_b_mid2": " shrinks from ",
+    "bullet_b_mid3": " down to ",
+    "bullet_b_mid4": "; ",
+    "bullet_b_mid5": " grows from 0 up to ",
+    "bullet_b_mid6": "; the ergosphere ",
+    "bullet_b_mid7": " separates from ",
+    "bullet_b_post": ".",
+    "bullet_c": "ISCO splits: prograde shrinks down to {{tex}} at extremal (energy efficiency 42%), retrograde grows toward {{tex2}}.",
+    "bullet_d_pre": "Hawking ",
+    "bullet_d_mid1": " as ",
+    "bullet_d_post": ": extremal Kerr is a zero-temperature black hole (third law).",
+    "cite": "Reference: Boyer & Lindquist 1967; Bardeen, Press & Teukolsky 1972; Wald, General Relativity, ch. 12.",
+    "equatorial_caption": "Equatorial slice (θ = π/2)",
+    "ergo_label": "ergo r=2M"
+  },
+  "btz": {
+    "title": "BTZ — 3D AdS Black Hole",
+    "desc": "The Bañados-Teitelboim-Zanelli black hole: a quotient of AdS₃ that is locally pure AdS but globally a black hole. Its boundary CFT entropy from Cardy's formula reproduces the Bekenstein-Hawking area law (Strominger 1998), the simplest microscopic counting in quantum gravity.",
+    "horizon_label_pre": "Horizon ",
+    "ads_radius_label_pre": "AdS radius ",
+    "props": {
+      "mass_param": "Mass parameter",
+      "hawking_t": "Hawking T",
+      "bh_entropy": "Bekenstein-Hawking S",
+      "thermal_beta": "Thermal β",
+      "central_charge": "Brown-Henneaux c",
+      "cardy_check": "Cardy check"
+    },
+    "match_title": "The Strominger 1998 match",
+    "match_p1_pre": "For BTZ, the boundary CFT (a 2D CFT with central charge ",
+    "match_p1_post": " from Brown-Henneaux) has a Cardy formula for asymptotic state degeneracy:",
+    "match_p2_pre": "Plugging the BTZ values ",
+    "match_p2_mid": " gives ",
+    "match_p2_emph": "exactly",
+    "match_p2_post_pre": " the Bekenstein-Hawking area law: ",
+    "match_p2_post_post": ". The \"Cardy check\" card above shows the numerical ratio — should read exactly 1 to machine precision.",
+    "cite": "Reference: Bañados, Teitelboim, Zanelli 1992; Brown & Henneaux 1986; Strominger 1998. Bit-exact verification across 6 parameter combinations in tests/test_phase8.py."
+  },
+  "rn": {
+    "title": "Reissner-Nordström Black Hole",
+    "desc_pre": "The unique static, spherically symmetric, asymptotically-flat Einstein-Maxwell solution. As ",
+    "desc_post": " grows from 0 (Schwarzschild) toward 1 (extremal), the inner and outer horizons approach, the photon sphere shrinks, and the Hawking temperature drops to zero.",
+    "mass_label_pre": "Mass ",
+    "qm_label_pre": "Dimensionless charge ",
+    "qm_hint_pre": "Cosmic censorship: ",
+    "qm_hint_mid": "; extremal at ",
+    "props": {
+      "outer_horizon": "Outer horizon r₊",
+      "inner_horizon": "Inner horizon r₋",
+      "photon_sphere": "Photon sphere",
+      "isco": "ISCO",
+      "kappa": "Surface gravity κ",
+      "hawking_t": "Hawking T",
+      "horizon_area": "Horizon area",
+      "entropy": "BH entropy",
+      "vieta": "Vieta check r₊r₋"
+    },
+    "spherical_caption": "Spherical slice (any θ, φ) · all surfaces are spheres",
+    "what_changes_title": "What changes as you charge it up?",
+    "bullet_a": "At Q = 0: pure Schwarzschild — r₊ = 2M, r₋ = 0, ISCO = 6M, photon sphere = 3M.",
+    "bullet_b": "For 0 < |Q| < M: r₊ shrinks from 2M toward M; r₋ grows from 0 toward M. Vieta's relations: r₊ + r₋ = 2M, r₊ · r₋ = Q².",
+    "bullet_c": "ISCO decreases monotonically with |Q|; photon sphere shrinks toward 2M.",
+    "bullet_d": "At extremality (|Q| = M): r₊ = r₋ = M, T_H = 0 (third law), entropy S = π M².",
+    "cite": "Reference: Reissner 1916; Nordström 1918; Wald §6.4; MTW §31.5. ISCO formula: Pradhan & Iyer 2010. Bit-exact tests pin all closed-form invariants to ≤ 1e-12 in tests/test_reissner_nordstrom.py."
+  },
+  "kn": {
+    "title": "Kerr-Newman Black Hole",
+    "desc": "The two-charge generalisation of Kerr — the unique stationary, axisymmetric, asymptotically-flat solution of the Einstein-Maxwell equations sourced by a point mass with both spin and electric charge (Newman et al. 1965). Reduces to Kerr at Q = 0, to RN at a = 0, to Schwarzschild at both.",
+    "formula_caption_pre": "Boyer-Lindquist; the only thing Q changes vs. Kerr is the extra ",
+    "formula_caption_mid": " in ",
+    "formula_caption_post": ".",
+    "mass_label_pre": "Mass ",
+    "spin_label_pre": "Spin ",
+    "charge_label_pre": "Charge ",
+    "censorship_label_pre": "Cosmic-censorship margin ",
+    "censorship_label_mid": ": ",
+    "censorship_violated": " — VIOLATED (naked singularity)",
+    "censorship_near_extremal": " — near extremal",
+    "censorship_blocked": "(a/M)² + (Q/M)² = {{value}} > 1 — naked singularity, request blocked",
+    "props": {
+      "outer_horizon": "Outer horizon r₊",
+      "inner_horizon": "Inner horizon r₋",
+      "ergo_equator": "Ergo equator",
+      "ergo_pole": "Ergo pole",
+      "omega_h": "Ω_H",
+      "hawking_t": "Hawking T",
+      "entropy": "BH entropy",
+      "vieta": "Vieta r₊r₋",
+      "extremal": "Extremal?",
+      "extremal_yes": "YES",
+      "extremal_no": "no"
+    },
+    "limits_title": "Three limits, one metric",
+    "bullet_schwarzschild": "Schwarzschild (a=0, Q=0): r₊ = 2M, no ergosphere, no Cauchy horizon.",
+    "bullet_kerr": "Kerr (Q=0): the page already exists at /kerr; this page reproduces it bit-exactly when you slide |Q|/M to 0.",
+    "bullet_rn": "Reissner-Nordström (a=0): the page at /reissner-nordstrom; this page reproduces it bit-exactly when you slide a/M to 0.",
+    "bullet_both": "Both: r₊ + r₋ = 2M, r₊ r₋ = a² + Q² (3-parameter Vieta's generalisation; \"Vieta r₊r₋\" card above checks it client-side).",
+    "bullet_extremal": "Extremal (a² + Q² = M²): horizons merge at r = M, T_H = 0 (third law).",
+    "cite_paper": "Reference: Newman et al., J. Math. Phys. 6, 918 (1965) — \"Metric of a rotating, charged mass\". Wald §12.3. Bit-exact tests pin all three limits in tests/test_kerr_newman.py.",
+    "cite_isco": "ISCO closed form (Aliev-Galtsov 1981) deferred to v3.2.1 — the polynomial is genuinely gnarly. Kerr's ISCO endpoints (/api/metrics/kerr) cover the Q=0 slice, and RN's (/api/metrics/reissner-nordstrom) cover the a=0 slice."
+  },
+  "desitter": {
+    "title": "de Sitter spacetime",
+    "desc_pre": "The unique maximally-symmetric vacuum solution of Einstein with positive cosmological constant ",
+    "desc_mid1": ". Static patch coordinates show a *cosmological* event horizon at",
+    "desc_mid2": " — analogous in form to Schwarzschild's BH horizon, but the metric is regular at the centre and the horizon is observer-dependent (each observer's past light cone has its own).",
+    "radius_label_pre": "de Sitter radius ",
+    "radius_hint_pre": "",
+    "radius_hint_post": " — three equivalent ways to think about it",
+    "props": {
+      "cosmo_horizon": "Cosmological horizon r_c",
+      "lambda": "Cosmological constant Λ",
+      "hubble": "Hubble parameter H",
+      "gh_t": "Gibbons-Hawking T",
+      "horizon_area": "Horizon area A",
+      "entropy": "Bekenstein-Hawking S",
+      "ricci": "Ricci scalar R"
+    },
+    "special_title": "What's special about dS",
+    "bullet_curvature_pre": "Constant-curvature: ",
+    "bullet_curvature_post": " everywhere; both the Ricci tensor and Riemann tensor are proportional to combinations of g_{μν}.",
+    "bullet_horizon_pre": "Cosmological horizon: every observer sees a horizon at proper distance ",
+    "bullet_horizon_post": ". It is NOT a BH — there's no singularity inside, no ergosphere, no ISCO.",
+    "bullet_gh_pre": "Gibbons-Hawking radiation (1977): the horizon emits thermal radiation at ",
+    "bullet_gh_post": " — the cosmological analogue of Hawking radiation from a BH horizon.",
+    "bullet_entropy_pre": "Bekenstein-Hawking entropy of a horizon you don't own: ",
+    "bullet_entropy_post": ". Holds even though no matter has fallen across this horizon — entropy from observer-dependent ignorance.",
+    "bullet_flrw_pre": "Limit of FLRW with ",
+    "bullet_flrw_post": ": an FLRW universe dominated by Λ asymptotes to dS. Our late-ΛCDM universe is approximately dS.",
+    "cite_paper": "Reference: Wald §5.2; Hawking & Ellis §5.2; Gibbons & Hawking, Phys. Rev. D 15, 2738 (1977). Bit-exact tests pin all closed-form invariants to ≤ 1e-12 in tests/test_de_sitter.py.",
+    "cite_flrw": "General FLRW (with arbitrary equation of state, mixed matter components, Friedmann ODE) deferred to v3.2.full — see docs/v3.2-flrw-de-sitter-spec.md. This page covers the closed-form Λ-only \"easy half\"."
+  },
+  "geodesics": {
+    "title": "Geodesic Explorer",
+    "lede": "Integrate timelike or null geodesics in Kerr / Schwarzschild via the symplectic implicit-midpoint integrator (Phase 3, v0.3). Click on the equatorial disk in the 3D scene below to set a new initial position, or use the preset library.",
+    "presets_title": "Presets",
+    "params_title": "Initial state & integration parameters",
+    "metric_label": "Metric",
+    "position_subhead": "Position",
+    "momentum_subhead": "Covariant momentum",
+    "integration_subhead": "Integration",
+    "step_label": "Step size h",
+    "nsteps_label": "n steps",
+    "decimation_label": "decimation",
+    "btn_replace": "▶ Replace with this",
+    "btn_integrating": "Integrating…",
+    "btn_add": "➕ Add as new",
+    "btn_max_tooltip": "Maximum 5 trajectories at once",
+    "btn_add_tooltip": "Add a new trajectory alongside the existing ones",
+    "trajectories_count": "{{n}}/5 trajectories",
+    "scene_title": "3D scene · click on the dark disk to set r₀, φ₀",
+    "btn_pause": "⏸ Pause",
+    "btn_play": "▶ Play",
+    "remove_tooltip": "Remove this trajectory",
+    "presets": {
+      "stable_inclined": {
+        "name": "Stable inclined orbit",
+        "desc": "Kerr a=0.5M, r=10M, prograde, slight inclination"
+      },
+      "plunge": {
+        "name": "Plunge to horizon",
+        "desc": "Kerr a=0.5M, starts at r=10M with strong inward p_r — falls in"
+      },
+      "schw_bound": {
+        "name": "Schwarzschild bound orbit",
+        "desc": "Schwarzschild M=1, eccentric bound orbit at r=8M"
+      },
+      "kerr_inclined": {
+        "name": "Highly inclined Kerr",
+        "desc": "Kerr a=0.9M, large p_θ — strong out-of-plane motion"
+      },
+      "photon": {
+        "name": "Photon deflection (null)",
+        "desc": "Schwarzschild M=1, b≈4.5 < b_c=3√3 ≈ 5.20 — photon swings past BH"
+      }
+    }
+  },
+  "penrose": {
+    "title": "Penrose Diagrams",
+    "lede_pre": "Conformal compactifications that bring the entire causal structure of an infinite spacetime onto a finite diagram. Light rays are exactly 45° lines; future and past timelike infinity (",
+    "lede_mid1": "), spacelike infinity (",
+    "lede_mid2": "), and null infinity (",
+    "lede_post": ") sit on the boundary.",
+    "kind_minkowski": "Minkowski",
+    "kind_minkowski_desc": "Flat spacetime causal structure",
+    "kind_schwarzschild": "Schwarzschild",
+    "kind_schwarzschild_desc": "Maximally extended four-region BH",
+    "mass_label": "Mass M",
+    "mass_hint": "Mass affects the labelled horizon position; the conformal shape itself is mass-independent.",
+    "overlay_label_pre": "Overlay a Schwarzschild bound geodesic (region I) — projected via ",
+    "overlay_meta_pre": "",
+    "overlay_meta_mid1": " region-I samples projected · ",
+    "overlay_meta_mid2": " skipped (r ≤ 2M) · final r = ",
+    "manifest": {
+      "regions": "Regions",
+      "coords": "Coords",
+      "infinities": "Infinities"
+    },
+    "how_to_read": "How to read it",
+    "bullet_a": "Light rays travel at 45° — that's the whole point of the conformal compactification: it preserves angles.",
+    "bullet_b": "Move up in the diagram = move forward in time. Past infinity at the bottom, future at the top.",
+    "bullet_c": "For Schwarzschild: regions I (our universe), II (BH interior), III (other universe), IV (white hole). No causal contact between I and III.",
+    "bullet_d": "The two diagonal lines inside region II are the future event horizons. Once crossed, you can only end at the singularity (the horizontal jagged line).",
+    "cite": "Reference: Penrose 1964 (causal structure); Kruskal 1960, Szekeres 1960 (Schwarzschild maximal extension); Hawking & Ellis, The Large Scale Structure of Space-Time, ch. 5. SVG renderer shipped in v1.5.0."
+  },
+  "holography": {
+    "title": "Holography & the Page Curve",
+    "lede": "The shape of the Hawking radiation entropy as a black hole evaporates. Don Page predicted in 1993 that, if quantum gravity is unitary, this curve must turn around — first growing (radiation looks thermal), then shrinking back (radiation purifies the black hole). The curve below is the modern derivation via the island formula.",
+    "eternal": {
+      "title": "Eternal BTZ — Hartman-Maldacena vs. island saddle",
+      "slider_horizon": "Horizon r₊",
+      "slider_ads": "AdS radius L",
+      "explainer_pre": "Linear-growth phase from the Hartman-Maldacena saddle dominates early; the constant island saddle takes over once it equals ",
+      "explainer_mid": ". The crossing time is the Page time ",
+      "explainer_post": "."
+    },
+    "evaporating": {
+      "title": "Evaporating Schwarzschild — bell-shaped Page curve",
+      "slider_initial_mass": "Initial mass M₀",
+      "explainer_pre": "Page time at ",
+      "explainer_post": " ≈ 0.6464 t_evap. The bell shape returns to zero — toy-model unitarity for an evaporating black hole."
+    },
+    "meta": {
+      "page_time": "Page time",
+      "saturation": "Saturation / peak",
+      "samples": "Samples"
+    },
+    "axes": {
+      "time_label": "time t",
+      "time_units_evap": "(in units of t_Planck × M₀³)"
+    }
+  },
+  "conservation": {
+    "title": "Conservation diagnostics",
+    "energy_label_pre": "Energy ",
+    "lz_label_pre": "z-Angular momentum ",
+    "mass_shell_label_pre": "Mass-shell ",
+    "carter_label_pre": "Carter ",
+    "unit_E_cyclic": "conserved exactly (cyclic t)",
+    "unit_Lz_cyclic": "conserved exactly (cyclic φ)",
+    "unit_mu_hamilton": "conserved by Hamilton flow",
+    "unit_carter_drift": "O(h²) drift per step",
+    "initial_label": "initial:",
+    "drift_label": "drift:",
+    "legend_pre": "Implicit-midpoint integrator: ",
+    "legend_mid1": " and ",
+    "legend_mid2": " conserved to machine precision (cyclic coordinates), ",
+    "legend_mid3": " and ",
+    "legend_mid4": " drift at ",
+    "legend_post": " — small drift is the diagnostic that the trajectory follows true geodesics."
+  }
+}

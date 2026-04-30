@@ -1,0 +1,385 @@
+{
+  "common": {
+    "loading": "Cargando…",
+    "loading_diagram": "Cargando diagrama…",
+    "api_error": "Error de API",
+    "client_fallback": "Usando cálculo local de respaldo (API: {{message}})",
+    "reference": "Referencia",
+    "language": "Idioma",
+    "english": "Inglés",
+    "spanish": "Español"
+  },
+  "nav": {
+    "schwarzschild": "Schwarzschild",
+    "kerr": "Kerr",
+    "btz": "BTZ",
+    "reissner_nordstrom": "RN",
+    "kerr_newman": "KN",
+    "de_sitter": "dS",
+    "geodesics": "Geodésicas",
+    "penrose": "Penrose",
+    "holography": "Holografía"
+  },
+  "footer": {
+    "built_by_pre": "Hecho por ",
+    "built_by_post": " — un ingeniero de IA aprendiendo Relatividad General construyendo herramientas para ella.",
+    "stats": "v2.7 · 700+ pruebas · 15 cuadernos · Licencia MIT · © 2026"
+  },
+  "embed": {
+    "powered_by": "con tecnología de ⚫ Spacetime Lab"
+  },
+  "home": {
+    "hero_title": "Física interactiva de agujeros negros, en tu navegador.",
+    "hero_lede": "Spacetime Lab es una plataforma Python + web para explorar soluciones exactas de la Relatividad General — desde el horizonte de Schwarzschild hasta la curva de Page de un agujero negro en evaporación.",
+    "cta_start": "Empezar con Schwarzschild →",
+    "cta_github": "GitHub ↗",
+    "status_ready": "✓ Disponible",
+    "status_building": "🏗 En construcción",
+    "cards": {
+      "schwarzschild": {
+        "subtitle": "Fase 1 · v0.1 → v0.4",
+        "desc": "El agujero negro exacto más simple. Controles para la masa; lecturas en vivo del horizonte, ISCO, esfera de fotones y temperatura de Hawking."
+      },
+      "kerr": {
+        "subtitle": "Fase 3 · v0.3 → v1.2",
+        "desc": "Agujero negro rotatorio. Ajusta (M, a/M); observa cómo la ergosfera se deforma y la ISCO se divide en prograda / retrógrada."
+      },
+      "btz": {
+        "subtitle": "Fase 8 · v0.8 → v1.3",
+        "desc": "El agujero negro 3D en AdS — dual de bulto de la curva de Page de BTZ. Coincidencia Strominger-Cardy verificada con precisión de máquina."
+      },
+      "rn": {
+        "subtitle": "Fase 4 diferida · v3.1 en UI",
+        "desc": "AN cargado estático. Censura cósmica impuesta; horizontes y esfera de fotones en forma cerrada; ISCO numérica desde dL²/dr=0."
+      },
+      "kn": {
+        "subtitle": "v3.2 en UI",
+        "desc": "AN rotatorio + cargado. Newman et al. 1965 — combina Kerr y RN. Los tres límites verificados bit-exactos entre sí."
+      },
+      "ds": {
+        "subtitle": "v3.2 parcial · cosmología",
+        "desc": "Vacío con Λ>0, parche estático. Horizonte cosmológico, radiación de Gibbons-Hawking. La 'mitad fácil' (sólo Λ) de la familia FLRW."
+      },
+      "geo": {
+        "subtitle": "Fase 3 · v0.3 (v2.6 en UI)",
+        "desc": "Integra geodésicas tipo tiempo en Kerr o Schwarzschild mediante el integrador simpléctico de punto medio implícito. Escena 3D con horizontes, ergosfera y trayectoria animada."
+      },
+      "penrose": {
+        "title": "Diagramas de Penrose",
+        "subtitle": "Fase 2 · v0.2 → v1.5",
+        "desc": "Estructura causal extendida al máximo. Desplaza y haz zoom en los diagramas conformes de Minkowski y Schwarzschild."
+      },
+      "holo": {
+        "subtitle": "Fases 7-9 · v0.7 → v2.1",
+        "desc": "Curvas de Page para BTZ eterno y Schwarzschild en evaporación — la resolución de la paradoja de la información en dos gráficos interactivos."
+      }
+    },
+    "stats_title": "En qué punto está el proyecto",
+    "stats_tests": "Pruebas pasando",
+    "stats_modules": "Módulos",
+    "stats_notebooks": "Cuadernos",
+    "stats_release": "Última versión",
+    "stats_caption": "Construido secuencialmente desde la Fase 1 (Schwarzschild) → Fase 9 (curva de Page, v1.0) → sprint post-lanzamiento v2.x (QES real + agujeros de gusano de réplica + RT en dimensión superior)."
+  },
+  "schwarzschild": {
+    "title": "Agujero negro de Schwarzschild",
+    "desc": "La solución de agujero negro exacta más simple — un espacio-tiempo de vacío sin rotación, sin carga y con simetría esférica.",
+    "mass_label": "Parámetro de masa M",
+    "mass_hint": "(unidades geométricas G = c = 1)",
+    "props": {
+      "horizon": "Horizonte de eventos",
+      "horizon_desc": "Punto sin retorno",
+      "isco": "ISCO",
+      "isco_desc": "Órbita circular estable más interior",
+      "photon": "Esfera de fotones",
+      "photon_desc": "Órbita inestable de la luz",
+      "hawking_t": "Temperatura de Hawking",
+      "hawking_t_desc": "Temperatura de la radiación cuántica",
+      "kappa": "Gravedad superficial",
+      "kappa_desc": "Gravedad en el horizonte",
+      "entropy": "Entropía del AN",
+      "entropy_desc": "Entropía de Bekenstein-Hawking"
+    },
+    "label_event_horizon": "Horizonte de eventos",
+    "label_photon_sphere": "Esfera de fotones"
+  },
+  "kerr": {
+    "title": "Agujero negro de Kerr",
+    "desc_pre": "La solución rotatoria de vacío con dos parámetros. A medida que ",
+    "desc_post": " crece desde 0 (Schwarzschild) hacia 1 (extremal), los horizontes interno y externo se acercan, la ergosfera se ensancha y la ISCO se divide en ramas prograda y retrógrada.",
+    "formula_caption_post": " · coordenadas de Boyer-Lindquist.",
+    "mass_label": "Masa M",
+    "spin_label_pre": "Spin ",
+    "spin_label_post": "",
+    "spin_hint_pre": "La censura cósmica exige ",
+    "spin_hint_mid": " · extremal en ",
+    "props": {
+      "outer_horizon": "Horizonte exterior r₊",
+      "inner_horizon": "Horizonte interior r₋",
+      "ergo_equator": "Ergosfera (ecuador)",
+      "isco_prograde": "ISCO prograda",
+      "isco_retrograde": "ISCO retrógrada",
+      "photon_prograde": "Esfera de fotones (+)",
+      "ang_velocity": "Velocidad angular del horizonte",
+      "hawking_t": "T de Hawking",
+      "entropy": "Entropía del AN"
+    },
+    "what_changes_title": "¿Qué cambia al hacerlo girar?",
+    "bullet_a_pre": "En ",
+    "bullet_a_mid1": ": Schwarzschild — ambos horizontes coinciden en ",
+    "bullet_a_mid2": ", ISCO = ",
+    "bullet_a_post": ", la ergosfera colapsa sobre el horizonte.",
+    "bullet_b_pre": "Para ",
+    "bullet_b_mid1": ": ",
+    "bullet_b_mid2": " disminuye desde ",
+    "bullet_b_mid3": " hasta ",
+    "bullet_b_mid4": "; ",
+    "bullet_b_mid5": " crece desde 0 hasta ",
+    "bullet_b_mid6": "; la ergosfera ",
+    "bullet_b_mid7": " se separa de ",
+    "bullet_b_post": ".",
+    "bullet_c": "La ISCO se divide: la prograda baja hasta {{tex}} en el extremal (eficiencia energética del 42%), la retrógrada crece hacia {{tex2}}.",
+    "bullet_d_pre": "La temperatura de Hawking ",
+    "bullet_d_mid1": " cuando ",
+    "bullet_d_post": ": el Kerr extremal es un agujero negro a temperatura cero (tercera ley).",
+    "cite": "Referencia: Boyer & Lindquist 1967; Bardeen, Press & Teukolsky 1972; Wald, General Relativity, cap. 12.",
+    "equatorial_caption": "Corte ecuatorial (θ = π/2)",
+    "ergo_label": "ergo r=2M"
+  },
+  "btz": {
+    "title": "BTZ — Agujero negro 3D en AdS",
+    "desc": "El agujero negro de Bañados-Teitelboim-Zanelli: un cociente de AdS₃ que es localmente AdS puro pero globalmente un agujero negro. La entropía de su CFT en la frontera, vía la fórmula de Cardy, reproduce la ley de área de Bekenstein-Hawking (Strominger 1998), el conteo microscópico más simple en gravedad cuántica.",
+    "horizon_label_pre": "Horizonte ",
+    "ads_radius_label_pre": "Radio AdS ",
+    "props": {
+      "mass_param": "Parámetro de masa",
+      "hawking_t": "T de Hawking",
+      "bh_entropy": "S de Bekenstein-Hawking",
+      "thermal_beta": "β térmico",
+      "central_charge": "c de Brown-Henneaux",
+      "cardy_check": "Verificación de Cardy"
+    },
+    "match_title": "La coincidencia de Strominger 1998",
+    "match_p1_pre": "Para BTZ, la CFT en la frontera (una CFT 2D con carga central ",
+    "match_p1_post": " de Brown-Henneaux) tiene una fórmula de Cardy para la degeneración asintótica de estados:",
+    "match_p2_pre": "Sustituyendo los valores de BTZ ",
+    "match_p2_mid": " se obtiene ",
+    "match_p2_emph": "exactamente",
+    "match_p2_post_pre": " la ley de área de Bekenstein-Hawking: ",
+    "match_p2_post_post": ". La tarjeta «Verificación de Cardy» de arriba muestra el cociente numérico — debería leer exactamente 1 con precisión de máquina.",
+    "cite": "Referencia: Bañados, Teitelboim, Zanelli 1992; Brown & Henneaux 1986; Strominger 1998. Verificación bit-exacta en 6 combinaciones de parámetros en tests/test_phase8.py."
+  },
+  "rn": {
+    "title": "Agujero negro de Reissner-Nordström",
+    "desc_pre": "La solución única estática, esféricamente simétrica y asintóticamente plana de las ecuaciones de Einstein-Maxwell. A medida que ",
+    "desc_post": " crece desde 0 (Schwarzschild) hacia 1 (extremal), los horizontes interno y externo se acercan, la esfera de fotones se contrae y la temperatura de Hawking cae a cero.",
+    "mass_label_pre": "Masa ",
+    "qm_label_pre": "Carga adimensional ",
+    "qm_hint_pre": "Censura cósmica: ",
+    "qm_hint_mid": "; extremal en ",
+    "props": {
+      "outer_horizon": "Horizonte exterior r₊",
+      "inner_horizon": "Horizonte interior r₋",
+      "photon_sphere": "Esfera de fotones",
+      "isco": "ISCO",
+      "kappa": "Gravedad superficial κ",
+      "hawking_t": "T de Hawking",
+      "horizon_area": "Área del horizonte",
+      "entropy": "Entropía del AN",
+      "vieta": "Verificación Vieta r₊r₋"
+    },
+    "spherical_caption": "Corte esférico (cualquier θ, φ) · todas las superficies son esferas",
+    "what_changes_title": "¿Qué cambia al cargarlo?",
+    "bullet_a": "En Q = 0: Schwarzschild puro — r₊ = 2M, r₋ = 0, ISCO = 6M, esfera de fotones = 3M.",
+    "bullet_b": "Para 0 < |Q| < M: r₊ disminuye desde 2M hacia M; r₋ crece desde 0 hacia M. Relaciones de Vieta: r₊ + r₋ = 2M, r₊ · r₋ = Q².",
+    "bullet_c": "La ISCO disminuye monotónicamente con |Q|; la esfera de fotones se contrae hacia 2M.",
+    "bullet_d": "En extremalidad (|Q| = M): r₊ = r₋ = M, T_H = 0 (tercera ley), entropía S = π M².",
+    "cite": "Referencia: Reissner 1916; Nordström 1918; Wald §6.4; MTW §31.5. Fórmula ISCO: Pradhan & Iyer 2010. Pruebas bit-exactas fijan todos los invariantes en forma cerrada a ≤ 1e-12 en tests/test_reissner_nordstrom.py."
+  },
+  "kn": {
+    "title": "Agujero negro de Kerr-Newman",
+    "desc": "La generalización con dos cargas de Kerr — la solución única estacionaria, axisimétrica y asintóticamente plana de las ecuaciones de Einstein-Maxwell con una masa puntual con spin y carga eléctrica (Newman et al. 1965). Se reduce a Kerr en Q = 0, a RN en a = 0, y a Schwarzschild en ambos.",
+    "formula_caption_pre": "Boyer-Lindquist; lo único que Q cambia respecto a Kerr es el ",
+    "formula_caption_mid": " adicional en ",
+    "formula_caption_post": ".",
+    "mass_label_pre": "Masa ",
+    "spin_label_pre": "Spin ",
+    "charge_label_pre": "Carga ",
+    "censorship_label_pre": "Margen de censura cósmica ",
+    "censorship_label_mid": ": ",
+    "censorship_violated": " — VIOLADA (singularidad desnuda)",
+    "censorship_near_extremal": " — cerca del extremal",
+    "censorship_blocked": "(a/M)² + (Q/M)² = {{value}} > 1 — singularidad desnuda, solicitud bloqueada",
+    "props": {
+      "outer_horizon": "Horizonte exterior r₊",
+      "inner_horizon": "Horizonte interior r₋",
+      "ergo_equator": "Ergo ecuador",
+      "ergo_pole": "Ergo polo",
+      "omega_h": "Ω_H",
+      "hawking_t": "T de Hawking",
+      "entropy": "Entropía del AN",
+      "vieta": "Vieta r₊r₋",
+      "extremal": "¿Extremal?",
+      "extremal_yes": "SÍ",
+      "extremal_no": "no"
+    },
+    "limits_title": "Tres límites, una métrica",
+    "bullet_schwarzschild": "Schwarzschild (a=0, Q=0): r₊ = 2M, sin ergosfera, sin horizonte de Cauchy.",
+    "bullet_kerr": "Kerr (Q=0): la página ya existe en /kerr; esta página la reproduce bit-exacta cuando deslizas |Q|/M a 0.",
+    "bullet_rn": "Reissner-Nordström (a=0): la página en /reissner-nordstrom; esta página la reproduce bit-exacta cuando deslizas a/M a 0.",
+    "bullet_both": "Ambos: r₊ + r₋ = 2M, r₊ r₋ = a² + Q² (generalización de Vieta a 3 parámetros; la tarjeta «Vieta r₊r₋» de arriba lo verifica del lado del cliente).",
+    "bullet_extremal": "Extremal (a² + Q² = M²): los horizontes se fusionan en r = M, T_H = 0 (tercera ley).",
+    "cite_paper": "Referencia: Newman et al., J. Math. Phys. 6, 918 (1965) — «Métrica de una masa rotatoria y cargada». Wald §12.3. Pruebas bit-exactas fijan los tres límites en tests/test_kerr_newman.py.",
+    "cite_isco": "La forma cerrada de la ISCO (Aliev-Galtsov 1981) se difiere a v3.2.1 — el polinomio es genuinamente complicado. Los endpoints de ISCO de Kerr (/api/metrics/kerr) cubren la rebanada Q=0, y los de RN (/api/metrics/reissner-nordstrom) cubren la rebanada a=0."
+  },
+  "desitter": {
+    "title": "Espacio-tiempo de de Sitter",
+    "desc_pre": "La solución única maximalmente simétrica de vacío de Einstein con constante cosmológica positiva ",
+    "desc_mid1": ". Las coordenadas del parche estático muestran un horizonte de eventos *cosmológico* en",
+    "desc_mid2": " — análogo en forma al horizonte de un AN de Schwarzschild, pero la métrica es regular en el centro y el horizonte depende del observador (cada cono de luz pasado tiene el suyo).",
+    "radius_label_pre": "Radio de de Sitter ",
+    "radius_hint_pre": "",
+    "radius_hint_post": " — tres formas equivalentes de pensarlo",
+    "props": {
+      "cosmo_horizon": "Horizonte cosmológico r_c",
+      "lambda": "Constante cosmológica Λ",
+      "hubble": "Parámetro de Hubble H",
+      "gh_t": "T de Gibbons-Hawking",
+      "horizon_area": "Área del horizonte A",
+      "entropy": "S de Bekenstein-Hawking",
+      "ricci": "Escalar de Ricci R"
+    },
+    "special_title": "Lo que tiene de especial dS",
+    "bullet_curvature_pre": "Curvatura constante: ",
+    "bullet_curvature_post": " en todos lados; tanto el tensor de Ricci como el de Riemann son proporcionales a combinaciones de g_{μν}.",
+    "bullet_horizon_pre": "Horizonte cosmológico: cada observador ve un horizonte a distancia propia ",
+    "bullet_horizon_post": ". NO es un AN — no hay singularidad dentro, ni ergosfera, ni ISCO.",
+    "bullet_gh_pre": "Radiación de Gibbons-Hawking (1977): el horizonte emite radiación térmica a ",
+    "bullet_gh_post": " — el análogo cosmológico de la radiación de Hawking de un horizonte de AN.",
+    "bullet_entropy_pre": "Entropía de Bekenstein-Hawking de un horizonte que no posees: ",
+    "bullet_entropy_post": ". Se cumple aunque ninguna materia haya cruzado este horizonte — entropía por la ignorancia dependiente del observador.",
+    "bullet_flrw_pre": "Límite de FLRW con ",
+    "bullet_flrw_post": ": un universo FLRW dominado por Λ tiende asintóticamente a dS. Nuestro universo ΛCDM tardío es aproximadamente dS.",
+    "cite_paper": "Referencia: Wald §5.2; Hawking & Ellis §5.2; Gibbons & Hawking, Phys. Rev. D 15, 2738 (1977). Pruebas bit-exactas fijan todos los invariantes en forma cerrada a ≤ 1e-12 en tests/test_de_sitter.py.",
+    "cite_flrw": "El FLRW general (con ecuación de estado arbitraria, componentes de materia mixtos, EDO de Friedmann) se difiere a v3.2.full — ver docs/v3.2-flrw-de-sitter-spec.md. Esta página cubre la «mitad fácil» en forma cerrada solo con Λ."
+  },
+  "geodesics": {
+    "title": "Explorador de geodésicas",
+    "lede": "Integra geodésicas tipo tiempo o nulas en Kerr / Schwarzschild mediante el integrador simpléctico de punto medio implícito (Fase 3, v0.3). Haz clic en el disco ecuatorial de la escena 3D de abajo para fijar una nueva posición inicial, o usa la biblioteca de presets.",
+    "presets_title": "Presets",
+    "params_title": "Estado inicial y parámetros de integración",
+    "metric_label": "Métrica",
+    "position_subhead": "Posición",
+    "momentum_subhead": "Momento covariante",
+    "integration_subhead": "Integración",
+    "step_label": "Tamaño de paso h",
+    "nsteps_label": "n pasos",
+    "decimation_label": "diezmado",
+    "btn_replace": "▶ Reemplazar con esta",
+    "btn_integrating": "Integrando…",
+    "btn_add": "➕ Añadir como nueva",
+    "btn_max_tooltip": "Máximo 5 trayectorias a la vez",
+    "btn_add_tooltip": "Añadir una nueva trayectoria junto a las existentes",
+    "trajectories_count": "{{n}}/5 trayectorias",
+    "scene_title": "Escena 3D · haz clic en el disco oscuro para fijar r₀, φ₀",
+    "btn_pause": "⏸ Pausar",
+    "btn_play": "▶ Reproducir",
+    "remove_tooltip": "Eliminar esta trayectoria",
+    "presets": {
+      "stable_inclined": {
+        "name": "Órbita estable inclinada",
+        "desc": "Kerr a=0.5M, r=10M, prograda, ligera inclinación"
+      },
+      "plunge": {
+        "name": "Caída al horizonte",
+        "desc": "Kerr a=0.5M, parte de r=10M con p_r fuertemente entrante — cae"
+      },
+      "schw_bound": {
+        "name": "Órbita ligada Schwarzschild",
+        "desc": "Schwarzschild M=1, órbita ligada excéntrica en r=8M"
+      },
+      "kerr_inclined": {
+        "name": "Kerr muy inclinada",
+        "desc": "Kerr a=0.9M, p_θ grande — fuerte movimiento fuera del plano"
+      },
+      "photon": {
+        "name": "Deflexión de fotón (nula)",
+        "desc": "Schwarzschild M=1, b≈4.5 < b_c=3√3 ≈ 5.20 — el fotón pasa cerca del AN"
+      }
+    }
+  },
+  "penrose": {
+    "title": "Diagramas de Penrose",
+    "lede_pre": "Compactificaciones conformes que llevan toda la estructura causal de un espacio-tiempo infinito a un diagrama finito. Los rayos de luz son líneas exactamente a 45°; el infinito tipo tiempo futuro y pasado (",
+    "lede_mid1": "), el infinito tipo espacio (",
+    "lede_mid2": ") y el infinito nulo (",
+    "lede_post": ") quedan en la frontera.",
+    "kind_minkowski": "Minkowski",
+    "kind_minkowski_desc": "Estructura causal de espacio-tiempo plano",
+    "kind_schwarzschild": "Schwarzschild",
+    "kind_schwarzschild_desc": "AN extendido al máximo en cuatro regiones",
+    "mass_label": "Masa M",
+    "mass_hint": "La masa afecta la posición etiquetada del horizonte; la forma conforme en sí es independiente de la masa.",
+    "overlay_label_pre": "Superponer una geodésica ligada de Schwarzschild (región I) — proyectada vía ",
+    "overlay_meta_pre": "",
+    "overlay_meta_mid1": " muestras de la región I proyectadas · ",
+    "overlay_meta_mid2": " omitidas (r ≤ 2M) · r final = ",
+    "manifest": {
+      "regions": "Regiones",
+      "coords": "Coords",
+      "infinities": "Infinitos"
+    },
+    "how_to_read": "Cómo leerlo",
+    "bullet_a": "Los rayos de luz viajan a 45° — ese es justamente el punto de la compactificación conforme: preserva los ángulos.",
+    "bullet_b": "Subir en el diagrama = avanzar en el tiempo. Infinito pasado abajo, futuro arriba.",
+    "bullet_c": "Para Schwarzschild: regiones I (nuestro universo), II (interior del AN), III (otro universo), IV (agujero blanco). No hay contacto causal entre I y III.",
+    "bullet_d": "Las dos líneas diagonales dentro de la región II son los horizontes de eventos futuros. Una vez cruzados, sólo puedes terminar en la singularidad (la línea horizontal dentada).",
+    "cite": "Referencia: Penrose 1964 (estructura causal); Kruskal 1960, Szekeres 1960 (extensión máxima de Schwarzschild); Hawking & Ellis, The Large Scale Structure of Space-Time, cap. 5. El renderizador SVG se incluyó en v1.5.0."
+  },
+  "holography": {
+    "title": "Holografía y curva de Page",
+    "lede": "La forma de la entropía de la radiación de Hawking conforme un agujero negro se evapora. Don Page predijo en 1993 que, si la gravedad cuántica es unitaria, esta curva debe darse vuelta — primero crece (la radiación parece térmica), luego decrece (la radiación purifica al agujero negro). La curva de abajo es la derivación moderna vía la fórmula de las islas.",
+    "eternal": {
+      "title": "BTZ eterno — Hartman-Maldacena vs. punto silla de isla",
+      "slider_horizon": "Horizonte r₊",
+      "slider_ads": "Radio AdS L",
+      "explainer_pre": "La fase de crecimiento lineal del punto silla de Hartman-Maldacena domina al inicio; el punto silla constante de la isla toma el control una vez que iguala ",
+      "explainer_mid": ". El tiempo de cruce es el tiempo de Page ",
+      "explainer_post": "."
+    },
+    "evaporating": {
+      "title": "Schwarzschild en evaporación — curva de Page acampanada",
+      "slider_initial_mass": "Masa inicial M₀",
+      "explainer_pre": "Tiempo de Page en ",
+      "explainer_post": " ≈ 0.6464 t_evap. La forma de campana regresa a cero — unitariedad de modelo de juguete para un AN en evaporación."
+    },
+    "meta": {
+      "page_time": "Tiempo de Page",
+      "saturation": "Saturación / pico",
+      "samples": "Muestras"
+    },
+    "axes": {
+      "time_label": "tiempo t",
+      "time_units_evap": "(en unidades de t_Planck × M₀³)"
+    }
+  },
+  "conservation": {
+    "title": "Diagnósticos de conservación",
+    "energy_label_pre": "Energía ",
+    "lz_label_pre": "Momento angular z ",
+    "mass_shell_label_pre": "Capa de masa ",
+    "carter_label_pre": "Carter ",
+    "unit_E_cyclic": "conservada exactamente (t cíclico)",
+    "unit_Lz_cyclic": "conservada exactamente (φ cíclico)",
+    "unit_mu_hamilton": "conservada por el flujo Hamiltoniano",
+    "unit_carter_drift": "deriva O(h²) por paso",
+    "initial_label": "inicial:",
+    "drift_label": "deriva:",
+    "legend_pre": "Integrador de punto medio implícito: ",
+    "legend_mid1": " y ",
+    "legend_mid2": " conservados a precisión de máquina (coordenadas cíclicas), ",
+    "legend_mid3": " y ",
+    "legend_mid4": " derivan a ",
+    "legend_post": " — una deriva pequeña es el diagnóstico de que la trayectoria sigue geodésicas verdaderas."
+  }
+}

@@ -7,11 +7,13 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TexBlock, Tex } from '../components/Math'
 
 const API = import.meta.env.VITE_API_URL || ''
 
 export default function BTZ() {
+  const { t } = useTranslation()
   const [rPlus, setRPlus] = useState(1.0)
   const [L, setL] = useState(1.0)
   const [data, setData] = useState(null)
@@ -32,13 +34,9 @@ export default function BTZ() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
       <section style={styles.card}>
-        <h2 style={styles.title}>BTZ — 3D AdS Black Hole</h2>
+        <h2 style={styles.title}>{t('btz.title')}</h2>
         <p style={styles.lede}>
-          The Bañados-Teitelboim-Zanelli black hole: a quotient of AdS₃
-          that is locally pure AdS but globally a black hole.  Its
-          boundary CFT entropy from Cardy's formula reproduces the
-          Bekenstein-Hawking area law (Strominger 1998), the simplest
-          microscopic counting in quantum gravity.
+          {t('btz.desc')}
         </p>
 
         <div style={styles.formula}>
@@ -49,12 +47,12 @@ export default function BTZ() {
 
         <div style={styles.controls}>
           <ControlSlider
-            label={<>Horizon <Tex>{'r_+'}</Tex></>}
+            label={<>{t('btz.horizon_label_pre')}<Tex>{'r_+'}</Tex></>}
             value={rPlus} onChange={setRPlus}
             min={0.2} max={3} step={0.05} color="#ff6b9d"
           />
           <ControlSlider
-            label={<>AdS radius <Tex>{'L'}</Tex></>}
+            label={<>{t('btz.ads_radius_label_pre')}<Tex>{'L'}</Tex></>}
             value={L} onChange={setL}
             min={0.5} max={2} step={0.05} color="#00dfff"
           />
@@ -62,22 +60,22 @@ export default function BTZ() {
 
         {data && (
           <div style={styles.propsGrid}>
-            <Prop label="Mass parameter"
+            <Prop label={t('btz.props.mass_param')}
               value={data.mass_parameter.toFixed(4)}
               tex={'M = \\frac{r_+^2}{8 G_N L^2}'} color="#ff6b9d" />
-            <Prop label="Hawking T"
+            <Prop label={t('btz.props.hawking_t')}
               value={data.hawking_temperature.toExponential(3)}
               tex={'T_H = \\frac{r_+}{2\\pi L^2}'} color="#fb923c" />
-            <Prop label="Bekenstein-Hawking S"
+            <Prop label={t('btz.props.bh_entropy')}
               value={data.bekenstein_hawking_entropy.toFixed(3)}
               tex={'S = \\frac{\\pi r_+}{2 G_N}'} color="#22c55e" />
-            <Prop label="Thermal β"
+            <Prop label={t('btz.props.thermal_beta')}
               value={data.thermal_beta.toExponential(3)}
               tex={'\\beta = \\frac{2\\pi L^2}{r_+}'} color="#a78bfa" />
-            <Prop label="Brown-Henneaux c"
+            <Prop label={t('btz.props.central_charge')}
               value={data.central_charge_brown_henneaux.toFixed(3)}
               tex={'c = \\frac{3 L}{2 G_N}'} color="#00dfff" />
-            <Prop label="Cardy check"
+            <Prop label={t('btz.props.cardy_check')}
               value={cardyCheck(data).toFixed(6)}
               tex={'S_{\\rm Cardy} / S_{BH}'}
               color={Math.abs(cardyCheck(data) - 1) < 1e-9 ? '#22c55e' : '#fb923c'} />
@@ -85,29 +83,24 @@ export default function BTZ() {
         )}
 
         {error && (
-          <div style={styles.errorBanner}>⚠️ API: {error}</div>
+          <div style={styles.errorBanner}>⚠️ {t('common.api_error')}: {error}</div>
         )}
       </section>
 
       <section style={styles.card}>
-        <h3 style={{ margin: 0, color: '#fff' }}>The Strominger 1998 match</h3>
+        <h3 style={{ margin: 0, color: '#fff' }}>{t('btz.match_title')}</h3>
         <p style={styles.bodyText}>
-          For BTZ, the boundary CFT (a 2D CFT with central charge{' '}
-          <Tex>{'c = 3L/(2 G_N)'}</Tex> from Brown-Henneaux) has a Cardy
-          formula for asymptotic state degeneracy:
+          {t('btz.match_p1_pre')}<Tex>{'c = 3L/(2 G_N)'}</Tex>{t('btz.match_p1_post')}
         </p>
         <TexBlock>{'S_{\\rm Cardy} = 2\\pi \\sqrt{\\frac{c L_0}{6}} + 2\\pi \\sqrt{\\frac{c \\bar L_0}{6}}'}</TexBlock>
         <p style={styles.bodyText}>
-          Plugging the BTZ values <Tex>{'L_0 = \\bar L_0 = M L / 2 = r_+^2 / (16 G_N L)'}</Tex>{' '}
-          gives <em>exactly</em> the Bekenstein-Hawking area
-          law: <Tex>{'S_{\\rm Cardy} = \\pi r_+ / (2 G_N) = A / 4 G_N'}</Tex>.
-          The "Cardy check" card above shows the numerical ratio — should
-          read exactly 1 to machine precision.
+          {t('btz.match_p2_pre')}<Tex>{'L_0 = \\bar L_0 = M L / 2 = r_+^2 / (16 G_N L)'}</Tex>
+          {t('btz.match_p2_mid')}<em>{t('btz.match_p2_emph')}</em>
+          {t('btz.match_p2_post_pre')}<Tex>{'S_{\\rm Cardy} = \\pi r_+ / (2 G_N) = A / 4 G_N'}</Tex>
+          {t('btz.match_p2_post_post')}
         </p>
         <p style={styles.cite}>
-          Reference: Bañados, Teitelboim, Zanelli 1992; Brown & Henneaux
-          1986; Strominger 1998.  Bit-exact verification across 6 parameter
-          combinations in <code>tests/test_phase8.py</code>.
+          {t('btz.cite')}
         </p>
       </section>
     </div>

@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import KerrScene3D from '../components/KerrScene3D'
 import ConservationPanel from '../components/ConservationPanel'
 import { TexBlock, Tex } from '../components/Math'
@@ -29,18 +30,17 @@ const DEFAULT_REQUEST = {
 
 /**
  * Preset library — each preset is a complete request body.
+ * Names and descriptions come from i18n at render time (i18nKey).
  * Citations: Bardeen-Press-Teukolsky 1972 (ISCO closed form);
  *            Wald §6.3 (Schwarzschild circular orbits).
  */
 const PRESETS = [
   {
-    name: 'Stable inclined orbit',
-    desc: 'Kerr a=0.5M, r=10M, prograde, slight inclination',
+    i18nKey: 'stable_inclined',
     request: { ...DEFAULT_REQUEST },
   },
   {
-    name: 'Plunge to horizon',
-    desc: 'Kerr a=0.5M, starts at r=10M with strong inward p_r — falls in',
+    i18nKey: 'plunge',
     request: {
       ...DEFAULT_REQUEST,
       initial_momentum: [-0.96, -0.45, 0.5, 1.8],
@@ -48,8 +48,7 @@ const PRESETS = [
     },
   },
   {
-    name: 'Schwarzschild bound orbit',
-    desc: 'Schwarzschild M=1, eccentric bound orbit at r=8M',
+    i18nKey: 'schw_bound',
     request: {
       metric: 'schwarzschild',
       params: { mass: 1.0 },
@@ -61,8 +60,7 @@ const PRESETS = [
     },
   },
   {
-    name: 'Highly inclined Kerr',
-    desc: 'Kerr a=0.9M, large p_θ — strong out-of-plane motion',
+    i18nKey: 'kerr_inclined',
     request: {
       metric: 'kerr',
       params: { mass: 1.0, spin: 0.9 },
@@ -74,17 +72,9 @@ const PRESETS = [
     },
   },
   {
-    // Null geodesic (photon) deflection in Schwarzschild.  Initial
-    // state satisfies the null condition g^{αβ} p_α p_β = 0 by
-    // construction at r = 15M, equator:
-    //   f = 1 − 2M/r = 13/15
-    //   −p_t²/f + f·p_r² + p_φ²/r² = 0
-    //   with p_t = −1, p_φ = 4.5  ⇒  p_r² ≈ 1.228  ⇒  p_r = −1.108 (incoming)
-    // Impact parameter b = L/E = 4.5 < b_c = 3√3 M ≈ 5.196, so the
-    // photon is deflected but escapes (does NOT plunge).  μ² ≈ 0
-    // throughout — verify in the Conservation panel.
-    name: 'Photon deflection (null)',
-    desc: 'Schwarzschild M=1, b≈4.5 < b_c=3√3 ≈ 5.20 — photon swings past BH',
+    // Null geodesic (photon) deflection in Schwarzschild. Initial
+    // state satisfies the null condition g^{αβ} p_α p_β = 0 at r = 15M.
+    i18nKey: 'photon',
     request: {
       metric: 'schwarzschild',
       params: { mass: 1.0 },
@@ -100,6 +90,7 @@ const PRESETS = [
 let nextId = 1
 
 export default function Geodesics() {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState(DEFAULT_REQUEST)
   const [trajectories, setTrajectories] = useState([])
   const [loading, setLoading] = useState(false)
@@ -191,12 +182,9 @@ export default function Geodesics() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <section style={styles.card}>
-        <h2 style={styles.title}>Geodesic Explorer</h2>
+        <h2 style={styles.title}>{t('geodesics.title')}</h2>
         <p style={styles.lede}>
-          Integrate timelike or null geodesics in Kerr / Schwarzschild via
-          the symplectic implicit-midpoint integrator (Phase 3, v0.3).
-          Click on the equatorial disk in the 3D scene below to set a new
-          initial position, or use the preset library.
+          {t('geodesics.lede')}
         </p>
         <div style={styles.formula}>
           <TexBlock>
@@ -206,41 +194,45 @@ export default function Geodesics() {
       </section>
 
       <section style={styles.card}>
-        <h3 style={styles.sub}>Presets</h3>
+        <h3 style={styles.sub}>{t('geodesics.presets_title')}</h3>
         <div style={styles.presetRow}>
-          {PRESETS.map((p) => (
-            <button
-              key={p.name}
-              onClick={() => {
-                setDraft(p.request)
-                runIntegration(p.request, true)
-              }}
-              style={styles.presetBtn}
-              title={p.desc}
-            >
-              <strong>{p.name}</strong>
-              <small>{p.desc}</small>
-            </button>
-          ))}
+          {PRESETS.map((p) => {
+            const name = t(`geodesics.presets.${p.i18nKey}.name`)
+            const desc = t(`geodesics.presets.${p.i18nKey}.desc`)
+            return (
+              <button
+                key={p.i18nKey}
+                onClick={() => {
+                  setDraft(p.request)
+                  runIntegration(p.request, true)
+                }}
+                style={styles.presetBtn}
+                title={desc}
+              >
+                <strong>{name}</strong>
+                <small>{desc}</small>
+              </button>
+            )
+          })}
         </div>
       </section>
 
       <section style={styles.card}>
-        <h3 style={styles.sub}>Initial state &amp; integration parameters</h3>
+        <h3 style={styles.sub}>{t('geodesics.params_title')}</h3>
 
         <div style={styles.controlsRow}>
-          <Slider label={<>Mass <Tex>{'M'}</Tex></>} color="#ff6b9d"
+          <Slider label={<>{t('kn.mass_label_pre')}<Tex>{'M'}</Tex></>} color="#ff6b9d"
             value={draft.params.mass} onChange={(v) => update('params.mass', v)}
             min={0.5} max={3} step={0.05} />
-          <Slider label={<>Spin <Tex>{'a/M'}</Tex></>} color="#00dfff"
+          <Slider label={<>{t('kn.spin_label_pre')}<Tex>{'a/M'}</Tex></>} color="#00dfff"
             value={draft.params.spin / draft.params.mass}
             onChange={(v) => update('params.spin', v * draft.params.mass)}
             min={0} max={0.999} step={0.005} />
           <SelectMetric value={draft.metric}
-            onChange={(v) => update('metric', v)} />
+            onChange={(v) => update('metric', v)} label={t('geodesics.metric_label')} />
         </div>
 
-        <div style={styles.subSection}>Position <Tex>{'x^\\mu'}</Tex></div>
+        <div style={styles.subSection}>{t('geodesics.position_subhead')} <Tex>{'x^\\mu'}</Tex></div>
         <div style={styles.controlsRow}>
           <Slider label="r₀" color="#fbbf24"
             value={draft.initial_position[1]}
@@ -252,7 +244,7 @@ export default function Geodesics() {
             min={0.1} max={Math.PI - 0.1} step={0.05} />
         </div>
 
-        <div style={styles.subSection}>Covariant momentum <Tex>{'p_\\mu'}</Tex></div>
+        <div style={styles.subSection}>{t('geodesics.momentum_subhead')} <Tex>{'p_\\mu'}</Tex></div>
         <div style={styles.controlsRow}>
           <Slider label={<>p_t = <Tex>{'-E'}</Tex></>} color="#22c55e"
             value={draft.initial_momentum[0]}
@@ -272,16 +264,16 @@ export default function Geodesics() {
             min={-1} max={1} step={0.02} />
         </div>
 
-        <div style={styles.subSection}>Integration</div>
+        <div style={styles.subSection}>{t('geodesics.integration_subhead')}</div>
         <div style={styles.controlsRow}>
-          <Slider label="Step size h" color="#c4b5fd"
+          <Slider label={t('geodesics.step_label')} color="#c4b5fd"
             value={draft.step_size} onChange={(v) => update('step_size', v)}
             min={0.05} max={2} step={0.05} />
-          <Slider label="n steps" color="#c4b5fd"
+          <Slider label={t('geodesics.nsteps_label')} color="#c4b5fd"
             value={draft.n_steps}
             onChange={(v) => update('n_steps', Math.round(v))}
             min={100} max={5000} step={100} />
-          <Slider label="decimation" color="#c4b5fd"
+          <Slider label={t('geodesics.decimation_label')} color="#c4b5fd"
             value={draft.decimation}
             onChange={(v) => update('decimation', Math.round(v))}
             min={1} max={50} step={1} />
@@ -290,16 +282,16 @@ export default function Geodesics() {
         <div style={styles.actionRow}>
           <button onClick={() => runIntegration(draft, true)}
             disabled={loading} style={{ ...styles.runBtn, ...(loading && styles.btnDisabled) }}>
-            {loading ? 'Integrating…' : '▶ Replace with this'}
+            {loading ? t('geodesics.btn_integrating') : t('geodesics.btn_replace')}
           </button>
           <button onClick={() => runIntegration(draft, false)}
             disabled={loading || trajectories.length >= 5}
             style={{ ...styles.runBtnSec, ...(loading && styles.btnDisabled) }}
-            title={trajectories.length >= 5 ? 'Maximum 5 trajectories at once' : 'Add a new trajectory alongside the existing ones'}>
-            ➕ Add as new
+            title={trajectories.length >= 5 ? t('geodesics.btn_max_tooltip') : t('geodesics.btn_add_tooltip')}>
+            {t('geodesics.btn_add')}
           </button>
           <span style={styles.actionHint}>
-            {trajectories.length}/5 trajectories
+            {t('geodesics.trajectories_count', { n: trajectories.length })}
           </span>
         </div>
 
@@ -307,7 +299,7 @@ export default function Geodesics() {
       </section>
 
       <section style={styles.card}>
-        <h3 style={styles.sub}>3D scene · click on the dark disk to set r₀, φ₀</h3>
+        <h3 style={styles.sub}>{t('geodesics.scene_title')}</h3>
         <KerrScene3D
           mass={draft.params.mass}
           spin={draft.metric === 'kerr' ? draft.params.spin : 0}
@@ -321,7 +313,7 @@ export default function Geodesics() {
             if (playFraction >= 1.0) setPlayFraction(0)
             setPlaying((p) => !p)
           }} style={styles.playBtn}>
-            {playing ? '⏸ Pause' : '▶ Play'}
+            {playing ? t('geodesics.btn_pause') : t('geodesics.btn_play')}
           </button>
           <input
             type="range" min="0" max="1" step="0.005"
@@ -337,17 +329,17 @@ export default function Geodesics() {
 
         {trajectories.length > 0 && (
           <div style={styles.legend}>
-            {trajectories.map((t) => (
-              <div key={t.id} style={styles.legendItem}>
-                <span style={{ ...styles.legendSwatch, background: t.color }} />
+            {trajectories.map((traj) => (
+              <div key={traj.id} style={styles.legendItem}>
+                <span style={{ ...styles.legendSwatch, background: traj.color }} />
                 <span style={styles.legendText}>
-                  {t.request.metric} M={t.request.params.mass}
-                  {t.request.metric === 'kerr' && ` a=${t.request.params.spin.toFixed(2)}`}
-                  {' '}r₀={t.request.initial_position[1].toFixed(1)}M
+                  {traj.request.metric} M={traj.request.params.mass}
+                  {traj.request.metric === 'kerr' && ` a=${traj.request.params.spin.toFixed(2)}`}
+                  {' '}r₀={traj.request.initial_position[1].toFixed(1)}M
                 </span>
-                <button onClick={() => removeTrajectory(t.id)}
+                <button onClick={() => removeTrajectory(traj.id)}
                   style={styles.legendCloseBtn}
-                  title="Remove this trajectory">✕</button>
+                  title={t('geodesics.remove_tooltip')}>✕</button>
               </div>
             ))}
           </div>
@@ -379,10 +371,10 @@ function Slider({ label, value, onChange, min, max, step, color }) {
   )
 }
 
-function SelectMetric({ value, onChange }) {
+function SelectMetric({ value, onChange, label }) {
   return (
     <div style={styles.sliderCell}>
-      <label style={styles.sliderLabel}>Metric</label>
+      <label style={styles.sliderLabel}>{label || 'Metric'}</label>
       <select value={value} onChange={(e) => onChange(e.target.value)}
         style={styles.select}>
         <option value="kerr">Kerr</option>

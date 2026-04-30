@@ -8,27 +8,24 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TexBlock, Tex } from '../components/Math'
 
 const API = import.meta.env.VITE_API_URL || ''
 
 export default function Holography() {
+  const { t } = useTranslation()
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
       <section style={styles.card}>
-        <h2 style={styles.title}>Holography & the Page Curve</h2>
+        <h2 style={styles.title}>{t('holography.title')}</h2>
         <p style={styles.lede}>
-          The shape of the Hawking radiation entropy as a black hole
-          evaporates.  Don Page predicted in 1993 that, if quantum gravity
-          is unitary, this curve must <em>turn around</em> — first growing
-          (radiation looks thermal), then shrinking back (radiation
-          purifies the black hole).  The curve below is the modern
-          derivation via the island formula.
+          {t('holography.lede')}
         </p>
       </section>
 
       <PageCurveCard
-        title="Eternal BTZ — Hartman-Maldacena vs. island saddle"
+        title={t('holography.eternal.title')}
         kind="eternal"
         endpoint={`${API}/api/holography/page_curve/eternal`}
         defaultParams={{
@@ -39,35 +36,30 @@ export default function Holography() {
           n_samples: 200,
         }}
         sliders={[
-          { key: 'horizon_radius', label: 'Horizon r₊', min: 0.3, max: 3, step: 0.05 },
-          { key: 'ads_radius', label: 'AdS radius L', min: 0.5, max: 2, step: 0.05 },
+          { key: 'horizon_radius', label: t('holography.eternal.slider_horizon'), min: 0.3, max: 3, step: 0.05 },
+          { key: 'ads_radius', label: t('holography.eternal.slider_ads'), min: 0.5, max: 2, step: 0.05 },
         ]}
         formula={'S(t) = \\min\\!\\left(S_{\\rm HM}(t),\\ 2 S_{BH}\\right)'}
         explainer={
           <>
-            Linear-growth phase from the Hartman-Maldacena saddle dominates
-            early; the constant island saddle takes over once it equals{' '}
-            <Tex>{'2 S_{BH}'}</Tex>.  The crossing time is the Page time{' '}
-            <Tex>{'t_P'}</Tex>.
+            {t('holography.eternal.explainer_pre')}<Tex>{'2 S_{BH}'}</Tex>{t('holography.eternal.explainer_mid')}<Tex>{'t_P'}</Tex>{t('holography.eternal.explainer_post')}
           </>
         }
         accentColor="#00dfff"
       />
 
       <PageCurveCard
-        title="Evaporating Schwarzschild — bell-shaped Page curve"
+        title={t('holography.evaporating.title')}
         kind="evaporating"
         endpoint={`${API}/api/holography/page_curve/evaporating`}
         defaultParams={{ initial_mass: 1.0, n_samples: 200 }}
         sliders={[
-          { key: 'initial_mass', label: 'Initial mass M₀', min: 0.5, max: 3, step: 0.05 },
+          { key: 'initial_mass', label: t('holography.evaporating.slider_initial_mass'), min: 0.5, max: 3, step: 0.05 },
         ]}
         formula={'S(t) = \\min\\!\\left(S_{\\rm H}(t),\\ S_{\\rm island}(t)\\right)'}
         explainer={
           <>
-            Page time at <Tex>{'t_P = (1 - \\sqrt{2}/4)\\, t_{\\rm evap}'}</Tex>
-            {' '}≈ 0.6464 t_evap.  The bell shape returns to zero — toy-model
-            unitarity for an evaporating black hole.
+            {t('holography.evaporating.explainer_pre')}<Tex>{'t_P = (1 - \\sqrt{2}/4)\\, t_{\\rm evap}'}</Tex>{t('holography.evaporating.explainer_post')}
           </>
         }
         accentColor="#ff6b9d"
@@ -79,6 +71,7 @@ export default function Holography() {
 function PageCurveCard({
   title, kind, endpoint, defaultParams, sliders, formula, explainer, accentColor,
 }) {
+  const { t } = useTranslation()
   const [params, setParams] = useState(defaultParams)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
@@ -134,23 +127,24 @@ function PageCurveCard({
 
       {data && (
         <div style={styles.metaRow}>
-          <Meta label="Page time" value={data.page_time.toExponential(3)} />
-          <Meta label="Saturation / peak" value={data.saturation_entropy.toFixed(3)} />
-          <Meta label="Samples" value={data.t_values.length} />
+          <Meta label={t('holography.meta.page_time')} value={data.page_time.toExponential(3)} />
+          <Meta label={t('holography.meta.saturation')} value={data.saturation_entropy.toFixed(3)} />
+          <Meta label={t('holography.meta.samples')} value={data.t_values.length} />
         </div>
       )}
 
       <p style={styles.explainer}>{explainer}</p>
 
-      {loading && <div style={styles.statusBanner}>Loading…</div>}
+      {loading && <div style={styles.statusBanner}>{t('common.loading')}</div>}
       {error && (
-        <div style={styles.errorBanner}>⚠️ API: {error}</div>
+        <div style={styles.errorBanner}>⚠️ {t('common.api_error')}: {error}</div>
       )}
     </section>
   )
 }
 
 function PageCurvePlot({ data, accentColor, kind }) {
+  const { t } = useTranslation()
   const W = 760
   const H = 320
   const pad = { top: 16, right: 24, bottom: 36, left: 56 }
@@ -231,7 +225,7 @@ function PageCurvePlot({ data, accentColor, kind }) {
         </text>
       ))}
       <text x={pad.left + plotW / 2} y={H - 6} fill="#c4b5fd" fontSize="11" textAnchor="middle">
-        time t {kind === 'evaporating' ? '(in units of t_Planck × M₀³)' : ''}
+        {t('holography.axes.time_label')} {kind === 'evaporating' ? t('holography.axes.time_units_evap') : ''}
       </text>
 
       {/* y labels */}

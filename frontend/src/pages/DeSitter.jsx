@@ -6,11 +6,13 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TexBlock, Tex } from '../components/Math'
 
 const API = import.meta.env.VITE_API_URL || ''
 
 export default function DeSitter() {
+  const { t } = useTranslation()
   const [radius, setRadius] = useState(1.0)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
@@ -27,15 +29,10 @@ export default function DeSitter() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
       <section style={styles.card}>
-        <h2 style={styles.title}>de Sitter spacetime</h2>
+        <h2 style={styles.title}>{t('desitter.title')}</h2>
         <p style={styles.lede}>
-          The unique maximally-symmetric vacuum solution of Einstein
-          with positive cosmological constant <Tex>{'\\Lambda > 0'}</Tex>.
-          Static patch coordinates show a *cosmological* event horizon at
-          <Tex>{' r = L = \\sqrt{3/\\Lambda} '}</Tex> — analogous in form
-          to Schwarzschild's BH horizon, but the metric is regular at the
-          centre and the horizon is observer-dependent (each observer's
-          past light cone has its own).
+          {t('desitter.desc_pre')}<Tex>{'\\Lambda > 0'}</Tex>{t('desitter.desc_mid1')}
+          <Tex>{' r = L = \\sqrt{3/\\Lambda} '}</Tex>{t('desitter.desc_mid2')}
         </p>
 
         <div style={styles.formula}>
@@ -46,7 +43,7 @@ export default function DeSitter() {
 
         <div style={styles.controlGroup}>
           <label style={styles.controlLabel}>
-            de Sitter radius <Tex>{'L'}</Tex>:{' '}
+            {t('desitter.radius_label_pre')}<Tex>{'L'}</Tex>:{' '}
             <strong style={{ color: '#00dfff' }}>{radius.toFixed(2)}</strong>
           </label>
           <input
@@ -55,32 +52,31 @@ export default function DeSitter() {
             style={{ width: '100%', accentColor: '#00dfff' }}
           />
           <small style={styles.hint}>
-            <Tex>{'L = 1/H = \\sqrt{3/\\Lambda}'}</Tex> — three equivalent
-            ways to think about it
+            <Tex>{'L = 1/H = \\sqrt{3/\\Lambda}'}</Tex>{t('desitter.radius_hint_post')}
           </small>
         </div>
 
         {data && (
           <div style={styles.propsGrid}>
-            <Prop label="Cosmological horizon r_c"
+            <Prop label={t('desitter.props.cosmo_horizon')}
               value={data.cosmological_horizon.toFixed(4)}
               tex={'r_c = L'} color="#ff6b9d" />
-            <Prop label="Cosmological constant Λ"
+            <Prop label={t('desitter.props.lambda')}
               value={data.cosmological_constant.toFixed(4)}
               tex={'\\Lambda = 3/L^2'} color="#a78bfa" />
-            <Prop label="Hubble parameter H"
+            <Prop label={t('desitter.props.hubble')}
               value={data.hubble_parameter.toFixed(4)}
               tex={'H = 1/L = \\sqrt{\\Lambda/3}'} color="#22c55e" />
-            <Prop label="Gibbons-Hawking T"
+            <Prop label={t('desitter.props.gh_t')}
               value={data.hawking_temperature.toExponential(3)}
               tex={'T_{GH} = \\frac{1}{2\\pi L}'} color="#fbbf24" />
-            <Prop label="Horizon area A"
+            <Prop label={t('desitter.props.horizon_area')}
               value={data.horizon_area.toFixed(3)}
               tex={'A = 4\\pi L^2'} color="#06b6d4" />
-            <Prop label="Bekenstein-Hawking S"
+            <Prop label={t('desitter.props.entropy')}
               value={data.bekenstein_hawking_entropy.toFixed(3)}
               tex={'S = \\pi L^2'} color="#fb923c" />
-            <Prop label="Ricci scalar R"
+            <Prop label={t('desitter.props.ricci')}
               value={data.ricci_scalar.toFixed(3)}
               tex={'R = 12/L^2 = 4\\Lambda'} color="#c4b5fd" />
           </div>
@@ -90,47 +86,29 @@ export default function DeSitter() {
       </section>
 
       <section style={styles.card}>
-        <h3 style={{ margin: 0, color: '#fff' }}>What's special about dS</h3>
+        <h3 style={{ margin: 0, color: '#fff' }}>{t('desitter.special_title')}</h3>
         <ul style={styles.bulletList}>
           <li>
-            <strong>Constant-curvature</strong>: <Tex>{'R = 12/L^2'}</Tex>{' '}
-            everywhere; both the Ricci tensor and Riemann tensor are
-            proportional to combinations of <Tex>{'g_{\\mu\\nu}'}</Tex>.
+            {t('desitter.bullet_curvature_pre')}<Tex>{'R = 12/L^2'}</Tex>{t('desitter.bullet_curvature_post')}
           </li>
           <li>
-            <strong>Cosmological horizon</strong>: every observer sees a
-            horizon at proper distance <Tex>{'L = 1/H'}</Tex>.  It is NOT
-            a BH — there's no singularity inside, no ergosphere, no ISCO.
+            {t('desitter.bullet_horizon_pre')}<Tex>{'L = 1/H'}</Tex>{t('desitter.bullet_horizon_post')}
           </li>
           <li>
-            <strong>Gibbons-Hawking radiation</strong> (1977): the
-            horizon emits thermal radiation at <Tex>{'T_{GH} = 1/(2\\pi L)'}</Tex>{' '}
-            — the cosmological analogue of Hawking radiation from a BH
-            horizon.
+            {t('desitter.bullet_gh_pre')}<Tex>{'T_{GH} = 1/(2\\pi L)'}</Tex>{t('desitter.bullet_gh_post')}
           </li>
           <li>
-            <strong>Bekenstein-Hawking entropy of a horizon you don't
-            own</strong>: <Tex>{'S = A/4 = \\pi L^2'}</Tex>.  Holds even
-            though no matter has fallen across this horizon — entropy
-            from observer-dependent ignorance.
+            {t('desitter.bullet_entropy_pre')}<Tex>{'S = A/4 = \\pi L^2'}</Tex>{t('desitter.bullet_entropy_post')}
           </li>
           <li>
-            <strong>Limit of FLRW with</strong> <Tex>{'w = -1'}</Tex>:
-            an FLRW universe dominated by Λ asymptotes to dS.  Our late-
-            ΛCDM universe is approximately dS.
+            {t('desitter.bullet_flrw_pre')}<Tex>{'w = -1'}</Tex>{t('desitter.bullet_flrw_post')}
           </li>
         </ul>
         <p style={styles.cite}>
-          Reference: Wald §5.2; Hawking & Ellis §5.2; Gibbons & Hawking,{' '}
-          <em>Phys. Rev. D</em> 15, 2738 (1977).  Bit-exact tests pin
-          all closed-form invariants to ≤ 1e-12 in{' '}
-          <code>tests/test_de_sitter.py</code>.
+          {t('desitter.cite_paper')}
         </p>
         <p style={styles.cite}>
-          General FLRW (with arbitrary equation of state, mixed matter
-          components, Friedmann ODE) deferred to v3.2.full — see{' '}
-          <code>docs/v3.2-flrw-de-sitter-spec.md</code>.  This page covers
-          the closed-form Λ-only "easy half".
+          {t('desitter.cite_flrw')}
         </p>
       </section>
     </div>

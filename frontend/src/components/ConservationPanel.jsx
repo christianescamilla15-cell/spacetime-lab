@@ -7,62 +7,64 @@
  * (μ², Q), red if obviously broken.
  */
 
+import { useTranslation } from 'react-i18next'
 import { Tex } from './Math'
 
 export default function ConservationPanel({ trajectory, drift }) {
+  const { t } = useTranslation()
   if (!trajectory || trajectory.length === 0 || !drift) return null
   const init = trajectory[0]
 
   return (
     <div style={styles.panel}>
-      <div style={styles.title}>Conservation diagnostics</div>
+      <div style={styles.title}>{t('conservation.title')}</div>
       <div style={styles.grid}>
         <Diagnostic
-          label={<>Energy <Tex>{'E = -p_t'}</Tex></>}
+          label={<>{t('conservation.energy_label_pre')}<Tex>{'E = -p_t'}</Tex></>}
           initial={init.E}
           drift={drift.E_drift}
           tightBound={1e-9}
           looseBound={1e-6}
-          unit="conserved exactly (cyclic t)"
+          unit={t('conservation.unit_E_cyclic')}
         />
         <Diagnostic
-          label={<>z-Angular momentum <Tex>{'L_z = p_\\varphi'}</Tex></>}
+          label={<>{t('conservation.lz_label_pre')}<Tex>{'L_z = p_\\varphi'}</Tex></>}
           initial={init.L_z}
           drift={drift.L_z_drift}
           tightBound={1e-9}
           looseBound={1e-6}
-          unit="conserved exactly (cyclic φ)"
+          unit={t('conservation.unit_Lz_cyclic')}
         />
         <Diagnostic
-          label={<>Mass-shell <Tex>{'\\mu^2 = -2H'}</Tex></>}
+          label={<>{t('conservation.mass_shell_label_pre')}<Tex>{'\\mu^2 = -2H'}</Tex></>}
           initial={init.mu_squared}
           drift={drift.mu_squared_drift}
           tightBound={1e-6}
           looseBound={1e-3}
-          unit="conserved by Hamilton flow"
+          unit={t('conservation.unit_mu_hamilton')}
         />
         {init.Q_carter !== null && drift.Q_carter_drift !== null && (
           <Diagnostic
-            label={<>Carter <Tex>{'\\mathcal{Q}'}</Tex></>}
+            label={<>{t('conservation.carter_label_pre')}<Tex>{'\\mathcal{Q}'}</Tex></>}
             initial={init.Q_carter}
             drift={drift.Q_carter_drift}
             tightBound={1e-6}
             looseBound={1e-3}
-            unit="O(h²) drift per step"
+            unit={t('conservation.unit_carter_drift')}
           />
         )}
       </div>
       <p style={styles.legend}>
-        Implicit-midpoint integrator: <Tex>{'E'}</Tex> and <Tex>{'L_z'}</Tex>{' '}
-        conserved to machine precision (cyclic coordinates), <Tex>{'\\mu^2'}</Tex>{' '}
-        and <Tex>{'\\mathcal{Q}'}</Tex> drift at <Tex>{'O(h^2)'}</Tex> — small drift
-        is the diagnostic that the trajectory follows true geodesics.
+        {t('conservation.legend_pre')}<Tex>{'E'}</Tex>{t('conservation.legend_mid1')}<Tex>{'L_z'}</Tex>
+        {t('conservation.legend_mid2')}<Tex>{'\\mu^2'}</Tex>{t('conservation.legend_mid3')}<Tex>{'\\mathcal{Q}'}</Tex>
+        {t('conservation.legend_mid4')}<Tex>{'O(h^2)'}</Tex>{t('conservation.legend_post')}
       </p>
     </div>
   )
 }
 
 function Diagnostic({ label, initial, drift, tightBound, looseBound, unit }) {
+  const { t } = useTranslation()
   const status = drift < tightBound
     ? 'tight'
     : drift < looseBound
@@ -73,10 +75,10 @@ function Diagnostic({ label, initial, drift, tightBound, looseBound, unit }) {
     <div style={{ ...styles.cell, borderTop: `2px solid ${color}` }}>
       <div style={styles.cellLabel}>{label}</div>
       <div style={styles.cellInitial}>
-        initial: <code>{initial.toExponential(4)}</code>
+        {t('conservation.initial_label')} <code>{initial.toExponential(4)}</code>
       </div>
       <div style={{ ...styles.cellDrift, color }}>
-        drift: {drift.toExponential(2)}
+        {t('conservation.drift_label')} {drift.toExponential(2)}
       </div>
       <div style={styles.cellUnit}>{unit}</div>
     </div>

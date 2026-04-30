@@ -16,10 +16,12 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TexBlock, Tex } from '../components/Math'
 import { api } from '../lib/api'
 
 export default function Kerr() {
+  const { t } = useTranslation()
   const [mass, setMass] = useState(1.0)
   const [aOverM, setAOverM] = useState(0.7)
   const [props, setProps] = useState(null)
@@ -52,12 +54,9 @@ export default function Kerr() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
       <section style={styles.card}>
-        <h2 style={styles.sectionTitle}>Kerr Black Hole</h2>
+        <h2 style={styles.sectionTitle}>{t('kerr.title')}</h2>
         <p style={styles.sectionDesc}>
-          The two-parameter rotating vacuum solution. As <Tex>{'a / M'}</Tex>
-          {' '}grows from 0 (Schwarzschild) toward 1 (extremal), the inner and
-          outer horizons approach, the ergosphere bulges, and the ISCO splits
-          into prograde and retrograde branches.
+          {t('kerr.desc_pre')}<Tex>{'a / M'}</Tex>{t('kerr.desc_post')}
         </p>
 
         <div style={styles.formula}>
@@ -68,14 +67,14 @@ export default function Kerr() {
             <Tex>{'\\Sigma \\equiv r^2 + a^2 \\cos^2\\theta'}</Tex>
             {' · '}
             <Tex>{'\\Delta \\equiv r^2 - 2Mr + a^2'}</Tex>
-            {' · Boyer-Lindquist coordinates.'}
+            {t('kerr.formula_caption_post')}
           </div>
         </div>
 
         <div style={styles.controls}>
           <div style={styles.controlGroup}>
             <label style={styles.label}>
-              Mass M: <strong style={{ color: '#ff6b9d' }}>{mass.toFixed(2)}</strong>
+              {t('kerr.mass_label')}: <strong style={{ color: '#ff6b9d' }}>{mass.toFixed(2)}</strong>
             </label>
             <input
               type="range"
@@ -90,7 +89,7 @@ export default function Kerr() {
 
           <div style={styles.controlGroup}>
             <label style={styles.label}>
-              Spin <Tex>{'a / M'}</Tex>:{' '}
+              {t('kerr.spin_label_pre')}<Tex>{'a / M'}</Tex>:{' '}
               <strong style={{ color: '#00dfff' }}>{aOverM.toFixed(3)}</strong>
             </label>
             <input
@@ -103,8 +102,7 @@ export default function Kerr() {
               style={styles.slider}
             />
             <small style={styles.hint}>
-              Cosmic censorship requires <Tex>{'|a| \\le M'}</Tex> · extremal at{' '}
-              <Tex>{'a/M = 1'}</Tex>
+              {t('kerr.spin_hint_pre')}<Tex>{'|a| \\le M'}</Tex>{t('kerr.spin_hint_mid')}<Tex>{'a/M = 1'}</Tex>
             </small>
           </div>
         </div>
@@ -112,55 +110,55 @@ export default function Kerr() {
         {props && (
           <div style={styles.propertiesGrid}>
             <PropertyCard
-              label="Outer horizon r₊"
+              label={t('kerr.props.outer_horizon')}
               value={props.outer_horizon.toFixed(4)}
               formulaTex={'r_+ = M + \\sqrt{M^2 - a^2}'}
               color="#ff6b9d"
             />
             <PropertyCard
-              label="Inner horizon r₋"
+              label={t('kerr.props.inner_horizon')}
               value={props.inner_horizon.toFixed(4)}
               formulaTex={'r_- = M - \\sqrt{M^2 - a^2}'}
               color="#a78bfa"
             />
             <PropertyCard
-              label="Ergosphere (equator)"
+              label={t('kerr.props.ergo_equator')}
               value={props.ergo_equator.toFixed(4)}
               formulaTex={'r_E = 2M'}
               color="#00dfff"
             />
             <PropertyCard
-              label="ISCO prograde"
+              label={t('kerr.props.isco_prograde')}
               value={props.isco_prograde.toFixed(4)}
               formulaTex={'r_{\\rm ISCO}^+ \\le 6M'}
               color="#22c55e"
             />
             <PropertyCard
-              label="ISCO retrograde"
+              label={t('kerr.props.isco_retrograde')}
               value={props.isco_retrograde.toFixed(4)}
               formulaTex={'r_{\\rm ISCO}^- \\ge 6M'}
               color="#f59e0b"
             />
             <PropertyCard
-              label="Photon sphere (+)"
+              label={t('kerr.props.photon_prograde')}
               value={props.photon_sphere_prograde.toFixed(4)}
               formulaTex={'r_\\gamma^+'}
               color="#00dfff"
             />
             <PropertyCard
-              label="Horizon ang. velocity"
+              label={t('kerr.props.ang_velocity')}
               value={props.angular_velocity_horizon.toExponential(3)}
               formulaTex={'\\Omega_H = \\frac{a}{r_+^2 + a^2}'}
               color="#c4b5fd"
             />
             <PropertyCard
-              label="Hawking T"
+              label={t('kerr.props.hawking_t')}
               value={props.hawking_temperature.toExponential(3)}
               formulaTex={'T_H = \\frac{r_+ - r_-}{4\\pi(r_+^2 + a^2)}'}
               color="#fb923c"
             />
             <PropertyCard
-              label="BH Entropy"
+              label={t('kerr.props.entropy')}
               value={props.bekenstein_hawking_entropy.toFixed(3)}
               formulaTex={'S = \\pi(r_+^2 + a^2)'}
               color="#ff6b9d"
@@ -172,40 +170,32 @@ export default function Kerr() {
           <KerrEquatorialPlot props={props} mass={mass} />
         </div>
 
-        {loading && <div style={styles.statusBanner}>Loading…</div>}
+        {loading && <div style={styles.statusBanner}>{t('common.loading')}</div>}
         {error && (
           <div style={styles.errorBanner}>
-            ⚠️ Using client-side fallback (API: {error})
+            ⚠️ {t('common.client_fallback', { message: error })}
           </div>
         )}
       </section>
 
       <section style={styles.card}>
-        <h3 style={{ margin: 0, color: '#fff' }}>What changes as you spin it up?</h3>
+        <h3 style={{ margin: 0, color: '#fff' }}>{t('kerr.what_changes_title')}</h3>
         <ul style={styles.bulletList}>
           <li>
-            At <Tex>{'a = 0'}</Tex>: Schwarzschild — both horizons meet at{' '}
-            <Tex>{'r = 2M'}</Tex>, ISCO = <Tex>{'6M'}</Tex>, ergosphere collapses
-            onto the horizon.
+            {t('kerr.bullet_a_pre')}<Tex>{'a = 0'}</Tex>{t('kerr.bullet_a_mid1')}<Tex>{'r = 2M'}</Tex>{t('kerr.bullet_a_mid2')}<Tex>{'6M'}</Tex>{t('kerr.bullet_a_post')}
           </li>
           <li>
-            For <Tex>{'0 < a < M'}</Tex>: <Tex>{'r_+'}</Tex> shrinks from{' '}
-            <Tex>{'2M'}</Tex> down to <Tex>{'M'}</Tex>; <Tex>{'r_-'}</Tex> grows
-            from 0 up to <Tex>{'M'}</Tex>; the ergosphere{' '}
-            <Tex>{'(r_E = 2M)'}</Tex> separates from <Tex>{'r_+'}</Tex>.
+            {t('kerr.bullet_b_pre')}<Tex>{'0 < a < M'}</Tex>{t('kerr.bullet_b_mid1')}<Tex>{'r_+'}</Tex>{t('kerr.bullet_b_mid2')}<Tex>{'2M'}</Tex>{t('kerr.bullet_b_mid3')}<Tex>{'M'}</Tex>{t('kerr.bullet_b_mid4')}<Tex>{'r_-'}</Tex>{t('kerr.bullet_b_mid5')}<Tex>{'M'}</Tex>{t('kerr.bullet_b_mid6')}<Tex>{'(r_E = 2M)'}</Tex>{t('kerr.bullet_b_mid7')}<Tex>{'r_+'}</Tex>{t('kerr.bullet_b_post')}
           </li>
           <li>
-            ISCO splits: prograde shrinks down to <Tex>{'M'}</Tex> at extremal
-            (energy efficiency 42%), retrograde grows toward <Tex>{'9M'}</Tex>.
+            {t('kerr.bullet_c', { tex: 'M', tex2: '9M' })}
           </li>
           <li>
-            Hawking <Tex>{'T_H \\to 0'}</Tex> as <Tex>{'a \\to M'}</Tex>:
-            extremal Kerr is a zero-temperature black hole (third law).
+            {t('kerr.bullet_d_pre')}<Tex>{'T_H \\to 0'}</Tex>{t('kerr.bullet_d_mid1')}<Tex>{'a \\to M'}</Tex>{t('kerr.bullet_d_post')}
           </li>
         </ul>
         <p style={styles.cite}>
-          Reference: Boyer & Lindquist 1967; Bardeen, Press & Teukolsky 1972;
-          Wald, <em>General Relativity</em>, ch. 12.
+          {t('kerr.cite')}
         </p>
       </section>
     </div>
@@ -225,6 +215,7 @@ function PropertyCard({ label, value, formulaTex, color }) {
 }
 
 function KerrEquatorialPlot({ props, mass }) {
+  const { t } = useTranslation()
   const size = 460
   const cx = size / 2
   const cy = size / 2
@@ -236,7 +227,7 @@ function KerrEquatorialPlot({ props, mass }) {
     return (
       <svg width={size} height={size} style={{ background: '#0a0a0f' }}>
         <text x={cx} y={cy} fill="#6b7280" fontSize="13" textAnchor="middle">
-          loading…
+          {t('common.loading')}
         </text>
       </svg>
     )
@@ -282,7 +273,7 @@ function KerrEquatorialPlot({ props, mass }) {
       <circle cx={cx} cy={cy} r={r_ergo} fill="none"
         stroke="#00dfff" strokeWidth="1.5" opacity="0.85" />
       <text x={cx + r_ergo - 4} y={cy + 24} fill="#00dfff" fontSize="10" textAnchor="end">
-        ergo r=2M
+        {t('kerr.ergo_label')}
       </text>
 
       {/* Outer horizon r_+ */}
@@ -302,7 +293,7 @@ function KerrEquatorialPlot({ props, mass }) {
 
       {/* Title */}
       <text x={cx} y={size - 10} fill="#6b7280" fontSize="11" textAnchor="middle">
-        Equatorial slice (θ = π/2)
+        {t('kerr.equatorial_caption')}
       </text>
     </svg>
   )

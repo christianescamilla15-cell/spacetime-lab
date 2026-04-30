@@ -7,10 +7,12 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TexBlock, Tex } from '../components/Math'
 import { api } from '../lib/api'
 
 export default function ReissnerNordstrom() {
+  const { t } = useTranslation()
   const [mass, setMass] = useState(1.0)
   const [qOverM, setQOverM] = useState(0.6)
   const [data, setData] = useState(null)
@@ -33,13 +35,9 @@ export default function ReissnerNordstrom() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
       <section style={styles.card}>
-        <h2 style={styles.title}>Reissner-Nordström Black Hole</h2>
+        <h2 style={styles.title}>{t('rn.title')}</h2>
         <p style={styles.lede}>
-          The unique static, spherically symmetric, asymptotically-flat
-          Einstein-Maxwell solution.  As <Tex>{'|Q|/M'}</Tex> grows from
-          0 (Schwarzschild) toward 1 (extremal), the inner and outer
-          horizons approach, the photon sphere shrinks, and the Hawking
-          temperature drops to zero.
+          {t('rn.desc_pre')}<Tex>{'|Q|/M'}</Tex>{t('rn.desc_post')}
         </p>
 
         <div style={styles.formula}>
@@ -50,45 +48,45 @@ export default function ReissnerNordstrom() {
 
         <div style={styles.controls}>
           <ControlSlider
-            label={<>Mass <Tex>{'M'}</Tex></>} color="#ff6b9d"
+            label={<>{t('rn.mass_label_pre')}<Tex>{'M'}</Tex></>} color="#ff6b9d"
             value={mass} onChange={setMass}
             min={0.5} max={3} step={0.05}
           />
           <ControlSlider
-            label={<>Dimensionless charge <Tex>{'|Q|/M'}</Tex></>} color="#fbbf24"
+            label={<>{t('rn.qm_label_pre')}<Tex>{'|Q|/M'}</Tex></>} color="#fbbf24"
             value={qOverM} onChange={setQOverM}
             min={0} max={0.999} step={0.005}
-            hint={<>Cosmic censorship: <Tex>{'|Q| \\le M'}</Tex>; extremal at <Tex>{'|Q|/M = 1'}</Tex></>}
+            hint={<>{t('rn.qm_hint_pre')}<Tex>{'|Q| \\le M'}</Tex>{t('rn.qm_hint_mid')}<Tex>{'|Q|/M = 1'}</Tex></>}
           />
         </div>
 
         {data && (
           <div style={styles.propsGrid}>
-            <Prop label="Outer horizon r₊"
+            <Prop label={t('rn.props.outer_horizon')}
               value={data.outer_horizon.toFixed(4)}
               tex={'r_+ = M + \\sqrt{M^2 - Q^2}'} color="#ff6b9d" />
-            <Prop label="Inner horizon r₋"
+            <Prop label={t('rn.props.inner_horizon')}
               value={data.inner_horizon.toFixed(4)}
               tex={'r_- = M - \\sqrt{M^2 - Q^2}'} color="#a78bfa" />
-            <Prop label="Photon sphere"
+            <Prop label={t('rn.props.photon_sphere')}
               value={data.photon_sphere.toFixed(4)}
               tex={'r_\\gamma = \\tfrac{1}{2}(3M + \\sqrt{9M^2 - 8Q^2})'} color="#00dfff" />
-            <Prop label="ISCO"
+            <Prop label={t('rn.props.isco')}
               value={data.isco.toFixed(4)}
               tex={'r_{\\rm ISCO} \\to 6M\\ \\text{at}\\ Q=0'} color="#22c55e" />
-            <Prop label="Surface gravity κ"
+            <Prop label={t('rn.props.kappa')}
               value={data.surface_gravity.toExponential(3)}
               tex={'\\kappa = \\frac{r_+ - r_-}{2 r_+^2}'} color="#fb923c" />
-            <Prop label="Hawking T"
+            <Prop label={t('rn.props.hawking_t')}
               value={data.hawking_temperature.toExponential(3)}
               tex={'T_H = \\frac{\\kappa}{2\\pi}'} color="#fbbf24" />
-            <Prop label="Horizon area"
+            <Prop label={t('rn.props.horizon_area')}
               value={data.horizon_area.toFixed(3)}
               tex={'A = 4\\pi r_+^2'} color="#06b6d4" />
-            <Prop label="BH entropy"
+            <Prop label={t('rn.props.entropy')}
               value={data.bekenstein_hawking_entropy.toFixed(3)}
               tex={'S = \\pi r_+^2'} color="#ff6b9d" />
-            <Prop label="Vieta check r₊r₋"
+            <Prop label={t('rn.props.vieta')}
               value={(data.outer_horizon * data.inner_horizon).toFixed(6)}
               tex={'r_+ r_- = Q^2'}
               color={Math.abs(data.outer_horizon * data.inner_horizon - charge * charge) < 1e-9 ? '#22c55e' : '#fb923c'} />
@@ -99,36 +97,20 @@ export default function ReissnerNordstrom() {
           <RNRadialPlot data={data} mass={mass} />
         </div>
 
-        {loading && <div style={styles.statusBanner}>Loading…</div>}
+        {loading && <div style={styles.statusBanner}>{t('common.loading')}</div>}
         {error && <div style={styles.errorBanner}>⚠️ {error}</div>}
       </section>
 
       <section style={styles.card}>
-        <h3 style={{ margin: 0, color: '#fff' }}>What changes as you charge it up?</h3>
+        <h3 style={{ margin: 0, color: '#fff' }}>{t('rn.what_changes_title')}</h3>
         <ul style={styles.bulletList}>
-          <li>
-            At <Tex>{'Q = 0'}</Tex>: pure Schwarzschild — <Tex>{'r_+ = 2M'}</Tex>,{' '}
-            <Tex>{'r_- = 0'}</Tex>, ISCO = 6M, photon sphere = 3M.
-          </li>
-          <li>
-            For <Tex>{'0 < |Q| < M'}</Tex>: <Tex>{'r_+'}</Tex> shrinks from 2M
-            toward M; <Tex>{'r_-'}</Tex> grows from 0 toward M.  Vieta's
-            relations: <Tex>{'r_+ + r_- = 2M'}</Tex>, <Tex>{'r_+ \\cdot r_- = Q^2'}</Tex>.
-          </li>
-          <li>
-            ISCO decreases monotonically with <Tex>{'|Q|'}</Tex>; photon sphere
-            shrinks toward <Tex>{'2M'}</Tex>.
-          </li>
-          <li>
-            At extremality (<Tex>{'|Q| = M'}</Tex>):{' '}
-            <Tex>{'r_+ = r_- = M'}</Tex>, <Tex>{'T_H = 0'}</Tex> (third law),
-            entropy <Tex>{'S = \\pi M^2'}</Tex>.
-          </li>
+          <li>{t('rn.bullet_a')}</li>
+          <li>{t('rn.bullet_b')}</li>
+          <li>{t('rn.bullet_c')}</li>
+          <li>{t('rn.bullet_d')}</li>
         </ul>
         <p style={styles.cite}>
-          Reference: Reissner 1916; Nordström 1918; Wald §6.4; MTW §31.5.
-          ISCO formula: Pradhan & Iyer 2010.  Bit-exact tests pin all
-          closed-form invariants to ≤ 1e-12 in <code>tests/test_reissner_nordstrom.py</code>.
+          {t('rn.cite')}
         </p>
       </section>
     </div>
@@ -160,6 +142,7 @@ function Prop({ label, value, tex, color }) {
 }
 
 function RNRadialPlot({ data, mass }) {
+  const { t } = useTranslation()
   const size = 460
   const cx = size / 2
   const cy = size / 2
@@ -167,7 +150,7 @@ function RNRadialPlot({ data, mass }) {
     return (
       <svg width={size} height={size} style={{ background: '#0a0a0f' }}>
         <text x={cx} y={cy} fill="#6b7280" fontSize="13" textAnchor="middle">
-          loading…
+          {t('common.loading')}
         </text>
       </svg>
     )
@@ -217,7 +200,7 @@ function RNRadialPlot({ data, mass }) {
       <circle cx={cx} cy={cy} r="2" fill="#fff" />
 
       <text x={cx} y={size - 10} fill="#6b7280" fontSize="11" textAnchor="middle">
-        Spherical slice (any θ, φ) · all surfaces are spheres
+        {t('rn.spherical_caption')}
       </text>
     </svg>
   )
