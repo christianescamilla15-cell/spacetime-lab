@@ -2,7 +2,10 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
 pydantic>=2.5.0
 numpy>=1.26.0
-scipy>=1.12.0
+scipy>=1.12.0,<1.14
 sympy>=1.12
-# Install spacetime_lab package from parent directory
--e ../
+# spacetime_lab itself is installed by the buildCommand:
+#   pip install -r backend/requirements.txt && pip install .
+# (separate `pip install .` from repo root — more portable than `-e ../`
+# in cloud-build sandboxes, which sometimes refuse editable installs
+# of relative paths)

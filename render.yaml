@@ -2,8 +2,16 @@ services:
   - type: web
     name: spacetime-lab-api
     env: python
-    buildCommand: "pip install -r backend/requirements.txt"
+    # Two-step install:
+    #   1. Backend deps from requirements.txt
+    #   2. The spacetime_lab package itself (non-editable; installs as a
+    #      wheel built from pyproject.toml — works on Render's sandbox
+    #      where `-e ../` inside requirements.txt is fragile).
+    buildCommand: "pip install -r backend/requirements.txt && pip install ."
     startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
+      # Loose pin: any 3.12.x.  Render's available patches drift; pinning
+      # an exact 3.12.8 historically caused "invalid python version"
+      # failures when Render's image only had 3.12.7 or 3.12.9 installed.
       - key: PYTHON_VERSION
-        value: 3.12.8
+        value: "3.12"
