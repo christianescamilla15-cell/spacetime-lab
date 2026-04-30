@@ -71,6 +71,13 @@ export default function Home() {
           status="ready"
         />
         <PageCard
+          to="/de-sitter"
+          title="de Sitter"
+          subtitle="v3.2 partial · cosmology"
+          desc="Λ>0 vacuum, static patch. Cosmological horizon, Gibbons-Hawking radiation. The Λ-only 'easy half' of the FLRW family."
+          status="ready"
+        />
+        <PageCard
           to="/geodesics"
           title="Geodesics"
           subtitle="Phase 3 · v0.3 (v2.6 in UI)"

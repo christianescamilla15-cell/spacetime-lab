@@ -26,6 +26,7 @@ export default function Layout() {
           <NavItem to="/btz">BTZ</NavItem>
           <NavItem to="/reissner-nordstrom">RN</NavItem>
           <NavItem to="/kerr-newman">KN</NavItem>
+          <NavItem to="/de-sitter">dS</NavItem>
           <NavItem to="/geodesics">Geodesics</NavItem>
           <NavItem to="/penrose">Penrose</NavItem>
           <NavItem to="/holography">Holography</NavItem>

@@ -49,6 +49,9 @@ export const api = {
     properties: (mass, spin, charge) =>
       get('/api/metrics/kerr-newman', { mass, spin, charge }),
   },
+  deSitter: {
+    properties: (radius) => get('/api/metrics/de-sitter', { radius }),
+  },
   diagrams: {
     penroseSvgUrl: (kind, opts = {}) => {
       const qs = new URLSearchParams({

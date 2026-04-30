@@ -14,6 +14,7 @@ import Kerr from './pages/Kerr'
 import BTZ from './pages/BTZ'
 import ReissnerNordstrom from './pages/ReissnerNordstrom'
 import KerrNewman from './pages/KerrNewman'
+import DeSitter from './pages/DeSitter'
 import Geodesics from './pages/Geodesics'
 import Penrose from './pages/Penrose'
 import Holography from './pages/Holography'
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="btz" element={<BTZ />} />
           <Route path="reissner-nordstrom" element={<ReissnerNordstrom />} />
           <Route path="kerr-newman" element={<KerrNewman />} />
+          <Route path="de-sitter" element={<DeSitter />} />
           <Route path="geodesics" element={<Geodesics />} />
           <Route path="penrose" element={<Penrose />} />
           <Route path="holography" element={<Holography />} />
@@ -40,6 +42,7 @@ export default function App() {
           <Route path="btz" element={<BTZ />} />
           <Route path="reissner-nordstrom" element={<ReissnerNordstrom />} />
           <Route path="kerr-newman" element={<KerrNewman />} />
+          <Route path="de-sitter" element={<DeSitter />} />
           <Route path="geodesics" element={<Geodesics />} />
           <Route path="penrose" element={<Penrose />} />
           <Route path="holography" element={<Holography />} />
