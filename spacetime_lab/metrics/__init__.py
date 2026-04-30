@@ -29,6 +29,7 @@ from spacetime_lab.metrics.ads import AdS
 from spacetime_lab.metrics.base import Metric
 from spacetime_lab.metrics.btz import BTZ
 from spacetime_lab.metrics.kerr import Kerr
+from spacetime_lab.metrics.reissner_nordstrom import ReissnerNordstrom
 from spacetime_lab.metrics.schwarzschild import Schwarzschild
 
 __all__ = [
@@ -36,5 +37,6 @@ __all__ = [
     "BTZ",
     "Kerr",
     "Metric",
+    "ReissnerNordstrom",
     "Schwarzschild",
 ]
