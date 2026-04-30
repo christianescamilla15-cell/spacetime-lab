@@ -214,5 +214,14 @@ async def list_available_metrics() -> dict:
                 "rest_endpoint": "/api/metrics/kerr-newman",
                 "available": True,
             },
+            {
+                "name": "de Sitter",
+                "description": "Maximally symmetric Λ>0 vacuum, static patch",
+                "parameters": ["radius"],
+                "phase": "v3.2 (partial — full FLRW deferred)",
+                "shipped_in_python": "v3.2.0",
+                "rest_endpoint": "/api/metrics/de-sitter",
+                "available": True,
+            },
         ]
     }

@@ -29,6 +29,8 @@ class KNProperties(BaseModel):
     horizon_area: float
     bekenstein_hawking_entropy: float
     is_extremal: bool
+    isco_prograde: float = Field(..., description="Equatorial ISCO, prograde branch")
+    isco_retrograde: float = Field(..., description="Equatorial ISCO, retrograde branch")
     line_element_latex: str
 
 
@@ -61,5 +63,7 @@ async def get_kerr_newman(
         horizon_area=bh.horizon_area(),
         bekenstein_hawking_entropy=bh.bekenstein_hawking_entropy(),
         is_extremal=bh.is_extremal,
+        isco_prograde=bh.isco(prograde=True),
+        isco_retrograde=bh.isco(prograde=False),
         line_element_latex=bh.line_element_latex(),
     )

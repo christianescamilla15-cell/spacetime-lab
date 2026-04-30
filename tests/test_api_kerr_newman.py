@@ -99,3 +99,25 @@ def test_kn_listed_in_available_metrics() -> None:
     kn = next((m for m in metrics if m["name"] == "Kerr-Newman"), None)
     assert kn is not None
     assert kn["available"] is True
+
+
+def test_kn_response_includes_isco_fields() -> None:
+    """v3.2.1: ISCO prograde + retrograde must be in the response."""
+    body = client.get("/api/metrics/kerr-newman",
+                      params={"mass": 1.0, "spin": 0.5, "charge": 0.3}).json()
+    assert "isco_prograde" in body
+    assert "isco_retrograde" in body
+    rp = body["outer_horizon"]
+    # Both must be outside the horizon and finite
+    assert rp < body["isco_prograde"] < 30
+    assert rp < body["isco_retrograde"] < 30
+    # Prograde < retrograde (general for any spin > 0)
+    assert body["isco_prograde"] < body["isco_retrograde"]
+
+
+def test_kn_isco_schwarzschild_limit() -> None:
+    """At a=0, Q=0: both branches collapse to 6M."""
+    body = client.get("/api/metrics/kerr-newman",
+                      params={"mass": 1.0, "spin": 0.0, "charge": 0.0}).json()
+    assert body["isco_prograde"] == pytest.approx(6.0, rel=1e-9)
+    assert body["isco_retrograde"] == pytest.approx(6.0, rel=1e-9)
